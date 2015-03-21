@@ -1,0 +1,120 @@
+Itineraire:
+    type: entity
+    table: itineraire
+    indexes:
+        fk_itineraire_auteur_idx:
+            columns:
+                - auteur
+        fk_itineraire_diff_idx:
+            columns:
+                - difficulte
+        fk_itineraire_trace_idx:
+            columns:
+                - trace
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    fields:
+        datecreation:
+            type: date
+            nullable: false
+            comment: ''
+        longueur:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+        deniveleplus:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+        denivelemoins:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+        description:
+            type: string
+            nullable: false
+            length: 255
+            fixed: false
+            comment: ''
+        nom:
+            type: string
+            nullable: false
+            length: 255
+            fixed: false
+            comment: ''
+        numero:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+        typechemin:
+            type: string
+            nullable: false
+            length: 255
+            fixed: false
+            comment: ''
+        status:
+            type: string
+            nullable: false
+            length: 255
+            fixed: false
+            comment: ''
+    manyToOne:
+        auteur:
+            targetEntity: Utilisateur
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                auteur:
+                    referencedColumnName: id
+            orphanRemoval: false
+        difficulte:
+            targetEntity: Difficulteparcours
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                difficulte:
+                    referencedColumnName: id
+            orphanRemoval: false
+        trace:
+            targetEntity: Trace
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                trace:
+                    referencedColumnName: id
+            orphanRemoval: false
+    manyToMany:
+        utilisateurnote:
+            targetEntity: Utilisateur
+            cascade: {  }
+            mappedBy: null
+            inversedBy: itinerairenote
+            joinTable:
+                name: note
+                joinColumns:
+                    -
+                        name: itinerairenote
+                        referencedColumnName: id
+                inverseJoinColumns:
+                    -
+                        name: utilisateurnote
+                        referencedColumnName: id
+            orderBy: null
+    lifecycleCallbacks: {  }

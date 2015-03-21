@@ -1,0 +1,32 @@
+Coordonnees:
+    type: entity
+    table: coordonnees
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    fields:
+        longitude:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+        latitude:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+        altitude:
+            type: float
+            nullable: false
+            precision: 10
+            scale: 0
+            comment: ''
+    lifecycleCallbacks: {  }

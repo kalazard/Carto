@@ -1,0 +1,51 @@
+Segment:
+    type: entity
+    table: segment
+    indexes:
+        fk_segment_trace1_idx:
+            columns:
+                - trace
+        fk_segment_coordonnees1_idx:
+            columns:
+                - coordonnees_debut
+        fk_segment_coordonnees2_idx:
+            columns:
+                - coordonnees_fin
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    manyToOne:
+        trace:
+            targetEntity: Trace
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                trace:
+                    referencedColumnName: id
+            orphanRemoval: false
+        coordonneesDebut:
+            targetEntity: Coordonnees
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                coordonnees_debut:
+                    referencedColumnName: id
+            orphanRemoval: false
+        coordonneesFin:
+            targetEntity: Coordonnees
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                coordonnees_fin:
+                    referencedColumnName: id
+            orphanRemoval: false
+    lifecycleCallbacks: {  }

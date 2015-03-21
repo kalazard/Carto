@@ -1,0 +1,52 @@
+Poi:
+    type: entity
+    table: poi
+    indexes:
+        fk_poi_typelieu1_idx:
+            columns:
+                - typelieu
+        fk_poi_coordonnees1_idx:
+            columns:
+                - coordonnees
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    fields:
+        titre:
+            type: string
+            nullable: true
+            length: 255
+            fixed: false
+            comment: ''
+        description:
+            type: string
+            nullable: true
+            length: 255
+            fixed: false
+            comment: ''
+    manyToOne:
+        typelieu:
+            targetEntity: Typelieu
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                typelieu:
+                    referencedColumnName: id
+            orphanRemoval: false
+        coordonnees:
+            targetEntity: Coordonnees
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                coordonnees:
+                    referencedColumnName: id
+            orphanRemoval: false
+    lifecycleCallbacks: {  }

@@ -1,0 +1,42 @@
+Utilisateur:
+    type: entity
+    table: utilisateur
+    indexes:
+        fk_utilisateur_role_idx:
+            columns:
+                - role
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    fields:
+        email:
+            type: string
+            nullable: false
+            length: 100
+            fixed: false
+            comment: ''
+    manyToOne:
+        role:
+            targetEntity: Role
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                role:
+                    referencedColumnName: id
+            orphanRemoval: false
+    manyToMany:
+        itinerairenote:
+            targetEntity: Itineraire
+            cascade: {  }
+            mappedBy: utilisateurnote
+            inversedBy: null
+            joinTable: null
+            orderBy: null
+    lifecycleCallbacks: {  }
