@@ -3,14 +3,15 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-
+use JsonSerializable;
+use Symfony\Component\Security\Core\Role\RoleInterface;
 /**
  * Role
  *
  * @ORM\Table(name="role")
  * @ORM\Entity
  */
-class Role
+class Role implements RoleInterface,  JsonSerializable
 {
     /**
      * @var integer
@@ -62,4 +63,13 @@ class Role
     {
         return $this->label;
     }
+
+    public function getRole() {
+        return array("ROLE_".$this->getLabel());
+    }
+
+    public function jsonSerialize() {
+        
+    }
+
 }

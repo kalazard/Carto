@@ -2,3 +2,9 @@ services:
 #    site_carto.example:
 #        class: Site\CartoBundle\Example
 #        arguments: [@service_id, "plain_value", %parameter%]
+    custom_user_provider:
+        class: Site\CartoBundle\Security\CustomUserProvider
+        arguments: ["@doctrine.orm.entity_manager"]
+    sso_authenticator:
+        class: Site\CartoBundle\Security\SSOAuthenticator
+        arguments: ["@custom_user_provider"]

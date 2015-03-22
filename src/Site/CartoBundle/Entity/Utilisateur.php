@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="utilisateur", indexes={@ORM\Index(name="fk_utilisateur_role_idx", columns={"role"})})
  * @ORM\Entity
  */
-class Utilisateur
+class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface, \Serializable
 {
     /**
      * @var integer
@@ -142,4 +142,46 @@ class Utilisateur
     {
         return $this->itinerairenote;
     }
+
+    public function eraseCredentials() {
+        
+    }
+
+    public function getPassword() {
+        
+    }
+
+    public function getRoles() {
+        return $this->role->getRole();
+    }
+
+    public function getSalt() {
+        
+    }
+
+    public function getUsername() {
+        return $this->email;
+    }
+
+    public function serialize() {
+        return serialize(array(
+            $this->id,
+            $this->email,
+            $this->role
+            
+            // see section on salt below
+            // $this->salt,
+        ));
+    }
+
+    public function unserialize($serialized) {
+        list (
+            $this->id,
+            $this->email,
+            $this->role
+            // see section on salt below
+            // $this->salt
+        ) = unserialize($serialized);
+    }
+
 }
