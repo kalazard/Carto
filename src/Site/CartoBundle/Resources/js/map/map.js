@@ -160,7 +160,7 @@ function showError(error)
 function goToPosition(position) {
 
   //Définition des attributs de la carte et positionnement
-  $("#map").css("height", "70%").css("width", "100%").css("margin","auto");
+  $("#map").css("height", "100%").css("width", "100%").css("margin","auto");
   $("#controls").css("width", "20%").css("margin","auto");
   var zoom = 3;
   if(position.coords.latitude !== 0 && position.coords.longitude !== 0){zoom = 13;}

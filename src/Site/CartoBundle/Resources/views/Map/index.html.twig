@@ -31,61 +31,18 @@
     <meta charset="utf-8">
 </head>
 <body>
-  <div class="page-header">
-    {% image '@SiteCartoBundle/Resources/views/Map/logo2.png' %}
-    <h1><img src="{{ asset_url }}" alt="Symfony!" style="width :12; height: 90px;"/><small>Site de cartographie collaborative</small></h1>
-    {% endimage %}    
-  </div>
   <style>
       .container-map{
           height: 100%;
           width: 100%;
       }
       .map{
-          width:200px;
+          width:100%;
+          height:100%;
       }
   </style>
-  <div class="container container-map">
+  <div class=" container-map">
       <div id="map" class="map context-menu-one box menu-1"></div>
-    <nav role="navigation" class="navbar navbar-default">
-        <div class="navbar-header">
-            <button type="button" data-target="#navbarCollapse" data-toggle="collapse" class="navbar-toggle">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="#" class="navbar-brand">Controles</a>
-        </div>
-        <div id="navbarCollapse" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav navbar-form">
-              <li class="active">
-                  <input type="text" class="form-control" placeholder="Latitude" aria-describedby="basic-addon1" id="lat">
-              </li>
-              <li>
-                  <input type="text" class="form-control" placeholder="Longitude" aria-describedby="basic-addon1" id="lng">
-              </li>
-              <li>
-                  <input type="text" class="form-control" placeholder="Longueur" aria-describedby="basic-addon1" id="longueur">
-              </li>
-              <li>
-                  <input type="text" class="form-control" placeholder="Zoom" aria-describedby="basic-addon1" id="zoom"> 
-              </li>
-              <li>
-                  <input type="text" class="form-control" placeholder="Dénivelé positif" aria-describedby="basic-addon1" id="denivp"> 
-              </li>
-              <li>
-                  <input type="text" class="form-control" placeholder="Dénivelé négatif" aria-describedby="basic-addon1" id="denivn"> 
-              </li>
-              
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><button type="button" class="btn btn-default navbar-btn" id="ok">Bouger</button></li>
-                <li><button type="button" class="btn btn-default navbar-btn" id="iti">Nouvel Itinéraire</button></li>
-            </ul>
-        </div>
-      </nav>
-      
     </div>
     <div class="modal fade" id="save">
       <div class="modal-dialog">

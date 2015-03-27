@@ -18,7 +18,7 @@ class ItineraireController extends Controller
         $server->setObject($this->get('itineraire_service'));
 
         $response = new Response();
-        //$response->headers->set('Content-Type', 'application/json');
+        $response->headers->set('Content-Type', 'application/json');
 
         ob_start();
         $server->handle();
