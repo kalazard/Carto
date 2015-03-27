@@ -14,10 +14,10 @@ class ItineraireService
         $this->entityManager = $em;
     }
     
-    public function zizitede()
+    public function list()
     {
         $itineraire = $this->entityManager->getRepository("SiteCartoBundle:Itineraire")->findAll();
-        return json_encode(array("zizi" => $itineraire));
+        return json_encode(array("list" => $itineraire));
     }
 }
  
