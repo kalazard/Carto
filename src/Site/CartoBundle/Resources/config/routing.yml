@@ -1,6 +1,6 @@
 site_carto_homepage:
     path:     /
     defaults: { _controller: SiteCartoBundle:Map:index }
-site_trail_homepage:
-    path:     /home
-    defaults: { _controller: SiteCartoBundle:Map:index }
+site_carto_itineraire:
+    path:     /itineraire
+    defaults: { _controller: SiteCartoBundle:Itineraire:index }

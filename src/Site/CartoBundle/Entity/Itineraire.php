@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
  * @ORM\Entity
  */
-class Itineraire
+class Itineraire implements \JsonSerializable
 {
     /**
      * @var integer
@@ -456,4 +456,12 @@ class Itineraire
     {
         return $this->utilisateurnote;
     }
+
+    public function jsonSerialize() {
+        return array(
+            'id' => $this->id,
+            'nom'=> $this->getNom(),
+        );
+    }
+
 }

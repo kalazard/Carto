@@ -8,3 +8,6 @@ services:
     sso_authenticator:
         class: Site\CartoBundle\Security\SSOAuthenticator
         arguments: ["@custom_user_provider"]
+    itineraire_service:
+        class: Site\CartoBundle\Services\ItineraireService
+        arguments: ["@doctrine.orm.entity_manager"]
