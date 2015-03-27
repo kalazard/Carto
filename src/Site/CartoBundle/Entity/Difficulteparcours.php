@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Difficulteparcours
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="difficulteparcours")
  * @ORM\Entity
  */
-class Difficulteparcours
+class Difficulteparcours implements JsonSerializable
 {
     /**
      * @var integer
@@ -91,5 +92,14 @@ class Difficulteparcours
     public function getLabel()
     {
         return $this->label;
+    }
+
+    public function jsonSerialize()
+    {
+        return array(
+            'id' => $this->getId(),
+            'niveau'=> $this->getNiveau(),
+            'label' => $this->getLabel()
+        );
     }
 }

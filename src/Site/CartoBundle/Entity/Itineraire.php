@@ -461,7 +461,8 @@ class Itineraire implements JsonSerializable
     public function jsonSerialize() {
         return array(
             'id' => $this->getId(),
-            'nom'=> $this->getNom()
+            'nom'=> $this->getNom(),
+            'typechemin' => $this->getTypechemin()
         );
     }
 
