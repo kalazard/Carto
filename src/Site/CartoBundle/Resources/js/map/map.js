@@ -1,4 +1,4 @@
-var map, GPX, routeControl,pointArray,latlngArray, polyline, elevationScript, elevationChartScript,denivelep,denivelen;
+var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline, elevationScript, elevationChartScript,denivelep,denivelen;
 var isCreateRoute = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
@@ -25,14 +25,10 @@ var Icone = function(id, path)
 
 $(window).load(function()
 {
-  var dispLat = $("<p>").attr("id","dispLat");
-  var dispLng = $("<p>").attr("id","dispLng");
   map = new L.map('map');
   getLocation();
   $("#ok").click(moveToCoords);
   $("#iti").click(createRoute);
-  $("body").append(dispLat);
-  $("body").append(dispLng);
   map.on('mousemove', displayCoords);
   map.on('zoomend', refreshZoom);
   map.on('contextmenu',context);
@@ -180,6 +176,33 @@ function goToPosition(position) {
 
   //$("#geocodeControl").css("width","20%");
   $("#map").css("cursor","move");
+
+  var routeCreate = L.Control.extend({
+        options: {
+            position: 'topleft'
+        },
+
+        onAdd: function (map) {
+            var container = L.DomUtil.create('div', 'leaflet-control-command');
+            $(container).html("<div class='btn-group'role='group' aria-label='...' id='routeCreate'>" + 
+                                "<button type='button' class='btn btn-default' id='iti'>Tracer</button></div>");
+            container.addEventListener('mouseover', function () 
+            {
+              map.dragging.disable();
+              map.off("click",createRoute);
+            });
+            container.addEventListener('mouseout', function () 
+            {
+                map.dragging.enable();
+                map.on("click",createRoute);
+            });
+            return container;
+        }
+    });
+  routeCreateControl = new routeCreate();
+  map.addControl(routeCreateControl);
+
+  
 }
 
 //Déplace la map aux coordonnées indiquées
@@ -222,6 +245,7 @@ function createRoute()
 {
   if(!isCreateRoute)
   {
+      
       isCreateRoute = true;
       var routeValidate = L.Control.extend({
         options: {
@@ -246,11 +270,11 @@ function createRoute()
         }
     });
 
-    routeControl = new routeValidate();
-    map.addControl(routeControl);
-    $("#routeOk").click(saveRoute);
     pointArray = [];
     latlngArray = [];
+    routeSaveControl = new routeValidate();
+    map.addControl(routeSaveControl);
+    $("#routeOk").click(saveRoute);
     map.on("click",drawRoute);
     $("#map").css("cursor","pointer");
     map.dragging.disable();
@@ -259,7 +283,6 @@ function createRoute()
 
 function drawRoute(event)
 {
-
   pointArray.push(new Point(event.latlng.lat,event.latlng.lng));
   latlngArray.push(event.latlng);
   var marker = L.circleMarker([event.latlng.lat, event.latlng.lng]);
@@ -302,7 +325,7 @@ function drawRoute(event)
 
 function saveRoute()
 {
-  routeControl.removeFrom(map);
+  routeSaveControl.removeFrom(map);
   map.off("click",drawRoute);
   $("#map").css("cursor","move");
   map.dragging.enable();
@@ -311,16 +334,19 @@ function saveRoute()
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
-      $.post("map/createRoute",
+      $.post("map/saveRoute",
                             {
                                    points: pointArray,
                                    longueur : pointArray[pointArray.length - 1].distance,
-                                   elevation : pointArray[pointArray.length - 1].elevation,
+                                   denivelep : denivelep,
+                                   denivelen : denivelen,
                                    nom : $("#nom").val(),
                                    numero : $("#numero").val(),
                                    typechemin : $("#typechemin").val(),
-                                   commentaire : $("#commentaire").val(),
-                                   difficulte : $("#difficulte option:selected").val()
+                                   description : $("#description").val(),
+                                   difficulte : $("#difficulte option:selected").val(),
+                                   auteur : $("#auteur").val(),
+                                   status : $("#status").val()
                                 },
                             function(data, status){
                                 console.log(data);

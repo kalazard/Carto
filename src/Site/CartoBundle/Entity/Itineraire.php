@@ -128,7 +128,7 @@ class Itineraire implements JsonSerializable
      *   }
      * )
      */
-    private $utilisateurnote;
+    //private $utilisateurnote;
 
     /**
      * Constructor
@@ -431,38 +431,47 @@ class Itineraire implements JsonSerializable
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
      * @return Itineraire
      */
-    public function addUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
+    /*public function addUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
     {
         $this->utilisateurnote[] = $utilisateurnote;
 
         return $this;
-    }
+    }*/
 
     /**
      * Remove utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
      */
-    public function removeUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
+    /*public function removeUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
     {
         $this->utilisateurnote->removeElement($utilisateurnote);
-    }
+    }*/
 
     /**
      * Get utilisateurnote
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getUtilisateurnote()
+    /*public function getUtilisateurnote()
     {
         return $this->utilisateurnote;
-    }
+    }*/
 
     public function jsonSerialize() {
         return array(
             'id' => $this->getId(),
             'nom'=> $this->getNom(),
-            'typechemin' => $this->getTypechemin()
+            'typechemin' => $this->getTypechemin(),
+            'numero' => $this->getNumero(),
+            'longueur' => $this->getLongueur(),
+            'description' => $this->getDescription(),
+            'deniveleplus' => $this->getDeniveleplus(),
+            'denivelemoins' => $this->getDenivelemoins(),
+            'difficulte' => $this->getDifficulte(),
+            'status' => $this->getStatus(),
+            'auteur' => $this->getAuteur(),
+            'trace' => $this->getTrace()
         );
     }
 
