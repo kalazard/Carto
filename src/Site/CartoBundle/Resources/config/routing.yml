@@ -4,3 +4,13 @@ site_carto_homepage:
 site_carto_itineraire:
     path:     /itineraire
     defaults: { _controller: SiteCartoBundle:Itineraire:index }
+site_carto_getDifficulteParcours:
+    path:    /itineraire_getDifficultes
+    defaults: { _controller:SiteCartoBundle:Itineraire:getDifficultes }
+    options:
+        expose: true
+site_carto_saveItineraire:
+    path:    /itineraire_save
+    defaults: { _controller:SiteCartoBundle:Itineraire:save }
+    options:
+        expose: true

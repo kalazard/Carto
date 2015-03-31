@@ -28,7 +28,7 @@ $(window).load(function()
   map = new L.map('map');
   getLocation();
   $("#ok").click(moveToCoords);
-  $("#iti").click(createRoute);
+  //$("#iti").click(createRoute);
   map.on('mousemove', displayCoords);
   map.on('zoomend', refreshZoom);
   map.on('contextmenu',context);
@@ -173,34 +173,35 @@ function goToPosition(position) {
   //Définition de l'écouteur
   $("#okVille").click(geocode);
 
+  var routeCreate = L.Control.extend({
+          options: {
+              position: 'topleft'
+          },
+
+          onAdd: function (map) {
+              var container = L.DomUtil.create('div', 'leaflet-control-command');
+              $(container).html("<div class='btn-group'role='group' aria-label='...' id='routeCreate'>" + 
+                                  "<button type='button' class='btn btn-default' id='iti'>Tracer</button></div>");
+              container.addEventListener('mouseover', function () 
+              {
+                map.dragging.disable();
+              });
+              container.addEventListener('mouseout', function () 
+              {
+                  map.dragging.enable();                  
+              });
+              container.addEventListener('click', function (event) 
+              {
+                  createRoute(event);
+              });
+              return container;
+          }
+      });
+    routeCreateControl = new routeCreate();
+    map.addControl(routeCreateControl);
 
   //$("#geocodeControl").css("width","20%");
   $("#map").css("cursor","move");
-
-  var routeCreate = L.Control.extend({
-        options: {
-            position: 'topleft'
-        },
-
-        onAdd: function (map) {
-            var container = L.DomUtil.create('div', 'leaflet-control-command');
-            $(container).html("<div class='btn-group'role='group' aria-label='...' id='routeCreate'>" + 
-                                "<button type='button' class='btn btn-default' id='iti'>Tracer</button></div>");
-            container.addEventListener('mouseover', function () 
-            {
-              map.dragging.disable();
-              map.off("click",createRoute);
-            });
-            container.addEventListener('mouseout', function () 
-            {
-                map.dragging.enable();
-                map.on("click",createRoute);
-            });
-            return container;
-        }
-    });
-  routeCreateControl = new routeCreate();
-  map.addControl(routeCreateControl);
 
   
 }
@@ -241,11 +242,11 @@ function geocode()
       .search($("#ville").val());
 }
 
-function createRoute()
+function createRoute(event)
 {
+  event.stopPropagation();
   if(!isCreateRoute)
   {
-      
       isCreateRoute = true;
       var routeValidate = L.Control.extend({
         options: {
@@ -260,12 +261,14 @@ function createRoute()
             {
               map.dragging.disable();
               map.off("click",drawRoute);
+              
             });
             container.addEventListener('mouseout', function () 
             {
                 map.dragging.enable();
                 map.on("click",drawRoute);
             });
+            
             return container;
         }
     });
@@ -334,7 +337,7 @@ function saveRoute()
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
-      $.post("map/saveRoute",
+      $.post(Routing.generate('site_carto_saveItineraire'),
                             {
                                    points: pointArray,
                                    longueur : pointArray[pointArray.length - 1].distance,
@@ -413,14 +416,14 @@ function getElevation(response)
 function loadDifficultes()
 {
   $.ajax({
-       url : "difficulte/getDifficultes",
+       url : Routing.generate('site_carto_getDifficulteParcours'),
        type : 'GET',
        dataType : 'json',
        success : function(json, statut){
            console.log(json);
            for(var i = 0; i < json.length; i++)
            {
-            var opt = $("<option>").attr("value",json[i].niveauDifficulte).text(json[i].label);
+            var opt = $("<option>").attr("value",json[i].niveau).text(json[i].label);
             opt.appendTo("#difficulte");
            }
        },
