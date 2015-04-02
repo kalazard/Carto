@@ -471,7 +471,8 @@ class Itineraire implements JsonSerializable
             'difficulte' => $this->getDifficulte(),
             'status' => $this->getStatus(),
             'auteur' => $this->getAuteur(),
-            'trace' => $this->getTrace()
+            'trace' => $this->getTrace(),
+            'datecreation' => $this->getDatecreation()->format('d-m-Y'),
         );
     }
 

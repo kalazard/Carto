@@ -1,4 +1,4 @@
-var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline, elevationScript, elevationChartScript,denivelep,denivelen;
+var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline, elevationScript, elevationChartScript,denivelep,denivelen,drawnItems,drawControl,currentLayer;
 var isCreateRoute = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
@@ -173,33 +173,87 @@ function goToPosition(position) {
   //Définition de l'écouteur
   $("#okVille").click(geocode);
 
-  var routeCreate = L.Control.extend({
-          options: {
-              position: 'topleft'
-          },
+    drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
 
-          onAdd: function (map) {
-              var container = L.DomUtil.create('div', 'leaflet-control-command');
-              $(container).html("<div class='btn-group'role='group' aria-label='...' id='routeCreate'>" + 
-                                  "<button type='button' class='btn btn-default' id='iti'>Tracer</button></div>");
-              container.addEventListener('mouseover', function () 
+    drawControl = new L.Control.Draw({
+      draw: {
+        polyline: {
+             shapeOptions: {
+                color: 'blue'
+             },
+        },
+        polygon : false,
+        rectangle : false,
+        marker : false,
+        circle : false,
+      },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+    L.drawLocal.draw.toolbar.buttons.polyline = 'Tracer un parcours';
+    map.addControl(drawControl);
+
+    map.on('draw:created', function (e) {
+        var type = e.layerType,
+            layer = e.layer;
+        drawnItems.addLayer(layer);
+    });
+
+    map.on('draw:drawstart', function (e) {
+              if(!isCreateRoute)
               {
-                map.dragging.disable();
-              });
-              container.addEventListener('mouseout', function () 
-              {
-                  map.dragging.enable();                  
-              });
-              container.addEventListener('click', function (event) 
-              {
-                  createRoute(event);
-              });
-              return container;
+                //drawnItems.clearLayers();
+                isCreateRoute = true;
+                pointArray = [];
+                latlngArray = [];
+              }
+          });
+    map.on('draw:drawstop', function (e) {
+        drawnItems.eachLayer(function (layer) {
+          var list = layer.getLatLngs();
+          pointArray = [];
+          latlngArray = [];
+          for(var i = 0; i < list.length; i++)
+          {
+            pointArray.push(new Point(list[i].lat,list[i].lng));
+            latlngArray.push(list[i]);
           }
-      });
-    routeCreateControl = new routeCreate();
-    map.addControl(routeCreateControl);
-
+          if(pointArray.length > 1)
+          {
+              currentLayer = layer;
+              var URL = elevationURL + '&latLngCollection=';
+              var URLChart = elevationChartURL + '&latLngCollection=';
+              for(var i = 0; i < layer.getLatLngs().length; i++)
+              {
+                var lat = layer.getLatLngs()[i].lat;
+                var lng = layer.getLatLngs()[i].lng;
+                URL += lat + "," + lng;
+                URLChart += lat + "," + lng;
+                if(i !== layer.getLatLngs().length - 1)
+                {
+                  URL += ",";
+                  URLChart += ",";
+                }
+                  
+              }
+              URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              URLChart.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              elevationScript = document.createElement('script');
+              elevationScript.type = 'text/javascript';
+              elevationScript.src = URL;
+              elevationChartScript = document.createElement('script');
+              elevationChartScript.type = 'text/javascript';
+              elevationChartScript.src = URLChart;
+              $("body").append(elevationScript);
+              graph.attr("src",elevationChartScript.src);
+              graph.css("display","block");      
+          }
+        });
+        saveRoute();
+    });
+  
   //$("#geocodeControl").css("width","20%");
   $("#map").css("cursor","move");
 
@@ -228,9 +282,9 @@ function parseGPX(path)
 {
   GPX = new L.GPX(path, {async: true,
   marker_options: {
-    startIconUrl: '/Trail2/Trail/web//pin-icon-start.png',
-    endIconUrl: '/Trail2/Trail/web//pin-icon-end.png',
-    shadowUrl: '/Trail2/Trail/web//pin-shadow.png'
+    startIconUrl: 'Trail/web/pin-icon-start.png',
+    endIconUrl: 'Trail/web/pin-icon-end.png',
+    shadowUrl: 'Trail/web/pin-shadow.png'
   }}).on('loaded', function(e) {
     map.fitBounds(e.target.getBounds());
   }).addTo(map);
@@ -244,11 +298,11 @@ function geocode()
 
 function createRoute(event)
 {
-  event.stopPropagation();
+  //event.stopPropagation();
   if(!isCreateRoute)
   {
       isCreateRoute = true;
-      var routeValidate = L.Control.extend({
+      /*var routeValidate = L.Control.extend({
         options: {
             position: 'topright'
         },
@@ -271,16 +325,16 @@ function createRoute(event)
             
             return container;
         }
-    });
+    });*/
 
     pointArray = [];
     latlngArray = [];
-    routeSaveControl = new routeValidate();
+    /*routeSaveControl = new routeValidate();
     map.addControl(routeSaveControl);
     $("#routeOk").click(saveRoute);
     map.on("click",drawRoute);
     $("#map").css("cursor","pointer");
-    map.dragging.disable();
+    map.dragging.disable();*/
   }
 }
 
@@ -288,15 +342,8 @@ function drawRoute(event)
 {
   pointArray.push(new Point(event.latlng.lat,event.latlng.lng));
   latlngArray.push(event.latlng);
-  var marker = L.circleMarker([event.latlng.lat, event.latlng.lng]);
-  map.addLayer(marker);
-  if(polyline !== undefined)
-  {
-    map.removeLayer(polyline);
-  }
   if(pointArray.length > 1)
   {
-      polyline = L.polyline(latlngArray, {color: 'blue', opacity : '0.5'}).addTo(map);
       var URL = elevationURL + '&latLngCollection=';
       var URLChart = elevationChartURL + '&latLngCollection=';
       for(var i = 0; i < latlngArray.length; i++)
@@ -327,12 +374,7 @@ function drawRoute(event)
 }
 
 function saveRoute()
-{
-  routeSaveControl.removeFrom(map);
-  map.off("click",drawRoute);
-  $("#map").css("cursor","move");
-  map.dragging.enable();
-  
+{  
   loadDifficultes();
   $("#save").modal('show');
   $("#saveiti").on("click",function()
