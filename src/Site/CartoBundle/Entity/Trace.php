@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Trace
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="trace")
  * @ORM\Entity
  */
-class Trace
+class Trace implements JsonSerializable
 {
     /**
      * @var integer
@@ -61,5 +62,12 @@ class Trace
     public function getPath()
     {
         return $this->path;
+    }
+
+    public function jsonSerialize() {
+        return array(
+            'id' => $this->getId(),
+            'path'=> $this->getPath()
+        );
     }
 }

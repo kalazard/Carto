@@ -49,13 +49,14 @@ class ItineraireService
         }
     }
 
-    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status)
+    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points)
     {
         $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
         $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
 
         $trace = new Trace();
-        $trace->setPath("test");
+        $filename = uniqid('trace_', true) . '.csv';
+        $trace->setPath($filename);
         $diff = $repositoryDiff->find($difficulte);
         $user = $repositoryUser->find($auteur);
 
@@ -73,11 +74,25 @@ class ItineraireService
         $route->setAuteur($user);
         $route->setStatus($status);
 
+        $json_obj = json_decode($points);
+        $fp = fopen('../../Traces/'.$filename, 'w');
+        foreach ($json_obj as $fields) {
+            fputcsv($fp, $fields);
+        }
+        fclose($fp);
+
         $this->entityManager->persist($route);
         $this->entityManager->persist($trace);
         $this->entityManager->flush();
 
         return json_encode(array("result" => "success","code" => 200));
+    }
+
+    public function getById($id)
+    {
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
+        return json_encode(array("searchResults" => $repository->find($id)));
+        
     }
 
     public function difficultelist()

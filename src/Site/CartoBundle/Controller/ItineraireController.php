@@ -54,7 +54,8 @@ class ItineraireController extends Controller
             $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
 
             $trace = new Trace();
-            $trace->setPath("test");
+            $filename = uniqid('trace_', true) . '.csv';
+            $trace->setPath($filename);
             $diff = $repositoryDiff->find($request->request->get("difficulte",""));
             $user = $repositoryUser->find($request->request->get("auteur",""));
 
@@ -71,6 +72,21 @@ class ItineraireController extends Controller
             $route->setDifficulte($diff);
             $route->setAuteur($user);
             $route->setStatus($request->request->get("status",""));
+
+            $json_obj = json_decode($request->request->get("points",""),true);
+            $fp = fopen('../../Traces/'.$filename, 'w');
+            $firstLineKeys = false;
+            foreach ($json_obj as $line)
+            {
+                if (empty($firstLineKeys))
+                {
+                    $firstLineKeys = array_keys($line);
+                    fputcsv($fp, $firstLineKeys);
+                    $firstLineKeys = array_flip($firstLineKeys);
+                }
+                fputcsv($fp, array_merge($firstLineKeys, $line));
+            }
+            fclose($fp);
 
             $manager->persist($route);
             $manager->persist($trace);

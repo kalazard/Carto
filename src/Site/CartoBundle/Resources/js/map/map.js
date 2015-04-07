@@ -1,4 +1,4 @@
-var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline, elevationScript, elevationChartScript,denivelep,denivelen,drawnItems,drawControl,currentLayer;
+var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,denivelep,denivelen,drawnItems,drawControl,currentLayer;
 var isCreateRoute = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
@@ -301,40 +301,9 @@ function createRoute(event)
   //event.stopPropagation();
   if(!isCreateRoute)
   {
-      isCreateRoute = true;
-      /*var routeValidate = L.Control.extend({
-        options: {
-            position: 'topright'
-        },
-
-        onAdd: function (map) {
-            var container = L.DomUtil.create('div', 'leaflet-control-command');
-            $(container).html("<div class='btn-group'role='group' aria-label='...' id='routeGroup'>" + 
-                                "<button type='button' class='btn btn-default' id='routeOk'>Valider</button></div>");
-            container.addEventListener('mouseover', function () 
-            {
-              map.dragging.disable();
-              map.off("click",drawRoute);
-              
-            });
-            container.addEventListener('mouseout', function () 
-            {
-                map.dragging.enable();
-                map.on("click",drawRoute);
-            });
-            
-            return container;
-        }
-    });*/
-
+    isCreateRoute = true;
     pointArray = [];
     latlngArray = [];
-    /*routeSaveControl = new routeValidate();
-    map.addControl(routeSaveControl);
-    $("#routeOk").click(saveRoute);
-    map.on("click",drawRoute);
-    $("#map").css("cursor","pointer");
-    map.dragging.disable();*/
   }
 }
 
@@ -381,7 +350,7 @@ function saveRoute()
     {
       $.post(Routing.generate('site_carto_saveItineraire'),
                             {
-                                   points: pointArray,
+                                   points: JSON.stringify(pointArray),
                                    longueur : pointArray[pointArray.length - 1].distance,
                                    denivelep : denivelep,
                                    denivelen : denivelen,
@@ -395,8 +364,10 @@ function saveRoute()
                                 },
                             function(data, status){
                                 console.log(data);
-                            });
+                            }
+      );
       $("#save").modal('hide');
+
     });
 
   isCreateRoute = false;
@@ -479,4 +450,60 @@ function loadDifficultes()
        }
 
     });
+}
+
+function csvJSON(csv){
+ 
+  var lines=csv.split("\n");
+ 
+  var result = [];
+ 
+  var headers=lines[0].replace(/(?:\\[r])+/g, "").split(",");
+ 
+  for(var i=1;i<lines.length;i++){
+    if(lines[i] !== "")
+    {
+      var obj = {};
+      var currentline=lines[i].replace(/(?:\\[r])+/g, "").split(",");
+   
+      for(var j=0;j<headers.length;j++){
+        obj[headers[j]] = currentline[j];
+      }
+   
+      result.push(obj);
+    }
+ 
+  }
+  console.log(result);
+  //return result; //JavaScript object
+  //return JSON.stringify(result); //JSON
+  return result;
+}
+
+function displayTrace(traceJSON)
+{
+  var latlngArr = [];
+  console.log(traceJSON);
+  for(var i = 0; i < traceJSON.length - 1; i++)
+  {
+    var res = new L.LatLng(traceJSON[i].lat,traceJSON[i].lng);
+    latlngArr.push(res);
+  }
+  tracepolyline = L.polyline(latlngArr, {color: 'blue'}).addTo(map);
+}
+
+function loadMap(path)
+{
+  $.ajax({
+        type: "GET",
+        url: "http://localhost/Traces/" + path,
+        dataType: "text",
+        success: function(data) {
+          var json = csvJSON(data);
+          displayTrace(json);
+        },
+       error : function(resultat, statut, erreur){
+         console.log("Erreur : Impossible de charger le fichier de parcours");
+       },
+     });
 }
