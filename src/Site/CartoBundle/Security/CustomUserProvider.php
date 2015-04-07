@@ -24,7 +24,8 @@ class CustomUserProvider implements UserProviderInterface {
         //Permet de récupérer l'id de l'utilisateur dans le cookie !        
         if(isset($_COOKIE["TrailAuthCookie"]))
         {
-            return intval(CustomCrypto::decrypt($_COOKIE["TrailAuthCookie"]));
+            $cookie = CustomCrypto::decrypt($_COOKIE["TrailAuthCookie"]);
+            return intval(explode("/", $cookie)[0]);
         }
         else
         {
@@ -42,7 +43,24 @@ class CustomUserProvider implements UserProviderInterface {
         return $utilisateur;
         
     }
-
+    
+    public function createNewUser($userid)
+    {
+        $cookie = CustomCrypto::decrypt($_COOKIE["TrailAuthCookie"]);
+        $email = explode("/", $cookie)[1];
+        $role_label = explode("/", $cookie)[2];
+        $role = $this->entityManager->getRepository("SiteCartoBundle:Role")->findOneBy(array('label' => $role_label));
+        $utilisateur = new Utilisateur();
+        $utilisateur->setId($userid);
+        $utilisateur->setEmail($email);
+        $utilisateur->setRole($role);
+        
+        $this->entityManager->flush();
+        
+        return $utilisateur;
+        
+    }
+    
     public function refreshUser(UserInterface $user) {
         // this is used for storing authentication in the session
         // but in this example, the token is sent in each request,

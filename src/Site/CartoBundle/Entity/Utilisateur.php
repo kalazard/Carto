@@ -17,7 +17,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * 
      */
     private $id;
 
@@ -62,6 +62,13 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function getId()
     {
         return $this->id;
+    }
+    
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     /**

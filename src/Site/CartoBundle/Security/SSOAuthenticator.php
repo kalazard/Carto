@@ -42,7 +42,8 @@ class SSOAuthenticator implements SimplePreAuthenticatorInterface
         $utilisateur = $this->userProvider->loadUserByUsername($userid);
         if($utilisateur == null)
         {
-            return new \Symfony\Component\Security\Core\Authentication\Token\AnonymousToken($providerKey,"anon.");
+            //Si l'utilisateur n'existe pas, il va falloir le créer dans la base de données de carto
+            $utilisateur = $this->userProvider->createNewUser($userid);
         }
         //IMPORTANT 
         $token = new UsernamePasswordToken(
