@@ -68,8 +68,8 @@ function loadPois()
            for(var i = 0; i < json.length; i++)
            {
               icone = L.icon({
-                      iconUrl : "../../Images/" + json[i].typelieu.icone.path,
-                      iconSize : [30, 85]
+                      iconUrl : "../../../Images/" + json[i].typelieu.icone.path,
+                      iconSize : [30, 30]
                     });
               marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
            }
@@ -117,10 +117,10 @@ function context(event)
                   if(allLieux[i].label===labelLieu)
                   {
                     idLieuPoi=allLieux[i].id;
-                    pathIcone = "../../Images/" + allLieux[i].icone.path;
+                    pathIcone = "../../../Images/" + allLieux[i].icone.path;
                     iconePoi = L.icon({
                       iconUrl : pathIcone,
-                      iconSize : [30, 85]
+                      iconSize : [30, 30]
                     });
                   }
                 }
