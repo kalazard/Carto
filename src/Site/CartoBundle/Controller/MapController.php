@@ -95,7 +95,7 @@ class MapController extends Controller
 			if($imageFileType != "gpx") 
 			{
 				$return_message .= " Le format de fichier n'est pas valide.";
-				$uploadOk = 0;
+				$upload = 0;
 			} 
 			
 			$response = new Response(json_encode(array("result" => $return_message,"code" => $code)));
