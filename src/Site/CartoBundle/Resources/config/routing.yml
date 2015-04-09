@@ -39,3 +39,9 @@ site_carto_getAllIcones:
     defaults: { _controller:SiteCartoBundle:Icones:getAllIcones }
     options:
         expose: true
+site_carto_upload:
+    path:     /upload
+    defaults: { _controller: SiteCartoBundle:Map:upload }
+site_carto_submitupload:
+    path:     /sub_upload
+    defaults: { _controller: SiteCartoBundle:Map:submit }

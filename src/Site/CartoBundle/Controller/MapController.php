@@ -10,6 +10,7 @@ use Site\CartoBundle\Entity\TypeLieu;
 use Site\CartoBundle\Entity\Icone;
 use Site\CartoBundle\Entity\Itiniraire;
 use Site\CartoBundle\Entity\Gpx;
+use Site\CartoBundle\Entity\Trace;
 use Site\CartoBundle\Entity\DifficulteParcours;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -57,6 +58,81 @@ class MapController extends Controller
 
       return new Response('This is not ajax!', 400);
     }
+	
+	public function uploadAction()
+	{		
+		$content = $this->get("templating")->render("SiteCartoBundle:Map:upload.html.twig");
+		return new Response($content);
+	}
+	
+	public function submitAction(Request $request)
+	{	
+		if ($request->isXMLHttpRequest()) 
+		{		
+			$return_message = "";
+			$code = 200;
+			
+			$gpx_name = $_FILES['upl']['name'];
+			$target_dir ="C:/wamp/www/uploads/";
+			$target_file = $target_dir.$gpx_name;
+			$upload = 1;
+			$ext = $_FILES["upl"]["name"];
+			$imageFileType = pathinfo($ext,PATHINFO_EXTENSION);
+			
+			// Check if file already exists
+			if (file_exists($target_file)) 
+			{
+				$return_message .= " Le fichier existe déjà. ";
+				$upload = 0;
+			}
+			
+			// Check file size
+			if ($_FILES["upl"]["size"] > 5000000) {
+				$return_message .= " Le fichier est trop volumineux. La taille est limitée à 5000 Ko. ";
+				$upload = 0;
+			}
+			
+			//Check file extension
+			$allowed = array('gpx');
+			if(isset($_FILES['upl']) && $_FILES['upl']['error'] == 0)
+			{
+				$extension = pathinfo($_FILES['upl']['name'], PATHINFO_EXTENSION);
+				$return_message .= " Le fichier n'a pas une extension valide";
+				$upload = 0;
+			}
+			
+			$response = new Response(json_encode(array("result" => $return_message,"code" => $code)));
+			
+			if($upload != 0)
+			{
+				if(move_uploaded_file($_FILES['upl']['tmp_name'], $target_file))
+				{
+					//si l'upload a réussi, on sauvegarde le chemin de destination dans la base de données (table Trace)
+					$trace = new Trace();
+					$trace->setPath($target_file);
+					
+					$em = $this->getDoctrine()->getManager();
+					$em->persist($trace);
+					$em->flush();
+					
+					if(!empty($trace->getId()))
+					{
+						$return_message = " Le fichier a correctement été importé";	
+					}				
+				}
+			}
+			else
+			{
+				$response->setStatusCode(500);
+			}
+		}
+		else
+		{
+			$response = new Response();
+		}
+		
+		return $response;
+	}
 }
 
 /* 
