@@ -112,10 +112,10 @@ class MapController extends Controller
 					$em->persist($trace);
 					$em->flush();
 					
-					if(!empty($trace->getId()))
-					{
+					//if(!empty($trace->getId()))
+					//{
 						$return_message = " Le fichier a correctement été importé";	
-					}				
+					//}				
 				}
 			}
 			else
