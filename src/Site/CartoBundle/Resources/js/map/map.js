@@ -480,7 +480,7 @@ function displayTrace(traceJSON)
 {
   var latlngArr = [];
   console.log(traceJSON);
-  for(var i = 0; i < traceJSON.length - 1; i++)
+  for(var i = 0; i < traceJSON.length; i++)
   {
     var res = new L.LatLng(traceJSON[i].lat,traceJSON[i].lng);
     latlngArr.push(res);
