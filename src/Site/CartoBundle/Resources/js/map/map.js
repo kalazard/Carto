@@ -251,12 +251,12 @@ function goToPosition(position) {
               }
           });
     map.on('draw:drawstop', function (e) {
-        pointArray = [];
-        latlngArray = [];
+        
         map.off("click");
         $("#denivp").text("");
         $("#denivn").text("");
         saveRoute();
+
     });
     $("#map").css("cursor","move");
     var MyControl = L.Control.extend({
@@ -381,13 +381,16 @@ function saveRoute()
                                 },
                             function(data, status){
                                 console.log(data);
+                                pointArray = [];
+                                latlngArray = [];
                             }
       );
       $("#save").modal('hide');
-
+        
     });
 
   isCreateRoute = false;
+
 }
 
 function savePoi()
