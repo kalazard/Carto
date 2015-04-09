@@ -54,7 +54,7 @@ class CustomUserProvider implements UserProviderInterface {
         $utilisateur->setId($userid);
         $utilisateur->setEmail($email);
         $utilisateur->setRole($role);
-        
+        $this->entityManager->persist($utilisateur);
         $this->entityManager->flush();
         
         return $utilisateur;
