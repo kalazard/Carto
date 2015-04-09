@@ -210,58 +210,69 @@ function goToPosition(position) {
     map.on('draw:drawstart', function (e) {
               if(!isCreateRoute)
               {
-                //drawnItems.clearLayers();
                 isCreateRoute = true;
                 pointArray = [];
                 latlngArray = [];
+                map.on("click",function (ev){
+                    pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
+                    latlngArray.push(ev.latlng);
+                    if(pointArray.length > 1)
+                    {
+                        //currentLayer = layer;
+                        var URL = elevationURL + '&latLngCollection=';
+                        var URLChart = elevationChartURL + '&latLngCollection=';
+                        for(var i = 0; i < latlngArray.length; i++)
+                        {
+                          var lat = latlngArray[i].lat;
+                          var lng = latlngArray[i].lng;
+                          URL += lat + "," + lng;
+                          URLChart += lat + "," + lng;
+                          if(i !== latlngArray.length - 1)
+                          {
+                            URL += ",";
+                            URLChart += ",";
+                          }
+                            
+                        }
+                        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        URLChart.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        elevationScript = document.createElement('script');
+                        elevationScript.type = 'text/javascript';
+                        elevationScript.src = URL;
+                        elevationChartScript = document.createElement('script');
+                        elevationChartScript.type = 'text/javascript';
+                        elevationChartScript.src = URLChart;
+                        $("body").append(elevationScript);
+                        graph.attr("src",elevationChartScript.src);
+                        graph.css("display","block");      
+                    }
+
+                  });
               }
           });
     map.on('draw:drawstop', function (e) {
-        drawnItems.eachLayer(function (layer) {
-          var list = layer.getLatLngs();
-          pointArray = [];
-          latlngArray = [];
-          for(var i = 0; i < list.length; i++)
-          {
-            pointArray.push(new Point(list[i].lat,list[i].lng));
-            latlngArray.push(list[i]);
-          }
-          if(pointArray.length > 1)
-          {
-              currentLayer = layer;
-              var URL = elevationURL + '&latLngCollection=';
-              var URLChart = elevationChartURL + '&latLngCollection=';
-              for(var i = 0; i < layer.getLatLngs().length; i++)
-              {
-                var lat = layer.getLatLngs()[i].lat;
-                var lng = layer.getLatLngs()[i].lng;
-                URL += lat + "," + lng;
-                URLChart += lat + "," + lng;
-                if(i !== layer.getLatLngs().length - 1)
-                {
-                  URL += ",";
-                  URLChart += ",";
-                }
-                  
-              }
-              URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-              URLChart.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-              elevationScript = document.createElement('script');
-              elevationScript.type = 'text/javascript';
-              elevationScript.src = URL;
-              elevationChartScript = document.createElement('script');
-              elevationChartScript.type = 'text/javascript';
-              elevationChartScript.src = URLChart;
-              $("body").append(elevationScript);
-              graph.attr("src",elevationChartScript.src);
-              graph.css("display","block");      
-          }
-        });
+        pointArray = [];
+        latlngArray = [];
+        map.off("click");
+        $("#denivp").text("");
+        $("#denivn").text("");
         saveRoute();
     });
-  
-  //$("#geocodeControl").css("width","20%");
-  $("#map").css("cursor","move");
+    $("#map").css("cursor","move");
+    var MyControl = L.Control.extend({
+      options: {
+          position: 'topright'
+      },
+
+      onAdd: function (map) {
+          // create the control container with a particular class name
+          var container = L.DomUtil.create('div', 'leaflet-control-command');
+              $(container).html("<p id='denivp' class='controlText'></p><p id='denivn' class='controlText'></p>");
+          return container;
+      }
+  });
+
+  map.addControl(new MyControl());
 
   loadPois();
 }
@@ -418,8 +429,9 @@ function getElevation(response)
     diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
   }
   $("#longueur").val(pointArray[pointArray.length - 1].distance);
-  $("#denivp").val(denivelep);
-      $("#denivn").val(denivelen);
+  console.log(denivelep);
+  $("#denivp").text("Dénivelé positif : " + denivelep);
+  $("#denivn").text("Dénivelé négatif : " + denivelen);
 }
 
 function loadDifficultes()
@@ -492,7 +504,7 @@ function loadMap(path)
 {
   $.ajax({
         type: "GET",
-        url: "http://localhost/Traces/" + path,
+        url: "http://130.79.214.167/Traces/" + path,
         dataType: "text",
         success: function(data) {
           var json = csvJSON(data);
