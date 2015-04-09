@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Gpx upload</title>
+		
+		{% stylesheets '@SiteCartoBundle/Resources/js/upload/assets/css/style.css' %}
+                <link href="{{ asset_url }}" type="text/css" rel="stylesheet" />
+				
+				<link href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700" rel='stylesheet' />
+        {% endstylesheets %}
+	
+		
+	</head>
+
+	<body>
+		<form id="upload" method="post" action="{{ path("site_carto_submitupload") }}" enctype="multipart/form-data">
+			<div id="drop">
+				Drop Here
+
+				<a>Browse</a>
+				<input type="file" name="upl" multiple />
+			</div>
+			<ul>
+				<!-- The file uploads will be shown here -->
+			</ul>
+		</form>		
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+						
+		{% javascripts  '@SiteCartoBundle/Resources/js/upload/assets/js/jquery.knob.js'
+						'@SiteCartoBundle/Resources/js/upload/assets/js/jquery.ui.widget.js'
+						'@SiteCartoBundle/Resources/js/upload/assets/js/jquery.iframe-transport.js'
+						'@SiteCartoBundle/Resources/js/upload/assets/js/jquery.fileupload.js'
+						'@SiteCartoBundle/Resources/js/upload/assets/js/script.js'						
+		%}
+			<script type="text/javascript" src="{{ asset_url }}"></script>
+		{% endjavascripts %} 
+		
+	</body>
+</html>
