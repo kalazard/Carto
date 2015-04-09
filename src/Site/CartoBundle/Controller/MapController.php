@@ -92,14 +92,11 @@ class MapController extends Controller
 				$upload = 0;
 			}
 			
-			//Check file extension
-			$allowed = array('gpx');
-			if(isset($_FILES['upl']) && $_FILES['upl']['error'] == 0)
+			if($imageFileType != "gpx") 
 			{
-				$extension = pathinfo($_FILES['upl']['name'], PATHINFO_EXTENSION);
-				$return_message .= " Le fichier n'a pas une extension valide";
-				$upload = 0;
-			}
+				$return_message .= " Le format de fichier n'est pas valide.";
+				$uploadOk = 0;
+			} 
 			
 			$response = new Response(json_encode(array("result" => $return_message,"code" => $code)));
 			
