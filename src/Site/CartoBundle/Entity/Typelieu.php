@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Typelieu
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="typelieu", indexes={@ORM\Index(name="fk_typelieu_icone1_idx", columns={"icone"})})
  * @ORM\Entity
  */
-class Typelieu
+class Typelieu implements JsonSerializable
 {
     /**
      * @var integer
@@ -94,5 +95,13 @@ class Typelieu
     public function getIcone()
     {
         return $this->icone;
+    }
+
+        public function jsonSerialize() {
+        return array(
+            'id' => $this->getId(),
+            'label'=> $this->getLabel(),
+            'icone' => $this->getIcone(),
+        );
     }
 }

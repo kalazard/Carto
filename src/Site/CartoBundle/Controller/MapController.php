@@ -57,39 +57,6 @@ class MapController extends Controller
 
       return new Response('This is not ajax!', 400);
     }
-
-
-    public function createPoiAction(Request $request)
-    {
-      /*if ($request->isXMLHttpRequest()) 
-      {*/
-        $manager=$this->getDoctrine()->getManager();
-
-        /*$repositoryIcon=$manager->getRepository("SiteTrailBundle:Icone");
-        $icone = $repositoryIcon->find($request->request->get("idicone",""));*/
-        $repositoryTypeLieu=$manager->getRepository("SiteCartoBundle:TypeLieu");
-        $typelieu = $repositoryTypeLieu->find($request->request->get("idlieu",""));
-
-        $coord = new Coordonnees();
-        $coord->setLongitude($request->request->get("longitude",1.0));
-        $coord->setLatitude($request->request->get("latitude",1.0));
-        $coord->setAltitude($request->request->get("altitude",1.0));
-
-        $poi = new Poi();
-        $poi->setTitre($request->request->get("titre","MonPoi"));
-        $poi->setDescription($request->request->get("description","Ceci est mon poi"));
-        $poi->setCoordonnees($coord);
-        $poi->setLieu($typelieu);
-
-        $manager->persist($coord);
-        $manager->persist($typelieu);
-        $manager->persist($poi);
-        $manager->flush();
-        return new JsonResponse(array('data' => 'Poi Crée'),200);
-      }
-/*
-      return new Response('This is not ajax!', 400);
-    }*/
 }
 
 /* 

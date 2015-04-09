@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Coordonnees
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="coordonnees")
  * @ORM\Entity
  */
-class Coordonnees
+class Coordonnees implements JsonSerializable
 {
     /**
      * @var integer
@@ -121,5 +122,15 @@ class Coordonnees
     public function getAltitude()
     {
         return $this->altitude;
+    }
+
+    public function jsonSerialize() 
+    {
+        return array(
+            'id' => $this->getId(),
+            'longitude'=> $this->getLongitude(),
+            'latitude' => $this->getLatitude(),
+            'altitude' => $this->getAltitude()
+        );
     }
 }

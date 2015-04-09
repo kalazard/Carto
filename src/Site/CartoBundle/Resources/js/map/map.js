@@ -3,6 +3,7 @@ var isCreateRoute = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
 var graph = $("<img>").css("display","none");
+var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
 
 var Point = function(lat,lng)
 {
@@ -28,6 +29,7 @@ $(window).load(function()
   map = new L.map('map');
   getLocation();
   $("#ok").click(moveToCoords);
+  $('#savepoi').click(savePoi);
   //$("#iti").click(createRoute);
   map.on('mousemove', displayCoords);
   map.on('zoomend', refreshZoom);
@@ -35,29 +37,12 @@ $(window).load(function()
   graph.appendTo("body");
 });
 
-/*
-var eauIcone = L.icon({
-    iconUrl: '../eau.png',
-    iconSize:     [30, 85], // size of the icon
-});
-var giteIcone = L.icon({
-    iconUrl: '../gite.png',
-    iconSize:     [30, 85], // size of the icon
-});
-var bugIcone = L.icon({
-    iconUrl: '../bug.png',
-    iconSize:     [30, 85], // size of the icon
-});
-
-var marker = L.marker([event.latlng.lat, event.latlng.lng], {icon: eauIcone}).addTo(map);
-*/
-
 function loadLieux()
 {
   var res = [];
 
   $.ajax({
-       url : "map/getAllLieux",
+       url : Routing.generate('site_carto_getAllLieux'),
        type : 'GET', 
        async : false,
        dataType : 'json',
@@ -71,54 +56,75 @@ function loadLieux()
   return res;
 }
 
-function loadPoi()
+function loadPois()
 {
-  var res;
   $.ajax({
-       url : "map/getPoi/",
-       type : 'GET',
+       url : Routing.generate('site_carto_getAllPois'),
+       type : 'GET', 
        dataType : 'json',
        success : function(json, statut){
-           console.log("jsonpoi : " + json);
-           res=json;
-       },
+          var icone;
+          var marker;
+           for(var i = 0; i < json.length; i++)
+           {
+              icone = L.icon({
+                      iconUrl : "../../Images/" + json[i].typelieu.icone.path,
+                      iconSize : [30, 85]
+                    });
+              marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
+           }
+         },
 
        error : function(resultat, statut, erreur){
-         
-       },
-
-       complete : function(resultat, statut){
-
        }
-
     });
-
-    return res;
 }
+
+/*
+var eauIcone = L.icon({
+    iconUrl: '../eau.png',
+    iconSize:     [30, 85], // size of the icon
+});
+
+var marker = L.marker([event.latlng.lat, event.latlng.lng], {icon: eauIcone}).addTo(map);
+*/
 
 function context(event)
 {
+  var allLieux = [];
     $(function()
     {
         allLieux = loadLieux();
         var idLieu;
         var labelLieu;
-        /*var pathIcone;
-        var txtMarker;
-        var idIcone;*/
-        var lat = event.latlng.lat;
-        var lng = event.latlng.lng;
+        var txtMarker = [];
+        var pathIcone;
         var tab = {};
+        console.log(allLieux);
         for(var i = 0; i < allLieux.length; i++)
-          {
+          {          
               idLieu = allLieux[i].id;
-              console.log("idlieu" + idLieu);
+              console.log(idLieu);
               labelLieu = allLieux[i].label;
-              /*pathIcone = allLieux[i].icone.path;
-              idIcone = allLieux[i].icone.id;*/
-              tab[labelLieu] = {"name": labelLieu, callback: function(idLieu){
-                  txtMarker = savePoi(lat, lng, 1, idLieu);
-                  var marker = L.marker([lat,lng]).addTo(map).bindPopup("<b>" + txtMarker[0] + "</b><br>" + txtMarker[1]);
+               
+
+              tab[labelLieu] = {"name": labelLieu, callback: function(labelLieu){
+                latPoi = event.latlng.lat;
+                lngPoi = event.latlng.lng;
+                altPoi = 1;
+                for(var i = 0; i < allLieux.length; i++)
+                {
+                  if(allLieux[i].label===labelLieu)
+                  {
+                    idLieuPoi=allLieux[i].id;
+                    pathIcone = "../../Images/" + allLieux[i].icone.path;
+                    iconePoi = L.icon({
+                      iconUrl : pathIcone,
+                      iconSize : [30, 85]
+                    });
+                  }
+                }
+                  $("#addpoi").modal('show');
               }};
           }
         var poi = {"key": {name: "Ajouter POI", "items":tab
@@ -257,7 +263,7 @@ function goToPosition(position) {
   //$("#geocodeControl").css("width","20%");
   $("#map").css("cursor","move");
 
-  
+  loadPois();
 }
 
 //Déplace la map aux coordonnées indiquées
@@ -373,20 +379,16 @@ function saveRoute()
   isCreateRoute = false;
 }
 
-function savePoi(lat, lng, alt, idLieu)
+function savePoi()
 {
-  $("#addpoi").modal('show');
-  $("#savepoi").on("click",function()
-    {
-      console.log("1");
-      $.post("map/createPoi",
+      $.post(Routing.generate('site_carto_savePoi'),
                             {
-                                   latitude: lat,
-                                   longitude : lng,
-                                   altitude : alt,
+                                   lat: latPoi,
+                                   lng : lngPoi,
+                                   alt : altPoi,
+                                   idLieu : idLieuPoi,
                                    titre : $("#titre").val(),
-                                   description : $("#description").val(),
-                                   idlieu : idLieu
+                                   description : $("#descriptionPoi").val()
                                    //labellieu : labelLieu,
                                    //idicone : idIcone,
                                    //pathicone : pathIcone
@@ -396,14 +398,8 @@ function savePoi(lat, lng, alt, idLieu)
                                 /*alert("Data: " + data + "\nStatus: " + status);*/
                                 console.log(data);
                             });
-      console.log("3");
+      var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
       $("#addpoi").modal('hide');
-      console.log("4");
-    });
-  console.log("5");
-    var res = [$("#titre").val(), $("#description").val()];
-    console.log("6");
-    return res;
 }
 
 function getElevation(response)

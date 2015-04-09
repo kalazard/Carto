@@ -14,3 +14,28 @@ site_carto_saveItineraire:
     defaults: { _controller:SiteCartoBundle:Itineraire:save }
     options:
         expose: true
+site_carto_getPoi:
+    path:    /poi_get
+    defaults: { _controller:SiteCartoBundle:Poi:getPoi }
+    options:
+        expose: true
+site_carto_savePoi:
+    path:    /poi_save
+    defaults: { _controller:SiteCartoBundle:Poi:savePoi}
+    options:
+        expose: true
+site_carto_getAllLieux:
+    path:    /poi_getAllLieux
+    defaults: { _controller:SiteCartoBundle:Typelieu:getAllLieux }
+    options:
+        expose: true
+site_carto_getAllPois:
+    path:    /poi_getAllPois
+    defaults: { _controller:SiteCartoBundle:Poi:getAllPois }
+    options:
+        expose: true
+site_carto_getAllIcones:
+    path:    /poi_getAllIcones
+    defaults: { _controller:SiteCartoBundle:Icones:getAllIcones }
+    options:
+        expose: true

@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Poi
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="poi", indexes={@ORM\Index(name="fk_poi_typelieu1_idx", columns={"typelieu"}), @ORM\Index(name="fk_poi_coordonnees1_idx", columns={"coordonnees"})})
  * @ORM\Entity
  */
-class Poi
+class Poi implements JsonSerializable
 {
     /**
      * @var integer
@@ -157,5 +158,15 @@ class Poi
     public function getCoordonnees()
     {
         return $this->coordonnees;
+    }
+
+        public function jsonSerialize() {
+        return array(
+            'id' => $this->getId(),
+            'titre'=> $this->getTitre(),
+            'description' => $this->getDescription(),
+            'typelieu' => $this->getTypelieu(),
+            'coordonnees' => $this->getCoordonnees(),
+        );
     }
 }
