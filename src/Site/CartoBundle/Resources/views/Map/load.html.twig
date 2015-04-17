@@ -1,0 +1,16 @@
+{% extends "SiteCartoBundle:Map:index.html.twig" %}
+
+{% block body %}
+<script>
+	{% if jsonObject is not empty %}
+		$(window).load(function()
+		{	//init();
+			map.on('load',function()
+			{
+				loadMap({{jsonObject|raw}});
+			});
+			
+		});
+	{% endif %}
+</script>
+{% endblock %}

@@ -45,6 +45,36 @@ class ItineraireController extends Controller
       return new Response('This is not ajax!', 400);
     }
 
+    public function getStatusAction(Request $request)
+    {
+      if ($request->isXMLHttpRequest()) 
+      {
+        $manager = $this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Status");
+        $stats = $repository->findAll();
+        $response = new Response(json_encode($stats));
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+      }
+
+      return new Response('This is not ajax!', 400);
+    }
+
+    public function getTypecheminAction(Request $request)
+    {
+      if ($request->isXMLHttpRequest()) 
+      {
+        $manager = $this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Typechemin");
+        $typechemin = $repository->findAll();
+        $response = new Response(json_encode($typechemin));
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+      }
+
+      return new Response('This is not ajax!', 400);
+    }
+
     public function saveAction(Request $request)
     {
         if ($request->isXMLHttpRequest()) 
@@ -52,12 +82,16 @@ class ItineraireController extends Controller
             $manager = $this->getDoctrine()->getManager();
             $repositoryDiff=$manager->getRepository("SiteCartoBundle:Difficulteparcours");
             $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
+            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
+            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
 
             $trace = new Trace();
             $filename = uniqid('trace_', true) . '.csv';
             $trace->setPath($filename);
             $diff = $repositoryDiff->find($request->request->get("difficulte",""));
             $user = $repositoryUser->find($request->request->get("auteur",""));
+            $status = $repositoryStatus->find($request->request->get("status",""));
+            $typechemin = $repositoryTypechemin->find($request->request->get("typechemin",""));
 
             $route = new Itineraire();
             $route->setDatecreation(new \DateTime('now'));
@@ -67,11 +101,11 @@ class ItineraireController extends Controller
             $route->setTrace($trace);
             $route->setNom($request->request->get("nom",""));
             $route->setNumero($request->request->get("numero",""));
-            $route->setTypechemin($request->request->get("typechemin",""));
+            $route->setTypechemin($typechemin);
             $route->setDescription($request->request->get("description",""));
             $route->setDifficulte($diff);
             $route->setAuteur($user);
-            $route->setStatus($request->request->get("status",""));
+            $route->setStatus($status);
 
             $json_obj = json_decode($request->request->get("points",""),true);
             $fp = fopen('../../Traces/'.$filename, 'w');
@@ -96,5 +130,13 @@ class ItineraireController extends Controller
             return $response;            
         }
         return new Response('This is not ajax!', 400);
+    }
+
+    public function loadAction($id)
+    {
+            $repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
+            $iti = $repository->find($id);
+            $content = $this->get("templating")->render("SiteCartoBundle:Map:load.html.twig",array("itineraire" => $iti,"jsonObject" => json_encode($iti)));
+            return new Response($content);            
     }
 }

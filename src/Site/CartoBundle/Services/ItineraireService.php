@@ -20,7 +20,7 @@ class ItineraireService
         return json_encode(array("list" => $itineraire));
     }
 
-    public function search($nom,$typechemin,$denivelep,$denivelen,$datecrea,$difficulte)
+    public function search($nom,$typechemin,$longueur,$datecrea,$difficulte,$status)
     {
         $params = array();
         $listItiniraire = array();
@@ -29,21 +29,21 @@ class ItineraireService
         if($nom != null || $nom != "")
         {
             $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-            if($typechemin != null){$repository->andWhere('i.typechemin LIKE :typechemin')->setParameter('typechemin', '%'.$typechemin.'%');}
-            if($denivelep != null){$repository->andWhere('i.deniveleplus = :denivelep')->setParameter('denivelep', $denivelep);}
-            if($denivelen != null){$repository->andWhere('i.denivelemoins = :denivelen')->setParameter('denivelen', $denivelen);}
+            if($typechemin != null){$repository->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);}
+            if($longueur != null){$repository->andWhere('i.longueur = :longueur')->setParameter('longueur', $longueur);}
             if($datecrea != null){$repository->andWhere('i.datecreation = :datecrea')->setParameter('datecrea', new \Datetime($datecrea));}
             if($difficulte != null){$repository->andWhere('i.difficulte = :difficulte')->setParameter('difficulte', $difficulte);}
+            if($status != null){$repository->andWhere('i.status = :status')->setParameter('status', $status);}
             $listItiniraire = $query->getQuery()->getResult();
             return json_encode(array("searchResults" => $listItiniraire));
         }
         else
         {
             if($typechemin != null){$params["typechemin"] = $typechemin;}
-            if($denivelep != null){$params["deniveleplus"] = $denivelep;}
-            if($denivelen != null){$params["denivelemoins"] = $denivelen;}
-            if($denivelen != null){$params["datecreation"] = $datecrea;}
+            if($longueur != null){$params["longueur"] = $longueur;}
+            if($datecrea != null){$params["datecreation"] = $datecrea;}
             if($difficulte != null){$params["difficulte"] = $difficulte;}
+            if($status != null){$params["status"] = $status;}
             $listItiniraire = $repository->findBy($params);
             return json_encode(array("searchResults" => $listItiniraire));
         }
@@ -53,12 +53,16 @@ class ItineraireService
     {
         $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
         $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
+        $repositoryStat=$this->entityManager->getRepository("SiteCartoBundle:Status");
+        $repositoryType=$this->entityManager->getRepository("SiteCartoBundle:Typechemin");
 
         $trace = new Trace();
         $filename = uniqid('trace_', true) . '.csv';
         $trace->setPath($filename);
         $diff = $repositoryDiff->find($difficulte);
-        $user = $repositoryUser->find($auteur);
+        $stat = $repositoryStat->find($status);
+        var_dump($typechemin);
+        $type = $repositoryType->find($typechemin);
 
         $route = new Itineraire();
         $route->setDate(new \DateTime('now'));
@@ -68,11 +72,11 @@ class ItineraireService
         $route->setTrace($gpx);
         $route->setNom($nom);
         $route->setNumero($numero);
-        $route->setTypechemin($typechemin);
+        $route->setTypechemin($type);
         $route->setDescription($description);
         $route->setDifficulte($diff);
         $route->setAuteur($user);
-        $route->setStatus($status);
+        $route->setStatus($stat);
 
         $json_obj = json_decode($points);
         $fp = fopen('../../Traces/'.$filename, 'w');
@@ -99,6 +103,18 @@ class ItineraireService
     {
         $diff = $this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours")->findAll();
         return json_encode(array("difficultes" => $diff));
+    }
+
+    public function statuslist()
+    {
+        $stat = $this->entityManager->getRepository("SiteCartoBundle:Status")->findAll();
+        return json_encode(array("status" => $stat));
+    }
+
+    public function typecheminlist()
+    {
+        $stat = $this->entityManager->getRepository("SiteCartoBundle:Typechemin")->findAll();
+        return json_encode(array("typechemin" => $stat));
     }
 }
  

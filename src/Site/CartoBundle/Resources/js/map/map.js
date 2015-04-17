@@ -1,4 +1,4 @@
-var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,denivelep,denivelen,drawnItems,drawControl,currentLayer;
+var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson;
 var isCreateRoute = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
@@ -24,18 +24,37 @@ var Icone = function(id, path)
     this.path = path;
 };
 
-$(window).load(function()
+/*$(window).load(function()
 {
-  map = new L.map('map');
+  init()
+});*/
+
+function init()
+{
+  map = new L.map('map',{
+      contextmenu: true,
+      contextmenuWidth: 140,
+      contextmenuItems: [{
+          text: 'Ajouter POI',
+          callback: function()
+          {
+            $("#addpoi").modal('show');
+          }
+      }]
+  });
+  loadLieux();
   getLocation();
   $("#ok").click(moveToCoords);
   $('#savepoi').click(savePoi);
-  //$("#iti").click(createRoute);
-  map.on('mousemove', displayCoords);
-  map.on('zoomend', refreshZoom);
-  map.on('contextmenu',context);
+  //map.on('contextmenu',context);
   graph.appendTo("body");
-});
+  addOverlay();
+  
+  if(!parent === window)
+  {
+    parent.iframeSize();
+  }
+}
 
 function loadLieux()
 {
@@ -47,8 +66,13 @@ function loadLieux()
        async : false,
        dataType : 'json',
        success : function(json, statut){
-           res = json;
-         },
+        console.log(json);
+           for(var i = 0; i < json.length; i++)
+           {
+            var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
+            opt.appendTo("#typelieu");
+           }
+       },
 
        error : function(resultat, statut, erreur){
        }
@@ -68,7 +92,7 @@ function loadPois()
            for(var i = 0; i < json.length; i++)
            {
               icone = L.icon({
-                      iconUrl : "../../../Images/" + json[i].typelieu.icone.path,
+                      iconUrl : "http://130.79.214.167/Images/" + json[i].typelieu.icone.path,
                       iconSize : [30, 30]
                     });
               marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
@@ -214,11 +238,13 @@ function goToPosition(position) {
                 pointArray = [];
                 latlngArray = [];
                 map.on("click",function (ev){
+                    console.log(ev);
                     pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
                     latlngArray.push(ev.latlng);
                     if(pointArray.length > 1)
                     {
                         //currentLayer = layer;
+                        polyline = L.polyline(latlngArray);
                         var URL = elevationURL + '&latLngCollection=';
                         var URLChart = elevationChartURL + '&latLngCollection=';
                         for(var i = 0; i < latlngArray.length; i++)
@@ -258,8 +284,38 @@ function goToPosition(position) {
         saveRoute();
 
     });
-    $("#map").css("cursor","move");
-    var MyControl = L.Control.extend({
+    $("#map").css("cursor","move"); 
+  loadPois();
+}
+
+function addOverlay()
+{
+    el = L.control.elevation({
+    position: "topright",
+    theme: "lime-theme", //default: lime-theme
+    width: 600,
+    height: 175,
+    margins: {
+        top: 10,
+        right: 20,
+        bottom: 30,
+        left: 50
+    },
+    useHeightIndicator: true, //if false a marker is drawn at map position
+    interpolation: "linear", //see https://github.com/mbostock/d3/wiki/SVG-Shapes#wiki-area_interpolate
+    hoverNumber: {
+        decimalsX: 3, //decimals on distance (always in km)
+        decimalsY: 0, //deciamls on height (always in m)
+        formatter: undefined //custom formatter function may be injected
+    },
+    xTicks: undefined, //number of ticks in x axis, calculated by default according to width
+    yTicks: undefined, //number of ticks on y axis, calculated by default according to height
+    collapsed: false    //collapsed mode, show chart on click or mouseover
+  });
+  el.addTo(map);
+  
+
+  var MyControl = L.Control.extend({
       options: {
           position: 'topright'
       },
@@ -267,14 +323,13 @@ function goToPosition(position) {
       onAdd: function (map) {
           // create the control container with a particular class name
           var container = L.DomUtil.create('div', 'leaflet-control-command');
-              $(container).html("<p id='denivp' class='controlText'></p><p id='denivn' class='controlText'></p>");
+              $(container).html("<p id='denivp' class='controlText'></p><p id='denivn' class='controlText'></p>" + 
+                                  "<p id='long' class='controlText'></p><p id='diffiDisplay' class='controlText'></p>");
           return container;
       }
   });
 
   map.addControl(new MyControl());
-
-  loadPois();
 }
 
 //Déplace la map aux coordonnées indiquées
@@ -290,10 +345,6 @@ function displayCoords(event)
     $("#lng").val(event.latlng.lng);
 }
 
-function refreshZoom()
-{
-  $("#zoom").val(map.getZoom());
-}
 
 function parseGPX(path)
 {
@@ -362,9 +413,12 @@ function drawRoute(event)
 function saveRoute()
 {  
   loadDifficultes();
+  loadStatus();
+  loadTypechemin();
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
+      console.log($("#typechemin option:selected").val());
       $.post(Routing.generate('site_carto_saveItineraire'),
                             {
                                    points: JSON.stringify(pointArray),
@@ -373,11 +427,11 @@ function saveRoute()
                                    denivelen : denivelen,
                                    nom : $("#nom").val(),
                                    numero : $("#numero").val(),
-                                   typechemin : $("#typechemin").val(),
+                                   typechemin : $("#typechemin option:selected").val(),
                                    description : $("#description").val(),
                                    difficulte : $("#difficulte option:selected").val(),
                                    auteur : $("#auteur").val(),
-                                   status : $("#status").val()
+                                   status : $("#status option:selected").val()
                                 },
                             function(data, status){
                                 console.log(data);
@@ -400,7 +454,7 @@ function savePoi()
                                    lat: latPoi,
                                    lng : lngPoi,
                                    alt : altPoi,
-                                   idLieu : idLieuPoi,
+                                   idLieu : $("#typelieu option:selected").val(),
                                    titre : $("#titre").val(),
                                    description : $("#descriptionPoi").val()
                                    //labellieu : labelLieu,
@@ -431,10 +485,22 @@ function getElevation(response)
     var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
     diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
   }
-  $("#longueur").val(pointArray[pointArray.length - 1].distance);
-  console.log(denivelep);
-  $("#denivp").text("Dénivelé positif : " + denivelep);
-  $("#denivn").text("Dénivelé négatif : " + denivelen);
+  $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
+  $("#denivp").text("Dénivelé positif : " + denivelep + "m");
+  $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+  var geojson = polyline.toGeoJSON();
+  for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+  {
+    geojson.geometry.coordinates[i].push(pointArray[i].elevation);
+  }
+  if(mapgeojson !== undefined)
+  {
+    map.removeLayer(mapgeojson);
+  }
+  el.clear();
+  mapgeojson = L.geoJson(geojson,{
+      onEachFeature: el.addData.bind(el) //working on a better solution
+  });
 }
 
 function loadDifficultes()
@@ -449,6 +515,58 @@ function loadDifficultes()
            {
             var opt = $("<option>").attr("value",json[i].niveau).text(json[i].label);
             opt.appendTo("#difficulte");
+           }
+       },
+
+       error : function(resultat, statut, erreur){
+         
+       },
+
+       complete : function(resultat, statut){
+
+       }
+
+    });
+}
+
+function loadStatus()
+{
+  $.ajax({
+       url : Routing.generate('site_carto_getStatus'),
+       type : 'GET',
+       dataType : 'json',
+       success : function(json, statut){
+           console.log(json);
+           for(var i = 0; i < json.length; i++)
+           {
+            var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
+            opt.appendTo("#status");
+           }
+       },
+
+       error : function(resultat, statut, erreur){
+         
+       },
+
+       complete : function(resultat, statut){
+
+       }
+
+    });
+}
+
+function loadTypechemin()
+{
+  $.ajax({
+       url : Routing.generate('site_carto_getTypechemin'),
+       type : 'GET',
+       dataType : 'json',
+       success : function(json, statut){
+           console.log(json);
+           for(var i = 0; i < json.length; i++)
+           {
+            var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
+            opt.appendTo("#typechemin");
            }
        },
 
@@ -494,27 +612,52 @@ function csvJSON(csv){
 function displayTrace(traceJSON)
 {
   var latlngArr = [];
-  console.log(traceJSON);
   for(var i = 0; i < traceJSON.length; i++)
   {
     var res = new L.LatLng(traceJSON[i].lat,traceJSON[i].lng);
     latlngArr.push(res);
   }
-  tracepolyline = L.polyline(latlngArr, {color: 'blue'}).addTo(map);
+  tracepolyline = L.polyline(latlngArr, {color: 'blue'});
+  tracepolyline.on("mouseover",function()
+  {
+      tracepolyline.setStyle({color: 'yellow'});
+      tracepolyline.redraw();
+  });
+  tracepolyline.on("mouseout",function()
+  {
+      tracepolyline.setStyle({color: 'blue'});
+      tracepolyline.redraw();
+  });
+  console.log(tracepolyline);
+  var geojson = tracepolyline.toGeoJSON();
+  console.log(tracepolyline);
+  console.log(geojson);
+  for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+  {
+    geojson.geometry.coordinates[i].push(traceJSON[i].elevation);
+  }
+  mapgeojson = L.geoJson(geojson,{
+      onEachFeature: el.addData.bind(el) //working on a better solution
+  });
+  tracepolyline.addTo(map);
 }
 
-function loadMap(path)
+function loadMap(json)
 {
   $.ajax({
         type: "GET",
-        url: "http://130.79.214.167/Traces/" + path,
+        url: "http://localhost/Traces/" + json.trace.path,
         dataType: "text",
         success: function(data) {
-          var json = csvJSON(data);
-          displayTrace(json);
+          var jsonData = csvJSON(data);
+          displayTrace(jsonData);
         },
        error : function(resultat, statut, erreur){
          console.log("Erreur : Impossible de charger le fichier de parcours");
        },
      });
+      $("#denivp").text("Dénivelé positif : " + json.deniveleplus + "m");
+      $("#denivn").text("Dénivelé négatif : " + json.denivelemoins + "m");
+      $("#long").text("Longueur : " + json.longueur + "km");
+      $("#diffiDisplay").text("Difficulté : " + json.difficulte.label);
 }
