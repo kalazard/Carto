@@ -19,7 +19,7 @@ $(function(){
         add: function (e, data) {
 
             var tpl = $('<li class="working"><input type="text" value="0" data-width="48" data-height="48"'+
-                ' data-fgColor="#0788a5" data-readOnly="1" data-bgColor="#3e4043" /><p></p><span>Annuler</span></li>');
+                ' data-fgColor="#0788a5" data-readOnly="1" data-bgColor="#3e4043" /><p></p><span>Annuler</span></li><span id="msg"></span>');
 
             // Append the file name and file size
             tpl.find('p').text(data.files[0].name)
@@ -65,6 +65,11 @@ $(function(){
         fail:function(e, data){
             // Something has gone wrong!
             data.context.addClass('error');
+			
+			var res = data.jqXHR.responseText;
+			var msg = res.split('"');
+
+			$('#msg').replaceWith('<p> </p><span>'+msg[3]+'</span>');
         }
 
     });
