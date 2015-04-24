@@ -93,6 +93,32 @@ class ItineraireService
         return json_encode(array("result" => "success","code" => 200));
     }
 
+    public function update($nom,$typechemin,$difficulte,$description,$numero,$auteur,$status,$public,$id)
+    {
+        $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
+        $repositoryStat=$this->entityManager->getRepository("SiteCartoBundle:Status");
+        $repositoryType=$this->entityManager->getRepository("SiteCartoBundle:Typechemin");
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+
+        $diff = $repositoryDiff->find($difficulte);
+        $stat = $repositoryStat->find($status);
+        $type = $repositoryType->find($typechemin);
+
+        $route = $repositoryIti->findBy(array('id' => $id));
+        $route[0]->setNom($nom);
+        $route[0]->setNumero($numero);
+        $route[0]->setTypechemin($type);
+        $route[0]->setDescription($description);
+        $route[0]->setDifficulte($diff);
+        $route[0]->setStatus($stat);
+        $route[0]->setPublic($public);
+
+        $this->entityManager->persist($route[0]);
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }
+
     public function getById($id)
     {
         $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
