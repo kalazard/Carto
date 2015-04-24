@@ -106,6 +106,7 @@ class ItineraireController extends Controller
             $route->setDifficulte($diff);
             $route->setAuteur($user);
             $route->setStatus($status);
+            $route->setPublic($request->request->get("public",""));
 
             $json_obj = json_decode($request->request->get("points",""),true);
             $fp = fopen('../../Traces/'.$filename, 'w');

@@ -49,7 +49,7 @@ class ItineraireService
         }
     }
 
-    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points)
+    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points,$public)
     {
         $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
         $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
@@ -77,6 +77,7 @@ class ItineraireService
         $route->setDifficulte($diff);
         $route->setAuteur($user);
         $route->setStatus($stat);
+        $route->setPublic($public);
 
         $json_obj = json_decode($points);
         $fp = fopen('../../Traces/'.$filename, 'w');
@@ -96,6 +97,13 @@ class ItineraireService
     {
         $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
         return json_encode(array("searchResults" => $repository->find($id)));
+        
+    }
+
+    public function getByUser($user)
+    {
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
+        return json_encode(array("list" => $repository->findBy(array('auteur' => $user))));
         
     }
 
