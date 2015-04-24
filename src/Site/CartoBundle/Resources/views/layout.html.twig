@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+	{#
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
+        {% stylesheets filter='cssrewrite'
+        '@SiteCartoBundle/Resources/css/*'
+        %}
+        <link rel="stylesheet" href="{{ asset_url }}" type="text/css" />
+        {% endstylesheets %}
+
+        <!--<script src='http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery.min.js'></script>-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <!--<script src="../../src/Site/TrailBundle/Resources/js/menu.js"></script>-->
+        <script src='http://fullcalendar.io/js/fullcalendar-2.1.1/lib/moment.min.js'></script>
+        <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery-ui.custom.min.js"></script>
+
+        <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <script src='http://fullcalendar.io/js/fullcalendar-2.1.1/fullcalendar.min.js'></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+        <script src="{{ asset('bundles/fosjsrouting/js/router.js') }}"></script>
+        <script src="{{ path('fos_js_routing_js', {"callback": "fos.Router.setData"}) }}"></script>
+        <meta charset="utf-8">
+        <title>{% block title %}Trail{% endblock %}</title>
+	#}
+	
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container-fluid">
+					
+				{# 
+			   <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+				
+				#}
+				
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="{{path('site_carto_homepage')}}">Accueil</a>
+                        </li>
+                        {% if not is_granted('IS_AUTHENTICATED_FULLY') %}
+                           {# <li>
+                                <a href="{{path('site_trail_news')}}">Nouveautés</a>
+                            </li> 
+                            <li>
+                                <a href="{{path('site_trail_club')}}">Le site</a>
+                            </li>
+                            <li>
+                                <a href="{{path('site_trail_contact')}}">Contact</a>
+                            </li>  #}
+                        {% endif %}
+                        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                            <li>
+                                <a href="{{path('site_carto_mapPage')}}">Carte</a>
+                            </li>
+                         {#   <li>
+                                <a href="{{path('site_trail_searchitineraire')}}">Itinéraires</a>
+                            </li> #}
+                        {% endif %}
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="dropdown">
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{app.user.email}} <span class="caret"></span></a>
+                                {% else %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Connexion<span class="caret"></span></a>
+                                {% endif %}
+                            <ul class="dropdown-menu" role="menu">
+                                <li>
+                                    <div class="navbar-login">
+                                        <div class="row">
+                                            <div class="col-lg-4">
+                                                <p class="text-center">
+{#
+                                                    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                                    <div class="img-size" style="background-image: url('{{app.user.avatar.path}}');"></div>
+                                                {% else %}
+                                                    <span class="glyphicon glyphicon-user icon-size"></span>
+                                                {% endif %}  #}
+                                                </p>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                                    <p class="text-left"><strong>{{app.user.email}}</strong></p>
+                                                    <p class="text-left small">Vous êtes connecté</p>
+                                                    <p class="text-left">
+                                                        <a href="{{path('site_carto_fiche')}}" class="btn btn-primary btn-block btn-sm">Mon profil</a>
+                                                    </p>
+
+                                                {% else %}
+                                                    <p class="text-left"><strong>Anonyme</strong></p>
+                                                    <p class="text-left small">Vous n'êtes pas connecté</p>
+													<p class="text-left small">La connexion des utilisiteurs est gérée par le site de l'ACSPA. Vous allez être redirigé</p>
+                                                    <p class="text-left">
+                                                        <a href="localhost/Trail/web/app_dev.php" class="btn btn-primary btn-block btn-sm">Me connecter</a>
+                                                    </p>
+                                                {% endif %}                                        
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                    <div class="navbar-login navbar-login-session">
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                                    {%if is_granted('ROLE_Administrateur')%}
+                                                        <p><a href="http://localhost/Trail/web/app_dev.php/" class="btn btn-primary btn-block" data-toggle="modal" data-target="#createUserModal">Créer un utilisateur</a></p>
+                                                    {%endif%}
+                                                    <p>
+                                                        <a href="#" class="btn btn-danger btn-block">Me deconnecter</a>
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div id="page-content-wrapper">
+            {% block body %}
+            {% endblock %}
+        </div>
+        <footer class="text-center">
+            <p>Adresse de nous</p>
+        </footer>
+
+		
+		{#		
+		
+        </script>
+        {% javascripts '@SiteCartoBundle/Resources/js/*' '@SiteCartoBundle/Resources/js/user/*' '@SiteCartoBundle/Resources/js/map/*'
+                   
+        %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+        {% endjavascripts %}
+		
+		#}
+    </body>
+</html>

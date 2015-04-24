@@ -1,5 +1,8 @@
 site_carto_homepage:
     path:     /
+    defaults: { _controller: SiteCartoBundle:Default:index }
+site_carto_mapPage:
+    path:     /carte
     defaults: { _controller: SiteCartoBundle:Map:index }
 site_carto_itineraire:
     path:     /itineraire
@@ -9,9 +12,24 @@ site_carto_getDifficulteParcours:
     defaults: { _controller:SiteCartoBundle:Itineraire:getDifficultes }
     options:
         expose: true
+site_carto_getStatus:
+    path:    /itineraire_getStatus
+    defaults: { _controller:SiteCartoBundle:Itineraire:getStatus }
+    options:
+        expose: true
+site_carto_getTypechemin:
+    path:    /itineraire_getTypechemin
+    defaults: { _controller:SiteCartoBundle:Itineraire:getTypechemin }
+    options:
+        expose: true
 site_carto_saveItineraire:
     path:    /itineraire_save
     defaults: { _controller:SiteCartoBundle:Itineraire:save }
+    options:
+        expose: true
+site_carto_loadItineraire:
+    path:    /itineraire_load/{id}
+    defaults: { _controller:SiteCartoBundle:Itineraire:load }
     options:
         expose: true
 site_carto_getPoi:
@@ -45,6 +63,7 @@ site_carto_upload:
 site_carto_submitupload:
     path:     /sub_upload
     defaults: { _controller: SiteCartoBundle:Map:submit }
+<<<<<<< HEAD
 site_carto_uploadIcone:
     path:     /uploadIcone
     defaults: { _controller: SiteCartoBundle:Typelieu:uploadIcone }
@@ -53,3 +72,9 @@ site_carto_submituploadIcone:
     defaults: { _controller: SiteCartoBundle:Typelieu:submituploadIcone }
     options:
         expose: true
+site_carto_recherche_itineraire:
+    path:     /recherche
+    defaults: { _controller: SiteCartoBundle:Itineraire:recherche }
+site_carto_fiche:
+    path:     /fiche
+    defaults: { _controller: SiteCartoBundle:User:index }

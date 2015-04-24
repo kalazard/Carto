@@ -98,8 +98,6 @@ class MapController extends Controller
 				$upload = 0;
 			} 
 			
-			$response = new Response(json_encode(array("result" => $return_message,"code" => $code)));
-			
 			if($upload != 0)
 			{
 				if(move_uploaded_file($_FILES['upl']['tmp_name'], $target_file))
@@ -115,11 +113,14 @@ class MapController extends Controller
 					//if(!empty($trace->getId()))
 					//{
 						$return_message = " Le fichier a correctement été importé";	
-					//}				
+					//}	
+
+					$response = new Response(json_encode(array("result" => $return_message,"code" => 200)));					
 				}
 			}
 			else
 			{
+				$response = new Response(json_encode(array("result" => $return_message,"code" => 500)));
 				$response->setStatusCode(500);
 			}
 		}

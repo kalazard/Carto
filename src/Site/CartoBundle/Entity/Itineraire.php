@@ -8,7 +8,7 @@ use JsonSerializable;
 /**
  * Itineraire
  *
- * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
+ * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_status_idx", columns={"status"}),@ORM\Index(name="fk_itineraire_typechemin_idx", columns={"typechemin"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
  * @ORM\Entity
  */
 class Itineraire implements JsonSerializable
@@ -72,16 +72,22 @@ class Itineraire implements JsonSerializable
     private $numero;
 
     /**
-     * @var string
+     * @var \Typechemin
      *
-     * @ORM\Column(name="typechemin", type="string", length=255, nullable=false)
+     * @ORM\ManyToOne(targetEntity="Typechemin")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="typechemin", referencedColumnName="id")
+     * })
      */
     private $typechemin;
 
     /**
-     * @var string
+     * @var \Status
      *
-     * @ORM\Column(name="status", type="string", length=255, nullable=false)
+     * @ORM\ManyToOne(targetEntity="Status")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="status", referencedColumnName="id")
+     * })
      */
     private $status;
 
@@ -114,6 +120,13 @@ class Itineraire implements JsonSerializable
      * })
      */
     private $trace;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="public", type="integer", nullable=false)
+     */
+    private $public;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -313,10 +326,10 @@ class Itineraire implements JsonSerializable
     /**
      * Set typechemin
      *
-     * @param string $typechemin
+     * @param \Site\CartoBundle\Entity\Typechemin $typechemin
      * @return Itineraire
      */
-    public function setTypechemin($typechemin)
+    public function setTypechemin(\Site\CartoBundle\Entity\Typechemin $typechemin = null)
     {
         $this->typechemin = $typechemin;
 
@@ -326,7 +339,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get typechemin
      *
-     * @return string 
+     * @return \Site\CartoBundle\Entity\Typechemin 
      */
     public function getTypechemin()
     {
@@ -336,10 +349,10 @@ class Itineraire implements JsonSerializable
     /**
      * Set status
      *
-     * @param string $status
+     * @param \Site\CartoBundle\Entity\Status $status
      * @return Itineraire
      */
-    public function setStatus($status)
+    public function setStatus(\Site\CartoBundle\Entity\Status $status = null)
     {
         $this->status = $status;
 
@@ -349,7 +362,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get status
      *
-     * @return string 
+     * @return Site\CartoBundle\Entity\Status 
      */
     public function getStatus()
     {
@@ -426,6 +439,29 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Set public
+     *
+     * @param integer $public
+     * @return Itineraire
+     */
+    public function setPublic($public)
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    /**
+     * Get public
+     *
+     * @return integer 
+     */
+    public function getPublic()
+    {
+        return $this->public;
+    }
+
+    /**
      * Add utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
@@ -473,6 +509,7 @@ class Itineraire implements JsonSerializable
             'auteur' => $this->getAuteur(),
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
+            'public' => $this->getPublic()
         );
     }
 

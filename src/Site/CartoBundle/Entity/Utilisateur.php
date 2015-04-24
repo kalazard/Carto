@@ -3,6 +3,7 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Utilisateur
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="utilisateur", indexes={@ORM\Index(name="fk_utilisateur_role_idx", columns={"role"})})
  * @ORM\Entity
  */
-class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface, \Serializable
+class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface, \Serializable, JsonSerializable
 {
     /**
      * @var integer
@@ -189,6 +190,14 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
             // see section on salt below
             // $this->salt
         ) = unserialize($serialized);
+    }
+
+    public function jsonSerialize() {
+        return array(
+            'id' => $this->getId(),
+            'email'=> $this->getEmail(),
+            'role' => $this->getRole()
+        );
     }
 
 }
