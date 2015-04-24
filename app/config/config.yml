@@ -53,6 +53,13 @@ doctrine:
         user:     "%database_user%"
         password: "%database_password%"
         charset:  UTF8
+		
+        types:
+            geometry:   CrEOF\Spatial\DBAL\Types\GeometryType
+            point:      CrEOF\Spatial\DBAL\Types\Geometry\PointType
+            polygon:    CrEOF\Spatial\DBAL\Types\Geometry\PolygonType
+            linestring: CrEOF\Spatial\DBAL\Types\Geometry\LineStringType
+
         # if using pdo_sqlite as your database driver:
         #   1. add the path in parameters.yml
         #     e.g. database_path: "%kernel.root_dir%/data/data.db3"
@@ -63,6 +70,12 @@ doctrine:
     orm:
         auto_generate_proxy_classes: "%kernel.debug%"
         auto_mapping: true
+        dql:
+            numeric_functions:
+            st_distance:     CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STDistance
+            st_area:         CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STArea
+            st_length:       CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STLength
+            st_geomfromtext: CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STGeomFromText
 
 # Swiftmailer Configuration
 swiftmailer:
