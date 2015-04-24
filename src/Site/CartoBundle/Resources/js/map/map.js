@@ -431,7 +431,8 @@ function saveRoute()
                                    description : $("#description").val(),
                                    difficulte : $("#difficulte option:selected").val(),
                                    auteur : $("#auteur").val(),
-                                   status : $("#status option:selected").val()
+                                   status : $("#status option:selected").val(),
+                                   public : $("#public option:selected").val()
                                 },
                             function(data, status){
                                 console.log(data);
@@ -638,8 +639,10 @@ function displayTrace(traceJSON)
   }
   mapgeojson = L.geoJson(geojson,{
       onEachFeature: el.addData.bind(el) //working on a better solution
-  });
+  }); 
   tracepolyline.addTo(map);
+  drawnItems.addLayer(tracepolyline);
+  map.fitBounds(tracepolyline.getBounds());
 }
 
 function loadMap(json)

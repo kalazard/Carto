@@ -122,6 +122,13 @@ class Itineraire implements JsonSerializable
     private $trace;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(name="public", type="integer", nullable=false)
+     */
+    private $public;
+
+    /**
      * @var \Doctrine\Common\Collections\Collection
      *
      * @ORM\ManyToMany(targetEntity="Utilisateur", inversedBy="itinerairenote")
@@ -432,6 +439,29 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Set public
+     *
+     * @param integer $public
+     * @return Itineraire
+     */
+    public function setPublic($public)
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    /**
+     * Get public
+     *
+     * @return integer 
+     */
+    public function getPublic()
+    {
+        return $this->public;
+    }
+
+    /**
      * Add utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
@@ -479,6 +509,7 @@ class Itineraire implements JsonSerializable
             'auteur' => $this->getAuteur(),
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
+            'public' => $this->getPublic()
         );
     }
 
