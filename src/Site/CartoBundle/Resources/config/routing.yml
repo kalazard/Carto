@@ -1,5 +1,8 @@
 site_carto_homepage:
     path:     /
+    defaults: { _controller: SiteCartoBundle:Default:index }
+site_carto_mapPage:
+    path:     /carte
     defaults: { _controller: SiteCartoBundle:Map:index }
 site_carto_itineraire:
     path:     /itineraire
@@ -60,3 +63,9 @@ site_carto_upload:
 site_carto_submitupload:
     path:     /sub_upload
     defaults: { _controller: SiteCartoBundle:Map:submit }
+site_carto_recherche_itineraire:
+    path:     /recherche
+    defaults: { _controller: SiteCartoBundle:Itineraire:recherche }
+site_carto_fiche:
+    path:     /fiche
+    defaults: { _controller: SiteCartoBundle:User:index }

@@ -134,9 +134,27 @@ class ItineraireController extends Controller
 
     public function loadAction($id)
     {
-            $repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
-            $iti = $repository->find($id);
-            $content = $this->get("templating")->render("SiteCartoBundle:Map:load.html.twig",array("itineraire" => $iti,"jsonObject" => json_encode($iti)));
-            return new Response($content);            
+		$repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
+		$iti = $repository->find($id);
+		$content = $this->get("templating")->render("SiteCartoBundle:Map:load.html.twig",array("itineraire" => $iti,"jsonObject" => json_encode($iti)));
+		return new Response($content);            
     }
+	
+	public function rechercheAction(Request $request)
+	{
+		//soit on affiche la page en chargeant toutes les données, soit on charge les données selon les paramètres 
+	
+		//on récupère la liste des paramètres choisi et on charge tout les itinéraires associés.
+		$result = array();
+		$search = array();		
+		$search["nom"] = $request->request->get("nom");
+		$search["typechemin"] = $request->request->get("typechemin");
+		$search["longueur"] = $request->request->get("longueur");
+		$search["datecrea"] = $request->request->get("datecrea");
+		$search["difficulte"] = $request->request->get("difficulte");
+		$search["status"] = $request->request->get("status");
+		
+		
+		return $this->render('SiteCartoBundle:Itineraire:index.html.twig');
+	}
 }

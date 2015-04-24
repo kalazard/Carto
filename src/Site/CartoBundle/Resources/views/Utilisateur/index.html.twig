@@ -1,0 +1,87 @@
+{% extends "SiteCartoBundle::layout.html.twig" %}
+
+{% block title %}Profil{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  
+  {#	{% if app.user %}    #}
+      <h1>Fiche Membre</h1>
+	
+		{#  {{ path("site_trail_submitprofilmembre") }}  #}
+	
+		<form action="#" method="post">  
+		  {# avatar du membre #}
+		{#  <p class="pre"><strong>Prenom : </strong><span class="pre" id="pr">{{ prenom }} </span></p>
+		  <p class="nom"><strong>Nom : </strong><span class="nom" id ="nm">{{ nom }} </span></p>
+		  <p class="dat"><strong>Date de naissance : </strong><span class="dat" id ="dn">{{date|date('d/m/Y')}}</span></p> #}
+		  <p class="ema"><strong>Email  : </strong><span class="ema" id="em">{{email}}</span></p>  {#
+		  <p class="tel"><strong>Téléphone : </strong><span class="tel" id="tl">{{tel}} </span></p>
+		  <p class="lic"><strong>Licence : </strong><span class="lic" id="lc">{{licence}} </span></p>  #}
+		
+		<button id="btn" class="btn btn-warning" onclick="Modif()">Modifier</button> 	
+		</form>  
+		
+		{#  affichage des itinéraires du membre
+		  {% if resultats is not empty %}
+		  
+				<h3>Résultats selon le nom</h3>
+				{% if resultats['username'] is not empty %}
+					{% for membre in resultats['username'] %}
+						<p> Pseudonyme: {{membre.getUserName()}}  Email: {{membre.getEmail()}}</p>
+					{% endfor %}
+				{% else %}
+					 <p>Aucun résultat n'a été trouvé pour ce nom</p>
+				{% endif %}
+				
+				<h3>Résultats selon l'email</h3>
+				{% if resultats['email'] is not empty %}
+					{% for membre in resultats['email'] %}
+						<p> Pseudonyme: {{membre.getUserName()}}  Email: {{membre.getEmail()}}</p>
+					{% endfor %}
+				{% else %}
+					 <p>Aucun résultat n'a été trouvé pour cet Email</p>
+				{% endif %}
+		  {% endif %}
+		  
+		#}
+{#		  
+ {% else %}
+     <p>Vous n'avez pas accès à cette page</p>
+ {% endif %}
+ #}
+ 
+	<script>
+
+	function Modif()
+	{
+		var prenom = $("#pr").text();
+		var nom =  $("#nm").text();
+		var date =  $("#dn").text();
+		var email =  $("#em").text();
+		var telephone =  $("#tl").text();
+		var licence =  $("#lc").text();
+		
+		$( "#pr" ).replaceWith('');
+		$( "#nm" ).replaceWith('');
+		$( "#dn" ).replaceWith('');
+		$( "#em" ).replaceWith('');
+		$( "#tl" ).replaceWith('');
+		$( "#lc" ).replaceWith('');
+			
+		//Edition des éléments -> remplassement du contenus HTML par d'autres structures.
+		$( ".pre" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Prénom : </strong></p> <input class="col-xs-4" type="text" name="Prenom" value="'+prenom+'"></div>');
+		$( ".nom" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Nom : </strong></p> <input class="col-xs-4" type="text" name="Nom" value="'+nom+'"></div>');
+		$( ".dat" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Date de naissance : </strong></p> <input class="col-xs-4" type="text" name="Date" value="'+date+'"></div>');
+		$( ".ema" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Email : </strong></p> <input class="col-xs-4" type="text" name="Email" value="'+email+'"></div>');
+		$( ".tel" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Téléphone : </strong></p> <input class="col-xs-4" type="text" name="Tel" value="'+telephone+'"></div>');
+		$( ".lic" ).replaceWith( '<div class="row"><p class="col-xs-4"><strong>Licence : </strong></p> <input class="col-xs-4" type="text" name="Licence" value="'+licence+'"></div>');
+		$( "#btn" ).replaceWith( '<input type="submit" class="btn btn-warning" name="submit" value=" Envoyer ">');	
+
+	}
+
+	</script>
+</div>
+
+{% endblock %}
