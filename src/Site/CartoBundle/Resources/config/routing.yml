@@ -63,6 +63,14 @@ site_carto_upload:
 site_carto_submitupload:
     path:     /sub_upload
     defaults: { _controller: SiteCartoBundle:Map:submit }
+site_carto_uploadIcone:
+    path:     /uploadIcone
+    defaults: { _controller: SiteCartoBundle:Typelieu:uploadIcone }
+site_carto_submituploadIcone:
+    path:     /submituploadIcone/
+    defaults: { _controller: SiteCartoBundle:Typelieu:submituploadIcone }
+    options:
+        expose: true
 site_carto_recherche_itineraire:
     path:     /recherche
     defaults: { _controller: SiteCartoBundle:Itineraire:recherche }
