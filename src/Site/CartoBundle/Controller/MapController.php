@@ -71,7 +71,7 @@ class MapController extends Controller
 		{		
 			$return_message = "";
 			$code = 200;
-			
+
 			$gpx_name = $_FILES['upl']['name'];
 			$target_dir ="C:/wamp/www/uploads/";
 			$target_file = $target_dir.$gpx_name;
