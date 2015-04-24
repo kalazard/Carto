@@ -69,3 +69,36 @@ site_carto_recherche_itineraire:
 site_carto_fiche:
     path:     /fiche
     defaults: { _controller: SiteCartoBundle:User:index }
+site_carto_createUser:
+    path:    /user/create
+    defaults: { _controller:SiteCartoBundle:User:create }
+site_carto_loadRoles:
+    path:    /user/loadRoles
+    defaults: { _controller:SiteCartoBundle:User:loadRoles }
+site_carto_getAllUsers:
+    path:    /user/all
+    defaults: { _controller:SiteCartoBundle:User:getAllUsers }
+site_carto_annuaire:
+    path:    /user/annuaire
+    defaults: { _controller:SiteCartoBundle:User:annuaire }
+site_carto_deleteUser:
+    path:    /user/delete
+    defaults: { _controller:SiteCartoBundle:User:delete }
+site_carto_getUser:
+    path:    /user/get
+    defaults: { _controller:SiteCartoBundle:User:getUser }
+site_carto_updateUser:
+    path:    /user/update
+    defaults: { _controller:SiteCartoBundle:User:updateUser }
+site_carto_getUserActivation:
+    path:    /user/getActivation
+    defaults:  { _controller:SiteCartoBundle:User:getUserActivation }
+site_carto_changePassword:
+    path:    /user/changePassword
+    defaults:  { _controller:SiteCartoBundle:User:changePassword }
+login_check:
+    path:   /login_check
+    defaults: { _controller:SiteCartoBundle:User:logIn }
+logout:
+    path:   /logout
+    defaults: { _controller:SiteCartoBundle:User:logOut }
