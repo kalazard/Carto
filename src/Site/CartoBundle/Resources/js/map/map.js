@@ -66,7 +66,6 @@ function loadLieux()
        async : false,
        dataType : 'json',
        success : function(json, statut){
-        console.log(json);
            for(var i = 0; i < json.length; i++)
            {
             var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
@@ -418,7 +417,6 @@ function saveRoute()
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
-      console.log($("#typechemin option:selected").val());
       $.post(Routing.generate('site_carto_saveItineraire'),
                             {
                                    points: JSON.stringify(pointArray),
@@ -435,11 +433,11 @@ function saveRoute()
                                    public : $("#public option:selected").val()
                                 },
                             function(data, status){
-                                console.log(data);
-                                pointArray = [];
-                                latlngArray = [];
+                                $.notify("Itinéraire sauvegardé", "success");
                             }
-      );
+      ).fail(function() {
+        $.notify("Erreur lors de la sauvegarde", "error");
+      });
       $("#save").modal('hide');
         
     });
@@ -473,7 +471,6 @@ function savePoi()
 
 function getElevation(response)
 {
-  console.log(response);
   denivelen = 0;
   denivelep = 0;
   for(var i = 0; i < pointArray.length; i++)
@@ -511,7 +508,6 @@ function loadDifficultes()
        type : 'GET',
        dataType : 'json',
        success : function(json, statut){
-           console.log(json);
            for(var i = 0; i < json.length; i++)
            {
             var opt = $("<option>").attr("value",json[i].niveau).text(json[i].label);
@@ -537,7 +533,6 @@ function loadStatus()
        type : 'GET',
        dataType : 'json',
        success : function(json, statut){
-           console.log(json);
            for(var i = 0; i < json.length; i++)
            {
             var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
@@ -563,7 +558,6 @@ function loadTypechemin()
        type : 'GET',
        dataType : 'json',
        success : function(json, statut){
-           console.log(json);
            for(var i = 0; i < json.length; i++)
            {
             var opt = $("<option>").attr("value",json[i].id).text(json[i].label);
@@ -604,7 +598,6 @@ function csvJSON(csv){
     }
  
   }
-  console.log(result);
   //return result; //JavaScript object
   //return JSON.stringify(result); //JSON
   return result;
@@ -629,10 +622,7 @@ function displayTrace(traceJSON)
       tracepolyline.setStyle({color: 'blue'});
       tracepolyline.redraw();
   });
-  console.log(tracepolyline);
   var geojson = tracepolyline.toGeoJSON();
-  console.log(tracepolyline);
-  console.log(geojson);
   for(var i = 0; i < geojson.geometry.coordinates.length; i++)
   {
     geojson.geometry.coordinates[i].push(traceJSON[i].elevation);
@@ -656,7 +646,7 @@ function loadMap(json)
           displayTrace(jsonData);
         },
        error : function(resultat, statut, erreur){
-         console.log("Erreur : Impossible de charger le fichier de parcours");
+         $.notify("Erreur : Impossible de charger le fichier de parcours","error");
        },
      });
       $("#denivp").text("Dénivelé positif : " + json.deniveleplus + "m");

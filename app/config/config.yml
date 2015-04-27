@@ -53,7 +53,7 @@ doctrine:
         user:     "%database_user%"
         password: "%database_password%"
         charset:  UTF8
-		
+
         types:
             geometry:   CrEOF\Spatial\DBAL\Types\GeometryType
             point:      CrEOF\Spatial\DBAL\Types\Geometry\PointType
@@ -70,12 +70,6 @@ doctrine:
     orm:
         auto_generate_proxy_classes: "%kernel.debug%"
         auto_mapping: true
-        dql:
-            numeric_functions:
-            st_distance:     CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STDistance
-            st_area:         CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STArea
-            st_length:       CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STLength
-            st_geomfromtext: CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STGeomFromText
 
 # Swiftmailer Configuration
 swiftmailer:
