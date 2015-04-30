@@ -605,34 +605,67 @@ function csvJSON(csv){
 
 function displayTrace(traceJSON)
 {
+  //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
   var latlngArr = [];
   for(var i = 0; i < traceJSON.length; i++)
   {
     var res = new L.LatLng(traceJSON[i].lat,traceJSON[i].lng);
     latlngArr.push(res);
   }
+
+  //On crée la polyline et on ajoute les points
   tracepolyline = L.polyline(latlngArr, {color: 'blue'});
-  tracepolyline.on("mouseover",function()
+  surbrillance(tracepolyline);
+  tracepolyline.markers = [];
+  for(var i = 0; i < latlngArr.length; i++)
   {
-      tracepolyline.setStyle({color: 'yellow'});
-      tracepolyline.redraw();
-  });
-  tracepolyline.on("mouseout",function()
-  {
-      tracepolyline.setStyle({color: 'blue'});
-      tracepolyline.redraw();
-  });
+    var marker = L.circleMarker([latlngArr[i].lat, latlngArr[i].lng]);
+    surbrillance(marker);
+    map.addLayer(marker);
+    tracepolyline.markers.push(marker);
+  }
+
+  //On ajoute le profil altimétrique
   var geojson = tracepolyline.toGeoJSON();
   for(var i = 0; i < geojson.geometry.coordinates.length; i++)
   {
     geojson.geometry.coordinates[i].push(traceJSON[i].elevation);
   }
   mapgeojson = L.geoJson(geojson,{
-      onEachFeature: el.addData.bind(el) //working on a better solution
+      onEachFeature: el.addData.bind(el)
   }); 
+
   tracepolyline.addTo(map);
   drawnItems.addLayer(tracepolyline);
-  map.fitBounds(tracepolyline.getBounds());
+
+  //Events de la polyline, on retire les points selon les différents cas
+  map.on('draw:editstart', function (e) {
+        for(var i = 0; i < tracepolyline.markers.length; i++)
+        {
+          map.removeLayer(tracepolyline.markers[i]);
+        }
+    });
+  map.on('draw:editstop', function (e) {
+        tracepolyline.markers = [];
+        var latlngs = tracepolyline.getLatLngs();
+        for(var i = 0; i < latlngs.length; i++)
+        {
+          var marker = L.circleMarker([latlngs[i].lat, latlngs[i].lng]);
+          surbrillance(marker);
+          map.addLayer(marker);
+          tracepolyline.markers.push(marker);
+        }
+    });
+  map.on('draw:deletestart', function (e) {
+      tracepolyline.on("click",function(){
+          for(var i = 0; i < tracepolyline.markers.length; i++)
+          {
+            map.removeLayer(tracepolyline.markers[i]);
+          }
+      })
+    });
+
+  map.fitBounds(tracepolyline.getBounds());//On centre la map sur la polyline
 }
 
 function loadMap(json)
@@ -653,4 +686,18 @@ function loadMap(json)
       $("#denivn").text("Dénivelé négatif : " + json.denivelemoins + "m");
       $("#long").text("Longueur : " + json.longueur + "km");
       $("#diffiDisplay").text("Difficulté : " + json.difficulte.label);
+}
+
+function surbrillance(object)
+{
+    object.on("mouseover",function()
+    {
+        object.setStyle({color: 'yellow'});
+        object.redraw();
+    });
+    object.on("mouseout",function()
+    {
+        object.setStyle({color: 'blue'});
+        object.redraw();
+    });
 }

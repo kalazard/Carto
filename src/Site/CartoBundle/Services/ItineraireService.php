@@ -119,6 +119,18 @@ class ItineraireService
         return json_encode(array("result" => "success","code" => 200));
     }
 
+    public function delete($id)
+    {
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+
+        $route = $repositoryIti->findBy(array('id' => $id));
+
+        $this->entityManager->remove($route[0]);
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }
+
     public function getById($id)
     {
         $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
