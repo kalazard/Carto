@@ -4,6 +4,7 @@
 namespace Site\CartoBundle\Services;
 
 use Site\CartoBundle\Entity\Itineraire;
+use \CrEOF\Spatial\PHP\Types\Geography\Point as MySQLPoint;
 
 class ItineraireService
 {
@@ -49,20 +50,40 @@ class ItineraireService
         }
     }
 
-    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points,$public)
+    /*public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points,$public)
     {
         $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
         $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
         $repositoryStat=$this->entityManager->getRepository("SiteCartoBundle:Status");
         $repositoryType=$this->entityManager->getRepository("SiteCartoBundle:Typechemin");
+        $repositorySegment=$this->entityManager->getRepository("SiteCartoBundle:Segment");
 
         $trace = new Trace();
         $filename = uniqid('trace_', true) . '.csv';
         $trace->setPath($filename);
         $diff = $repositoryDiff->find($difficulte);
         $stat = $repositoryStat->find($status);
-        var_dump($typechemin);
         $type = $repositoryType->find($typechemin);
+
+        $segment = new Segment();
+        $pointArray = json_decode($points,true);
+        $lsArray = [];
+        $elevationString = "";
+        $i = 1;
+        foreach($pointArray as $pt)
+        {
+            array_push($lsArray,new MySQLPoint()->setX($pt["lng"])->setY($pt["lat"]));
+            $elevationString = $elevationString . $pt["elevation"];
+            if(++$i != count($pointArray))
+            {
+                $elevationString = $elevationString . ";";
+            }
+        }
+        $segment->setTrace(new LineString()->setPoints($lsArray));
+        $segment->setElevation($elevationString);
+        $segment->setSens(0);
+        $segment->setPog1($lsArray[0]);
+        $segment->setPog2(end($lsArray));
 
         $route = new Itineraire();
         $route->setDate(new \DateTime('now'));
@@ -78,6 +99,7 @@ class ItineraireService
         $route->setAuteur($user);
         $route->setStatus($stat);
         $route->setPublic($public);
+        $route->setSegment($segment);
 
         $json_obj = json_decode($points);
         $fp = fopen('../../Traces/'.$filename, 'w');
@@ -88,10 +110,11 @@ class ItineraireService
 
         $this->entityManager->persist($route);
         $this->entityManager->persist($trace);
+        $this->entityManager->persist($segment);
         $this->entityManager->flush();
 
         return json_encode(array("result" => "success","code" => 200));
-    }
+    }*/
 
     public function update($nom,$typechemin,$difficulte,$description,$numero,$auteur,$status,$public,$id)
     {

@@ -8,7 +8,7 @@ use JsonSerializable;
 /**
  * Itineraire
  *
- * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_status_idx", columns={"status"}),@ORM\Index(name="fk_itineraire_typechemin_idx", columns={"typechemin"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
+ * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_status_idx", columns={"status"}),@ORM\Index(name="fk_itineraire_typechemin_idx", columns={"typechemin"}),@ORM\Index(name="fk_itineraire_segment_idx", columns={"segment"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
  * @ORM\Entity
  */
 class Itineraire implements JsonSerializable
@@ -127,6 +127,16 @@ class Itineraire implements JsonSerializable
      * @ORM\Column(name="public", type="integer", nullable=false)
      */
     private $public;
+
+    /**
+     * @var \Segment
+     *
+     * @ORM\ManyToOne(targetEntity="Segment",cascade={"persist"})
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="segment", referencedColumnName="id")
+     * })
+     */
+    private $segment;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -462,6 +472,29 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Set segment
+     *
+     * @param \Site\CartoBundle\Entity\Segment $segment
+     * @return Itineraire
+     */
+    public function setSegment(\Site\CartoBundle\Entity\Segment $segment = null)
+    {
+        $this->segment = $segment;
+
+        return $this;
+    }
+
+    /**
+     * Get segment
+     *
+     * @return \Site\CartoBundle\Entity\Segment 
+     */
+    public function getSegment()
+    {
+        return $this->segment;
+    }
+
+    /**
      * Add utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
@@ -509,7 +542,8 @@ class Itineraire implements JsonSerializable
             'auteur' => $this->getAuteur(),
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
-            'public' => $this->getPublic()
+            'public' => $this->getPublic(),
+            'segment' => $this->getSegment(),
         );
     }
 

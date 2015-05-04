@@ -24,7 +24,7 @@ class MapController extends Controller
 {
     public function indexAction()
     {       
-        $content = $this->get("templating")->render("SiteCartoBundle:Map:index.html.twig");        
+        $content = $this->get("templating")->render("SiteCartoBundle:Map:map.html.twig");        
         return new Response($content);
     }
 

@@ -110,3 +110,6 @@ login_check:
 logout:
     path:   /logout
     defaults: { _controller:SiteCartoBundle:User:logOut }
+site_carto_recherche_itineraire:
+    path:     /list
+    defaults: { _controller: SiteCartoBundle:Itineraire:itilist }

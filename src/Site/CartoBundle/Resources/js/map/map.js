@@ -4,6 +4,7 @@ var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7
 var elevationChartURL = "http://open.mapquestapi.com/elevation/v1/chart?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&inFormat=kvp&shapeFormat=raw&width=425&height=350";
 var graph = $("<img>").css("display","none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
+var r = $.Deferred();
 
 var Point = function(lat,lng)
 {
@@ -29,7 +30,7 @@ var Icone = function(id, path)
   init()
 });*/
 
-function init()
+function init(callback,params)
 {
   map = new L.map('map',{
       contextmenu: true,
@@ -43,16 +44,19 @@ function init()
       }]
   });
   loadLieux();
-  getLocation();
-  $("#ok").click(moveToCoords);
-  $('#savepoi').click(savePoi);
-  //map.on('contextmenu',context);
-  graph.appendTo("body");
-  addOverlay();
-  
-  if(!parent === window)
+  if (navigator.geolocation) 
   {
-    parent.iframeSize();
+    navigator.geolocation.getCurrentPosition(goToPosition,showError);
+  } 
+  else 
+  {
+    goToPosition({"coords" : {"latitude" : 0,"longitude" : 0}},callback,params);
+  }
+  addOverlay();
+  $('#savepoi').click(savePoi);
+  if(typeof callback !== "undefined" && typeof params !== "undefined")
+  {
+    callback.apply(null,params);
   }
 }
 
@@ -183,10 +187,8 @@ function showError(error)
 
 //Place la map à la position récupérée dans getLocation
 function goToPosition(position) {
-
   //Définition des attributs de la carte et positionnement
   $("#map").css("height", "100%").css("width", "100%").css("margin","auto");
-  $("#controls").css("width", "20%").css("margin","auto");
   var zoom = 3;
   if(position.coords.latitude !== 0 && position.coords.longitude !== 0){zoom = 13;}
   map.setView([position.coords.latitude, position.coords.longitude], zoom);
@@ -237,7 +239,6 @@ function goToPosition(position) {
                 pointArray = [];
                 latlngArray = [];
                 map.on("click",function (ev){
-                    console.log(ev);
                     pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
                     latlngArray.push(ev.latlng);
                     if(pointArray.length > 1)
@@ -309,7 +310,7 @@ function addOverlay()
     },
     xTicks: undefined, //number of ticks in x axis, calculated by default according to width
     yTicks: undefined, //number of ticks on y axis, calculated by default according to height
-    collapsed: false    //collapsed mode, show chart on click or mouseover
+    collapsed: true    //collapsed mode, show chart on click or mouseover
   });
   el.addTo(map);
   
@@ -603,13 +604,15 @@ function csvJSON(csv){
   return result;
 }
 
-function displayTrace(traceJSON)
+function displayTrace(trace,elevation)
 {
   //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
+  var LSCoords = trace.split(",");
   var latlngArr = [];
-  for(var i = 0; i < traceJSON.length; i++)
+  for(var i = 0; i < LSCoords.length; i++)
   {
-    var res = new L.LatLng(traceJSON[i].lat,traceJSON[i].lng);
+    var coords = LSCoords[i].split(" ");
+    var res = new L.LatLng(coords[1],coords[0]);
     latlngArr.push(res);
   }
 
@@ -627,17 +630,21 @@ function displayTrace(traceJSON)
 
   //On ajoute le profil altimétrique
   var geojson = tracepolyline.toGeoJSON();
+  var elevations = elevation.split(";");
   for(var i = 0; i < geojson.geometry.coordinates.length; i++)
   {
-    geojson.geometry.coordinates[i].push(traceJSON[i].elevation);
+    geojson.geometry.coordinates[i].push(elevations[i]);
   }
   mapgeojson = L.geoJson(geojson,{
       onEachFeature: el.addData.bind(el)
   }); 
 
   tracepolyline.addTo(map);
-  drawnItems.addLayer(tracepolyline);
-
+  if(drawnItems !== undefined)
+  {
+    drawnItems.addLayer(tracepolyline);
+  }
+  
   //Events de la polyline, on retire les points selon les différents cas
   map.on('draw:editstart', function (e) {
         for(var i = 0; i < tracepolyline.markers.length; i++)
@@ -670,7 +677,8 @@ function displayTrace(traceJSON)
 
 function loadMap(json)
 {
-  $.ajax({
+  displayTrace(json.segment.trace,json.segment.elevation);
+  /*$.ajax({
         type: "GET",
         url: "http://localhost/Traces/" + json.trace.path,
         dataType: "text",
@@ -681,7 +689,7 @@ function loadMap(json)
        error : function(resultat, statut, erreur){
          $.notify("Erreur : Impossible de charger le fichier de parcours","error");
        },
-     });
+     });*/
       $("#denivp").text("Dénivelé positif : " + json.deniveleplus + "m");
       $("#denivn").text("Dénivelé négatif : " + json.denivelemoins + "m");
       $("#long").text("Longueur : " + json.longueur + "km");
