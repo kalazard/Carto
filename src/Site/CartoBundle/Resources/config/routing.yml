@@ -76,7 +76,10 @@ site_carto_recherche_itineraire:
     defaults: { _controller: SiteCartoBundle:Itineraire:recherche }
 site_carto_fiche:
     path:     /fiche
-    defaults: { _controller: SiteCartoBundle:User:index }
+    defaults: { _controller: SiteCartoBundle:User:profil }
+site_carto_submitFiche:
+    path:     /submit_fiche
+    defaults: { _controller: SiteCartoBundle:User:profilSubmit }
 site_carto_createUser:
     path:    /user/create
     defaults: { _controller:SiteCartoBundle:User:create }
@@ -113,3 +116,13 @@ logout:
 site_carto_recherche_itineraire:
     path:     /list
     defaults: { _controller: SiteCartoBundle:Itineraire:itilist }
+site_carto_saveSegment:
+    path:    /segment_save
+    defaults: { _controller:SiteCartoBundle:Itineraire:saveSegment }
+    options:
+        expose: true
+site_carto_loadSegment:
+    path:    /segmentload
+    defaults: { _controller:SiteCartoBundle:Itineraire:loadSegment }
+    options:
+        expose: true
