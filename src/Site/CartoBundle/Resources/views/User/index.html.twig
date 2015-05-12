@@ -6,26 +6,22 @@
 
 <div class="container">
   
-  {#	{% if app.user %}    #}
+  	{% if app.user %}    
       <h1>Fiche Membre</h1>
 	
-		{#  {{ path("site_trail_submitprofilmembre") }}  #}
-	
-		<form action="#" method="post">  
-		  {# avatar du membre #}
-		{#  <p class="pre"><strong>Prenom : </strong><span class="pre" id="pr">{{ prenom }} </span></p>
+		<form action="{{ path("site_carto_submitFiche") }}" method="post">  
+		  <p class="pre"><strong>Prenom : </strong><span class="pre" id="pr">{{ prenom }} </span></p>
 		  <p class="nom"><strong>Nom : </strong><span class="nom" id ="nm">{{ nom }} </span></p>
-		  <p class="dat"><strong>Date de naissance : </strong><span class="dat" id ="dn">{{date|date('d/m/Y')}}</span></p> #}
-		  <p class="ema"><strong>Email  : </strong><span class="ema" id="em">{{email}}</span></p>  {#
-		  <p class="tel"><strong>Téléphone : </strong><span class="tel" id="tl">{{tel}} </span></p>
-		  <p class="lic"><strong>Licence : </strong><span class="lic" id="lc">{{licence}} </span></p>  #}
+		  <p class="dat"><strong>Date de naissance : </strong><span class="dat" id ="dn">{{date|date('d/m/Y')}}</span></p> 
+		  <p class="ema"><strong>Email  : </strong><span class="ema" id="em">{{email}}</span></p>  
+		  <p class="tel"><strong>Téléphone : </strong><span class="tel" id="tl">{{tel}} </span></p>   
 		
 		<button id="btn" class="btn btn-warning" onclick="Modif()">Modifier</button> 	
 		</form>  
 		
 		{#  affichage des itinéraires du membre
 		  {% if resultats is not empty %}
-		  
+				
 				<h3>Résultats selon le nom</h3>
 				{% if resultats['username'] is not empty %}
 					{% for membre in resultats['username'] %}
@@ -43,14 +39,13 @@
 				{% else %}
 					 <p>Aucun résultat n'a été trouvé pour cet Email</p>
 				{% endif %}
+				
 		  {% endif %}
-		  
-		#}
-{#		  
+		 #}	  
  {% else %}
      <p>Vous n'avez pas accès à cette page</p>
  {% endif %}
- #}
+
  
 	<script>
 
