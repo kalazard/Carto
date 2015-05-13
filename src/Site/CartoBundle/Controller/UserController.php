@@ -56,8 +56,16 @@ class UserController extends Controller {
                 //On récupère le numéro de téléphone de l'utilisateur
                 $telephone = $request->request->get('telephone');
                 //Le role sera celui qu'aura spécifié l'administrateur donc on récupère ce paramètre de la requête
-                $role_base = intval($request->request->get('role'));
-
+                $role_base = $request->request->get('role');
+                
+                if($role_base == "")
+                {
+                    $role_base = 1; //C'est un utilisateur
+                }
+                else
+                {
+                   $role_base = intval($role_base); 
+                }
 
                 //On fait des vérifications pour voir que les informations saisies sont valide
                 //Si l'email est vide
@@ -732,7 +740,7 @@ class UserController extends Controller {
         $this->get('request')->getSession()->invalidate();
         $response = new RedirectResponse($this->generateUrl('site_carto_homepage'));
         $response->headers->clearCookie($this->container->getParameter("carto_auth_cookie"));
-
+        $response->headers->clearCookie("TrailAuthCookie");
         return $response;
     }
 
