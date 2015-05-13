@@ -60,7 +60,7 @@ class UserController extends Controller {
                 
                 if($role_base == "")
                 {
-                    $role_base = 1; //C'est un utilisateur
+                    $role_base = 2; //C'est un utilisateur
                 }
                 else
                 {
