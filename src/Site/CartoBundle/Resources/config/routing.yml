@@ -116,6 +116,11 @@ logout:
 site_carto_recherche_itineraire:
     path:     /list
     defaults: { _controller: SiteCartoBundle:Itineraire:itilist }
+site_carto_segment_update:
+    path:     /segment_update
+    defaults: { _controller: SiteCartoBundle:Segment:update }
+    options:
+        expose: true
 site_carto_saveSegment:
     path:    /segment_save
     defaults: { _controller:SiteCartoBundle:Itineraire:saveSegment }

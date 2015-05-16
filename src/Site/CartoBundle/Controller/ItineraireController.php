@@ -176,7 +176,7 @@ class ItineraireController extends Controller
             $manager->persist($trace);
             $manager->persist($segment);
             $manager->flush();
-            $response = new Response(json_encode(array("result" => "success","code" => 200)));
+            $response = new Response(json_encode(array("result" => "success","code" => 200,"jsonObject" => json_encode($iti))));
             $response->headers->set('Content-Type', 'application/json');
             return $response;            
         }
