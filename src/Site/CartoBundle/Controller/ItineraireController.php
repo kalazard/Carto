@@ -476,6 +476,81 @@ class ItineraireController extends Controller
 		}
 		return new Response('This is not ajax!', 400);
 	}
+	
+	
+	//fonction de recherche des itinéraires 
+	public function searchAction(Request $request)
+	{
+		$clientSOAP = new \SoapClient(null, array(
+                    'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                    'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                    'trace' => true,
+                    'exceptions' => true
+                ));
+
+		//Chargement de la liste des difficultés dans le select
+        $responseDiff = $clientSOAP->__call('difficultelist',array());
+
+        //Chargement de la liste des status dans le select
+        $responseStat = $clientSOAP->__call('statuslist',array());
+
+        //Chargement de la liste des types de chemin dans le select
+        $responseType = $clientSOAP->__call('typecheminlist',array());
+		
+        if($request->request->get("valid") == "ok")
+        {
+        	//Appel du service de recherche
+        	$search = array();		
+			$search["nom"] = $request->request->get("nom");
+			$search["typechemin"] = $request->request->get("typechemin");
+			$search["longueur"] = $request->request->get("longueur");
+			$search["datecrea"] = $request->request->get("datecrea");
+			$search["difficulte"] = $request->request->get("difficulte");
+			$search["status"] = $request->request->get("status");
+
+	        $response = $clientSOAP->__call('search', $search);
+
+			$res_search = json_decode($response);
+			$resDiff = json_decode($responseDiff);
+			$resStat = json_decode($responseStat);
+			$resType = json_decode($responseType);
+			$content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => $res_search,"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType, "list" => array()));
+        }
+		else
+		{
+			// Recupère la liste complète
+			$response = $clientSOAP->__call('itilist', array());
+		
+			$res_list = json_decode($response);
+			$resDiff = json_decode($responseDiff);
+			$resStat = json_decode($responseStat);
+			$resType = json_decode($responseType);
+			$content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => array(),"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType,"list" => $res_list));
+		}
+
+		return new Response($content);
+	}
+	
+	public function getByIdAction($id)
+	{
+        	//Appel du service de recherche
+        	$search = array();		
+			$search["id"] = $id;
+			
+			$clientSOAP = new \SoapClient(null, array(
+	                    'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'trace' => true,
+	                    'exceptions' => true
+	                ));
+
+	        $response = $clientSOAP->__call('getById', $search);
+
+			$res = json_decode($response);
+			
+			$content = $this->get("templating")->render("SiteTrailBundle:Itiniraire:FicheItineraire.html.twig",array("resultats" => $res,"jsonObject" => $response));
+			return new Response($content);
+	}
 
 	 
 }
