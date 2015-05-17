@@ -17,7 +17,7 @@ class ItineraireService
     
     public function itilist()
     {
-        $itineraire = $this->entityManager->getRepository("SiteCartoBundle:Itineraire")->findAll();
+        $itineraire = $this->entityManager->getRepository("SiteCartoBundle:Itineraire")->findBy(array('public' => 1));
         return json_encode(array("list" => $itineraire));
     }
 
@@ -30,11 +30,12 @@ class ItineraireService
         if($nom != null || $nom != "")
         {
             $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-            if($typechemin != null){$repository->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);}
-            if($longueur != null){$repository->andWhere('i.longueur = :longueur')->setParameter('longueur', $longueur);}
-            if($datecrea != null){$repository->andWhere('i.datecreation = :datecrea')->setParameter('datecrea', new \Datetime($datecrea));}
-            if($difficulte != null){$repository->andWhere('i.difficulte = :difficulte')->setParameter('difficulte', $difficulte);}
-            if($status != null){$repository->andWhere('i.status = :status')->setParameter('status', $status);}
+            if($typechemin != null){$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);}
+            if($longueur != null){$query->andWhere('i.longueur = :longueur')->setParameter('longueur', $longueur);}
+            if($datecrea != null){$query->andWhere('i.datecreation = :datecrea')->setParameter('datecrea', new \Datetime($datecrea));}
+            if($difficulte != null){$query->andWhere('i.difficulte = :difficulte')->setParameter('difficulte', $difficulte);}
+            if($status != null){$query->andWhere('i.status = :status')->setParameter('status', $status);}
+            $query->andWhere('i.public=1');
             $listItiniraire = $query->getQuery()->getResult();
             return json_encode(array("searchResults" => $listItiniraire));
         }
@@ -45,6 +46,7 @@ class ItineraireService
             if($datecrea != null){$params["datecreation"] = $datecrea;}
             if($difficulte != null){$params["difficulte"] = $difficulte;}
             if($status != null){$params["status"] = $status;}
+            $params["public"] = 1;
             $listItiniraire = $repository->findBy($params);
             return json_encode(array("searchResults" => $listItiniraire));
         }
