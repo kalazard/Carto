@@ -318,14 +318,239 @@ class ItineraireController extends Controller
 	
 	public function loadSegmentAction(Request $request)
 	{
-		//on récupère les paramètres dans le request 
-
-		//on sauvegarde les données dans la base
-		
-		//on renvoit un message de validation
-		
-		//sauvegarde dans la controller itinéraire
-		
+		if($request->isXMLHttpRequest()) 
+        {
+			$north = $request->request->get("north","");
+			$south = $request->request->get("south","");
+			
+			//on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
+			
+			//requete pour trouver les résultats 
+			
+			$response = new Response(json_encode(array("result" => "success","code" => 200)));
+			return $response; 
+		}
+		return new Response('This is not ajax!', 400);		
 	}
+	
+	public function getSegmentByIdAction(Request $request)
+	{
+		//on récupère l'id de l'itinéraire à charger 
+		
+		//on charge ses données
+		
+		//on renvoit le tout
+		
+		$id = $request->get('id');
+		
+		//on charge les infos de l'utilisateur courant.
+		$manager = $this->getDoctrine()->getManager();
+		//on recherche l'itinéraire associé à son id
+		$data = $manager->getRepository('SiteCartoBundle:Itineraire')->findOneBy(array('id'=>$id)); 
+			
+		//lien itinéraire (nom et id), type de chemin, difficulté, date de création, longueur du parcours, statut, visiblité, supprimer
+		$result['id'] = $data->getId();
+		$result['auteur_id'] = $data->getAuteur()->getId();
+		$result['nom'] = $data->getNom();
+		$result['numero'] = $data->getNumero();
+		$result['type'] = $data->getTypeChemin()->getLabel();
+		$result['type_id'] = $data->getTypeChemin()->getId();
+		$result['difficulte'] = $data->getDifficulte()->getLabel();
+		$result['difficulte_id'] = $data->getDifficulte()->getId();
+		$result['date'] = $data->getDateCreation();
+		$result['longueur'] = $data->getLongueur();
+		$result['deniv_plus'] = $data->getDenivelePlus();
+		$result['deniv_moins'] = $data->getDeniveleMoins();
+		$result['status'] = $data->getStatus()->getLabel();
+		$result['status_id'] = $data->getStatus()->getId();
+		$result['description'] = $data->getDescription();
+		$result['auteur'] = $data->getAuteur()->getEmail();
+		
+		$public = "privé";
+		if($data->getPublic() == 1)
+		{
+			$public = "publique";
+		}
+		
+		$result['public'] = $public;
+		
+		$content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig",$result);
+		return new Response($content);
+	}
+	
+	 public function getFormDataAction(Request $request)
+    {	
+    	//si c'est un appel AJAX
+		if($request->isXMLHttpRequest()) 
+        {
+			//Chargement de la liste des difficultés dans le select
+			$manager = $this->getDoctrine()->getManager();
+			$repository = $manager->getRepository("SiteCartoBundle:Difficulteparcours");
+			$diffs = $repository->findAll();
+			
+			$result = array();
+			$result['difficulte'] = array();
+			$compteur = 0;
+			foreach($diffs as $var)
+			{
+				$result['difficulte'][$compteur]['niveau'] = $var->getNiveau();
+				$result['difficulte'][$compteur]['texte'] = $var->getLabel();
+				
+				$compteur++;
+			}
+		
+			//Chargement de la liste des status dans le select
+			$repository = $manager->getRepository("SiteCartoBundle:Status");
+			$diffs = $repository->findAll();
+			
+			$result['status'] = array();
+			$compteur = 0;
+			foreach($diffs as $var)
+			{
+				$result['status'][$compteur]['texte'] = $var->getLabel();
+				$result['status'][$compteur]['id'] = $var->getId();
+				
+				$compteur++;
+			}			
+
+			//Chargement de la liste des types de chemin dans le select
+			$repository = $manager->getRepository("SiteCartoBundle:Typechemin");
+			$diffs = $repository->findAll();
+			
+			$result['type'] = array();
+			$compteur = 0;
+			foreach($diffs as $var)
+			{
+				$result['type'][$compteur]['texte'] = $var->getLabel();
+				$result['type'][$compteur]['id'] = $var->getId();
+				
+				$compteur++;
+			}
+			
+			$data = json_encode($result);
+		  
+			return new Response($data);
+		}
+		return new Response('This is not ajax!', 400);	
+    }
+	
+	public function updateItiAction(Request $request)
+	{
+		if($request->isXMLHttpRequest()) 
+        {	
+			$params = array();		
+			$params["nom"] = $request->request->get("nom");
+			$params["typechemin"] = $request->request->get("typechemin");
+			$params["difficulte"] = $request->request->get("difficulte");
+			$params["description"] = $request->request->get("description");
+			$params["numero"] = $request->request->get("numero");
+			$params["auteur"] = $request->request->get("auteur");
+			$params["status"] = $request->request->get("status");
+			$params["public"] = $request->request->get("public");
+			$params["id"] = $request->request->get("id");
+		
+			$manager = $this->getDoctrine()->getManager();
+		
+			$repositoryDiff=$manager->getRepository("SiteCartoBundle:Difficulteparcours");
+			$repositoryStat=$manager->getRepository("SiteCartoBundle:Status");
+			$repositoryType=$manager->getRepository("SiteCartoBundle:Typechemin");
+			$repositoryIti=$manager->getRepository("SiteCartoBundle:Itineraire");
+
+			$diff = $repositoryDiff->find($params["difficulte"]);
+			$stat = $repositoryStat->find($params["status"]);
+			$type = $repositoryType->find($params["typechemin"]);
+
+			$route = $repositoryIti->findBy(array('id' => $params["id"]));
+			$route[0]->setNom($params["nom"]);
+			$route[0]->setNumero($params["numero"] );
+			$route[0]->setTypechemin($type);
+			$route[0]->setDescription($params["description"]);
+			$route[0]->setDifficulte($diff);
+			$route[0]->setStatus($stat);
+			$route[0]->setPublic($params["public"]);
+
+			$manager->persist($route[0]);
+			$manager->flush();
+
+			return new Response("success");
+		}
+		return new Response('This is not ajax!', 400);
+	}
+	
+	
+	//fonction de recherche des itinéraires 
+	public function searchAction(Request $request)
+	{
+		$clientSOAP = new \SoapClient(null, array(
+                    'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                    'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                    'trace' => true,
+                    'exceptions' => true
+                ));
+
+		//Chargement de la liste des difficultés dans le select
+        $responseDiff = $clientSOAP->__call('difficultelist',array());
+
+        //Chargement de la liste des status dans le select
+        $responseStat = $clientSOAP->__call('statuslist',array());
+
+        //Chargement de la liste des types de chemin dans le select
+        $responseType = $clientSOAP->__call('typecheminlist',array());
+		
+        if($request->request->get("valid") == "ok")
+        {
+        	//Appel du service de recherche
+        	$search = array();		
+			$search["nom"] = $request->request->get("nom");
+			$search["typechemin"] = $request->request->get("typechemin");
+			$search["longueur"] = $request->request->get("longueur");
+			$search["datecrea"] = $request->request->get("datecrea");
+			$search["difficulte"] = $request->request->get("difficulte");
+			$search["status"] = $request->request->get("status");
+
+	        $response = $clientSOAP->__call('search', $search);
+
+			$res_search = json_decode($response);
+			$resDiff = json_decode($responseDiff);
+			$resStat = json_decode($responseStat);
+			$resType = json_decode($responseType);
+			$content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => $res_search,"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType, "list" => array()));
+        }
+		else
+		{
+			// Recupère la liste complète
+			$response = $clientSOAP->__call('itilist', array());
+		
+			$res_list = json_decode($response);
+			$resDiff = json_decode($responseDiff);
+			$resStat = json_decode($responseStat);
+			$resType = json_decode($responseType);
+			$content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => array(),"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType,"list" => $res_list));
+		}
+
+		return new Response($content);
+	}
+	
+	public function getByIdAction($id)
+	{
+        	//Appel du service de recherche
+        	$search = array();		
+			$search["id"] = $id;
+			
+			$clientSOAP = new \SoapClient(null, array(
+	                    'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'trace' => true,
+	                    'exceptions' => true
+	                ));
+
+	        $response = $clientSOAP->__call('getById', $search);
+
+			$res = json_decode($response);
+			
+			$content = $this->get("templating")->render("SiteTrailBundle:Itiniraire:FicheItineraire.html.twig",array("resultats" => $res,"jsonObject" => $response));
+			return new Response($content);
+	}
+
 	 
 }
