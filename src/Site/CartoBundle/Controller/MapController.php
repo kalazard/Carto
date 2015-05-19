@@ -24,7 +24,7 @@ class MapController extends Controller
 {
     public function indexAction()
     {       
-        $content = $this->get("templating")->render("SiteCartoBundle:Map:index.html.twig");        
+        $content = $this->get("templating")->render("SiteCartoBundle:Map:map.html.twig");        
         return new Response($content);
     }
 
@@ -131,6 +131,45 @@ class MapController extends Controller
 		
 		return $response;
 	}
+	
+		//fonction de chargement des tronçons dans une zone précise
+	public function loadSegmentAction(Request $request)
+	{
+		if ($request->isXMLHttpRequest()) 
+		{
+			//calcul de la section à charger
+		
+			//requete pour charger les données en fonction des coordonnés passé en paramètre.
+			
+			//coordonées des deux pogs 
+			
+			
+			//la requete renvoit seulement les POG/POP afin d'alleger le transfert de données
+			$response = new Response(json_encode(array("result" => $return_message,"code" => 500)));
+			$response = new Response();
+		}
+		else 
+		{
+			$response = new Response();
+		}
+	}
+	
+	/*public function saveSegmentAction(Request $request)
+	{
+		//on récupère les paramètres dans le request 
+
+		//on sauvegarde les données dans la base
+		
+		//on renvoit un message de validation
+		
+		//sauvegarde dans la controller itinéraire
+		
+	}
+	*/
+	//prévoir une deuxieme fonction pour charger un tronçon précis et d'obtenir tout ses points (edition)
+	
+	//fonction de modification d'un segment 
+	//séparation d'un segment en deux autre tronçon suivant le points d'insertion.a
 }
 
 /* 

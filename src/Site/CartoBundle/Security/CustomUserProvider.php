@@ -22,7 +22,12 @@ class CustomUserProvider implements UserProviderInterface {
             $cookie = CustomCrypto::decrypt($_COOKIE["TrailAuthCookie"]);
             return intval(explode("/", $cookie)[0]);
         } else {
-            return false;
+            if (isset($_COOKIE["CartoAuthCookie"])) {
+                $cookie = CustomCrypto::decrypt($_COOKIE["CartoAuthCookie"]);
+                return intval(explode("/", $cookie)[0]);
+            } else {
+                return false;
+            }
         }
     }
 

@@ -1,0 +1,119 @@
+{% extends "SiteCartoBundle::layout.html.twig" %}
+
+{% block title %}{{ parent() }} - Recherche d'itinéraire{% endblock %}
+
+{% block body %}
+	  {% if app.user %}
+	  <div class="container">
+		      <h1>Recherche d'itinéraire</h1>
+			  
+			  <form class="form-inline" role="form" name="myform" action="{{ path('site_carto_searchitineraire') }}" method="POST">
+			  		<table class="table table-striped">
+				<thead>
+					<tr>
+						<th><label for="nom">Nom</label></th>
+						<th><label for="typechemin">Type de chemin</label></th>
+						<th><label for="recipient-name" class="control-label">Difficulté</label></th>
+						<th><label for="datecrea">Date de création</label></th>
+						<th><label for="longueur">Longueur</label></th>
+						<th><label for="status">Statut</label></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th class="col-xs-3"><input name="nom" id="nom" type="text" placeholder="Nom"></th>
+
+		                <th class="col-xs-2" >
+			                <select name="typechemin">
+			                  {% if typechemin.typechemin is not empty %}
+			                  <option value=""/></option>
+										{% for type in typechemin.typechemin%}
+											<option value={{type.id}}>{{type.label}}</option>
+										{% endfor %}
+							  {% endif %}
+			                </select>
+		            	</th>
+
+		                <th class="col-xs-2" >
+			                <select name="difficulte">
+			                  {% if diffs.difficultes is not empty %}
+			                  <option value=""/></option>
+										{% for diff in diffs.difficultes%}
+											<option value={{diff.niveau}}>{{diff.label}}</option>
+										{% endfor %}
+							  {% endif %}
+			                </select>
+		            	</th>
+
+						<th class="col-xs-2" ><input name="datecrea" id="datecrea" type="date" placeholder="Date de création"></th>
+
+						<th class="col-xs-2" ><input name="longueur" id="longueur" type="text" placeholder="Longueur"></th>
+
+						<th class="col-xs-2" >
+							<select name="status">
+			                  {% if stats.status is not empty %}
+			                  <option value=""/></option>
+										{% for stat in stats.status%}
+											<option value={{stat.id}}>{{stat.label}}</option>
+										{% endfor %}
+							  {% endif %}
+			                </select>
+		            	</th>
+
+					</tr>
+				</tbody>
+			   </table>
+		            <input name="valid" type="hidden" value="ok">
+		            <div class="form-group">
+						<input type="submit" class="btn btn-primary" name="submit" value=" Rechercher ">
+					</div>
+				</form>
+				<hr>
+			  <table class="table table-striped">
+				<thead>
+					<tr>
+						<th>Itinéraire</th>
+						<th>Type de chemin</th>
+						<th>Difficulté</th>
+						<th>Date de création</th>
+						<th>Longueur du parcours</th>
+						<th>Statut</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% if resultats is empty %}
+					{% if list.list is not empty %}
+						{% for itineraire in list.list %}
+							{% if itineraire.public == 1 or itineraire.auteur.id == app.user.id %}
+						<tr>
+							<td><a href="{{ path('site_carto_getByIditineraire', {'id': itineraire.id}) }}">{{itineraire.nom}}</a></td>
+							<td>{{itineraire.typechemin.label}}</td>
+							<td>{{itineraire.difficulte.label}}</td>
+							<td>{{itineraire.datecreation}}</td>
+							<td>{{itineraire.longueur}}km</td>
+							<td>{{itineraire.status.label}}</td>
+						</tr>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				  {% else %}
+						{% if resultats.searchResults is not empty %}
+							{% for itineraire in resultats.searchResults %}
+								<tr>
+									<td><a href="{{ path('site_carto_getByIditineraire', {'id': itineraire.id}) }}">{{itineraire.nom}}</a></td>
+									<td>{{itineraire.typechemin.label}}</td>
+									<td>{{itineraire.difficulte.label}}</td>
+									<td>{{itineraire.datecreation}}</td>
+									<td>{{itineraire.longueur}}km</td>
+									<td>{{itineraire.status.label}}</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+				  {% endif %}
+				</tbody>
+			   </table>
+		</div>
+	 {% else %}
+	     <p>Vous n'avez pas accès à cette page</p>
+	 {% endif %}
+{% endblock %}

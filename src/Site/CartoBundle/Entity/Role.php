@@ -69,7 +69,10 @@ class Role implements RoleInterface,  JsonSerializable
     }
 
     public function jsonSerialize() {
-        
+        return array(
+            'id' => $this->id,
+            'name'=> $this->getLabel(),
+        );
     }
 
 }

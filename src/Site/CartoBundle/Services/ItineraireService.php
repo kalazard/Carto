@@ -4,6 +4,7 @@
 namespace Site\CartoBundle\Services;
 
 use Site\CartoBundle\Entity\Itineraire;
+use \CrEOF\Spatial\PHP\Types\Geography\Point as MySQLPoint;
 
 class ItineraireService
 {
@@ -16,7 +17,7 @@ class ItineraireService
     
     public function itilist()
     {
-        $itineraire = $this->entityManager->getRepository("SiteCartoBundle:Itineraire")->findAll();
+        $itineraire = $this->entityManager->getRepository("SiteCartoBundle:Itineraire")->findBy(array('public' => 1));
         return json_encode(array("list" => $itineraire));
     }
 
@@ -29,11 +30,12 @@ class ItineraireService
         if($nom != null || $nom != "")
         {
             $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-            if($typechemin != null){$repository->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);}
-            if($longueur != null){$repository->andWhere('i.longueur = :longueur')->setParameter('longueur', $longueur);}
-            if($datecrea != null){$repository->andWhere('i.datecreation = :datecrea')->setParameter('datecrea', new \Datetime($datecrea));}
-            if($difficulte != null){$repository->andWhere('i.difficulte = :difficulte')->setParameter('difficulte', $difficulte);}
-            if($status != null){$repository->andWhere('i.status = :status')->setParameter('status', $status);}
+            if($typechemin != null){$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);}
+            if($longueur != null){$query->andWhere('i.longueur = :longueur')->setParameter('longueur', $longueur);}
+            if($datecrea != null){$query->andWhere('i.datecreation = :datecrea')->setParameter('datecrea', new \Datetime($datecrea));}
+            if($difficulte != null){$query->andWhere('i.difficulte = :difficulte')->setParameter('difficulte', $difficulte);}
+            if($status != null){$query->andWhere('i.status = :status')->setParameter('status', $status);}
+            $query->andWhere('i.public=1');
             $listItiniraire = $query->getQuery()->getResult();
             return json_encode(array("searchResults" => $listItiniraire));
         }
@@ -44,25 +46,46 @@ class ItineraireService
             if($datecrea != null){$params["datecreation"] = $datecrea;}
             if($difficulte != null){$params["difficulte"] = $difficulte;}
             if($status != null){$params["status"] = $status;}
+            $params["public"] = 1;
             $listItiniraire = $repository->findBy($params);
             return json_encode(array("searchResults" => $listItiniraire));
         }
     }
 
-    public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points,$public)
+    /*public function save($nom,$typechemin,$denivelep,$denivelen,$difficulte,$longueur,$description,$numero,$auteur,$status,$points,$public)
     {
         $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
         $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
         $repositoryStat=$this->entityManager->getRepository("SiteCartoBundle:Status");
         $repositoryType=$this->entityManager->getRepository("SiteCartoBundle:Typechemin");
+        $repositorySegment=$this->entityManager->getRepository("SiteCartoBundle:Segment");
 
         $trace = new Trace();
         $filename = uniqid('trace_', true) . '.csv';
         $trace->setPath($filename);
         $diff = $repositoryDiff->find($difficulte);
         $stat = $repositoryStat->find($status);
-        var_dump($typechemin);
         $type = $repositoryType->find($typechemin);
+
+        $segment = new Segment();
+        $pointArray = json_decode($points,true);
+        $lsArray = [];
+        $elevationString = "";
+        $i = 1;
+        foreach($pointArray as $pt)
+        {
+            array_push($lsArray,new MySQLPoint()->setX($pt["lng"])->setY($pt["lat"]));
+            $elevationString = $elevationString . $pt["elevation"];
+            if(++$i != count($pointArray))
+            {
+                $elevationString = $elevationString . ";";
+            }
+        }
+        $segment->setTrace(new LineString()->setPoints($lsArray));
+        $segment->setElevation($elevationString);
+        $segment->setSens(0);
+        $segment->setPog1($lsArray[0]);
+        $segment->setPog2(end($lsArray));
 
         $route = new Itineraire();
         $route->setDate(new \DateTime('now'));
@@ -78,6 +101,7 @@ class ItineraireService
         $route->setAuteur($user);
         $route->setStatus($stat);
         $route->setPublic($public);
+        $route->setSegment($segment);
 
         $json_obj = json_decode($points);
         $fp = fopen('../../Traces/'.$filename, 'w');
@@ -88,6 +112,45 @@ class ItineraireService
 
         $this->entityManager->persist($route);
         $this->entityManager->persist($trace);
+        $this->entityManager->persist($segment);
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }*/
+
+    public function update($nom,$typechemin,$difficulte,$description,$numero,$auteur,$status,$public,$id)
+    {
+        $repositoryDiff=$this->entityManager->getRepository("SiteCartoBundle:Difficulteparcours");
+        $repositoryStat=$this->entityManager->getRepository("SiteCartoBundle:Status");
+        $repositoryType=$this->entityManager->getRepository("SiteCartoBundle:Typechemin");
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+
+        $diff = $repositoryDiff->find($difficulte);
+        $stat = $repositoryStat->find($status);
+        $type = $repositoryType->find($typechemin);
+
+        $route = $repositoryIti->findBy(array('id' => $id));
+        $route[0]->setNom($nom);
+        $route[0]->setNumero($numero);
+        $route[0]->setTypechemin($type);
+        $route[0]->setDescription($description);
+        $route[0]->setDifficulte($diff);
+        $route[0]->setStatus($stat);
+        $route[0]->setPublic($public);
+
+        $this->entityManager->persist($route[0]);
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }
+
+    public function delete($id)
+    {
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+
+        $route = $repositoryIti->findBy(array('id' => $id));
+
+        $this->entityManager->remove($route[0]);
         $this->entityManager->flush();
 
         return json_encode(array("result" => "success","code" => 200));

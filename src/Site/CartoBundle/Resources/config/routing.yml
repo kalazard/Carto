@@ -86,4 +86,82 @@ site_carto_recherche_itineraire:
     defaults: { _controller: SiteCartoBundle:Itineraire:recherche }
 site_carto_fiche:
     path:     /fiche
-    defaults: { _controller: SiteCartoBundle:User:index }
+    defaults: { _controller: SiteCartoBundle:Member:profil }
+site_carto_submitFiche:
+    path:     /submit_fiche
+    defaults: { _controller: SiteCartoBundle:Member:profilSubmit }
+site_carto_createUser:
+    path:    /user/create
+    defaults: { _controller:SiteCartoBundle:User:create }
+site_carto_loadRoles:
+    path:    /user/loadRoles
+    defaults: { _controller:SiteCartoBundle:User:loadRoles }
+site_carto_getAllUsers:
+    path:    /user/all
+    defaults: { _controller:SiteCartoBundle:User:getAllUsers }
+site_carto_annuaire:
+    path:    /user/annuaire
+    defaults: { _controller:SiteCartoBundle:User:annuaire }
+site_carto_deleteUser:
+    path:    /user/delete
+    defaults: { _controller:SiteCartoBundle:User:delete }
+site_carto_getUser:
+    path:    /user/get
+    defaults: { _controller:SiteCartoBundle:User:getUser }
+site_carto_updateUser:
+    path:    /user/update
+    defaults: { _controller:SiteCartoBundle:User:updateUser }
+site_carto_getUserActivation:
+    path:    /user/getActivation
+    defaults:  { _controller:SiteCartoBundle:User:getUserActivation }
+site_carto_changePassword:
+    path:    /user/changePassword
+    defaults:  { _controller:SiteCartoBundle:User:changePassword }
+login_check:
+    path:   /login_check
+    defaults: { _controller:SiteCartoBundle:User:logIn }
+logout:
+    path:   /logout
+    defaults: { _controller:SiteCartoBundle:User:logOut }
+site_carto_recherche_itineraire:
+    path:     /list
+    defaults: { _controller: SiteCartoBundle:Itineraire:itilist }
+site_carto_segment_update:
+    path:     /segment_update
+    defaults: { _controller: SiteCartoBundle:Segment:update }
+    options:
+        expose: true
+site_carto_saveSegment:
+    path:    /segment_save
+    defaults: { _controller:SiteCartoBundle:Itineraire:saveSegment }
+    options:
+        expose: true
+site_carto_loadSegment:
+    path:    /segmentload
+    defaults: { _controller:SiteCartoBundle:Itineraire:loadSegment }
+    options:
+        expose: true
+site_carto_fiche_itineraire:
+    path:     /itineraire_get/{id}
+    defaults: { _controller: SiteCartoBundle:Itineraire:getSegmentById }
+site_carto_ficheitineraireformdata:
+    path:     /itineraire_get_form_data/
+    defaults: { _controller: SiteCartoBundle:Itineraire:getFormData }
+    options:
+        expose: true
+site_carto_itineraireupdate:
+    path:     /itineraire_update_iti/
+    defaults: { _controller: SiteCartoBundle:Itineraire:updateIti }
+    options:
+        expose: true
+site_carto_searchitineraire:
+    path:     /itineraire_search/
+    defaults: { _controller: SiteCartoBundle:Itineraire:search }
+site_carto_getByIditineraire:
+    path:     /itineraire_getById/{id}
+    defaults: { _controller: SiteCartoBundle:Itineraire:getById }
+site_carto_itinerairedelete:
+    path:     /itineraire_delete/
+    defaults: { _controller: SiteCartoBundle:Itineraire:delete }
+    options:
+        expose: true

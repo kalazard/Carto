@@ -3,14 +3,15 @@
 namespace Site\CartoBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 /**
  * Segment
  *
- * @ORM\Table(name="segment", indexes={@ORM\Index(name="fk_segment_trace1_idx", columns={"trace"}), @ORM\Index(name="fk_segment_coordonnees1_idx", columns={"coordonnees_debut"}), @ORM\Index(name="fk_segment_coordonnees2_idx", columns={"coordonnees_fin"})})
+ * @ORM\Table(name="segment", indexes={@ORM\Index(name="fk_segment_trace1_idx", columns={"pog1"}), @ORM\Index(name="fk_segment_coordonnees1_idx", columns={"pog2"})})
  * @ORM\Entity
  */
-class Segment
+class Segment implements JsonSerializable
 {
     /**
      * @var integer
@@ -22,35 +23,60 @@ class Segment
     private $id;
 
     /**
-     * @var \Trace
+     * @var integer
      *
-     * @ORM\ManyToOne(targetEntity="Trace")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="trace", referencedColumnName="id")
-     * })
+     * @ORM\Column(name="sens", type="integer", nullable=false)
+     */
+    private $sens;
+
+    /**
+     * @var linestring
+     *
+     * @ORM\Column(name="trace", type="linestring", nullable=false)
      */
     private $trace;
 
     /**
-     * @var \Coordonnees
+     * @var string
      *
-     * @ORM\ManyToOne(targetEntity="Coordonnees")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="coordonnees_debut", referencedColumnName="id")
-     * })
+     * @ORM\Column(name="elevation", type="text", nullable=false)
      */
-    private $coordonneesDebut;
+    private $elevation;
 
     /**
-     * @var \Coordonnees
+     * @var \Point
      *
-     * @ORM\ManyToOne(targetEntity="Coordonnees")
+     * @ORM\ManyToOne(targetEntity="Point")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="coordonnees_fin", referencedColumnName="id")
+     *   @ORM\JoinColumn(name="pog1", referencedColumnName="id")
      * })
      */
-    private $coordonneesFin;
+    private $pog1;
 
+    /**
+     * @var \Point
+     *
+     * @ORM\ManyToOne(targetEntity="Point")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="pog2", referencedColumnName="id")
+     * })
+     */
+    private $pog2;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Point", mappedBy="idsegment")
+     */
+    //private $idpop;
+
+    /**
+     * Constructor
+     */
+    /*public function __construct()
+    {
+        $this->idpop = new \Doctrine\Common\Collections\ArrayCollection();
+    }*/
 
 
     /**
@@ -64,12 +90,35 @@ class Segment
     }
 
     /**
-     * Set trace
+     * Set sens
      *
-     * @param \Site\CartoBundle\Entity\Trace $trace
+     * @param integer $sens
      * @return Segment
      */
-    public function setTrace(\Site\CartoBundle\Entity\Trace $trace = null)
+    public function setSens($sens)
+    {
+        $this->sens = $sens;
+
+        return $this;
+    }
+
+    /**
+     * Get sens
+     *
+     * @return integer 
+     */
+    public function getSens()
+    {
+        return $this->sens;
+    }
+
+    /**
+     * Set trace
+     *
+     * @param linestring $trace
+     * @return Segment
+     */
+    public function setTrace($trace)
     {
         $this->trace = $trace;
 
@@ -79,7 +128,7 @@ class Segment
     /**
      * Get trace
      *
-     * @return \Site\CartoBundle\Entity\Trace 
+     * @return linestring 
      */
     public function getTrace()
     {
@@ -87,48 +136,115 @@ class Segment
     }
 
     /**
-     * Set coordonneesDebut
+     * Set elevation
      *
-     * @param \Site\CartoBundle\Entity\Coordonnees $coordonneesDebut
+     * @param string $elevation
      * @return Segment
      */
-    public function setCoordonneesDebut(\Site\CartoBundle\Entity\Coordonnees $coordonneesDebut = null)
+    public function setElevation($elevation)
     {
-        $this->coordonneesDebut = $coordonneesDebut;
+        $this->elevation = $elevation;
 
         return $this;
     }
 
     /**
-     * Get coordonneesDebut
+     * Get elevation
      *
-     * @return \Site\CartoBundle\Entity\Coordonnees 
+     * @return string 
      */
-    public function getCoordonneesDebut()
+    public function getElevation()
     {
-        return $this->coordonneesDebut;
+        return $this->elevation;
     }
 
     /**
-     * Set coordonneesFin
+     * Set pog1
      *
-     * @param \Site\CartoBundle\Entity\Coordonnees $coordonneesFin
+     * @param \Site\CartoBundle\Entity\Point $pog1
      * @return Segment
      */
-    public function setCoordonneesFin(\Site\CartoBundle\Entity\Coordonnees $coordonneesFin = null)
+    public function setPog1(\Site\CartoBundle\Entity\Point $pog1 = null)
     {
-        $this->coordonneesFin = $coordonneesFin;
+        $this->pog1 = $pog1;
 
         return $this;
     }
 
     /**
-     * Get coordonneesFin
+     * Get pog1
      *
-     * @return \Site\CartoBundle\Entity\Coordonnees 
+     * @return \Site\CartoBundle\Entity\Point 
      */
-    public function getCoordonneesFin()
+    public function getPog1()
     {
-        return $this->coordonneesFin;
+        return $this->pog1;
+    }
+
+    /**
+     * Set pog2
+     *
+     * @param \Site\CartoBundle\Entity\Point $pog2
+     * @return Segment
+     */
+    public function setPog2(\Site\CartoBundle\Entity\Point $pog2 = null)
+    {
+        $this->pog2 = $pog2;
+
+        return $this;
+    }
+
+    /**
+     * Get pog2
+     *
+     * @return \Site\CartoBundle\Entity\Point 
+     */
+    public function getPog2()
+    {
+        return $this->pog2;
+    }
+
+    /**
+     * Add idpop
+     *
+     * @param \Site\CartoBundle\Entity\Point $idpop
+     * @return Segment
+     */
+    /*public function addIdpop(\Site\CartoBundle\Entity\Point $idpop)
+    {
+        $this->idpop[] = $idpop;
+
+        return $this;
+    }*/
+
+    /**
+     * Remove idpop
+     *
+     * @param \Site\CartoBundle\Entity\Point $idpop
+     */
+   /* public function removeIdpop(\Site\CartoBundle\Entity\Point $idpop)
+    {
+        $this->idpop->removeElement($idpop);
+    }*/
+
+    /**
+     * Get idpop
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    /*public function getIdpop()
+    {
+        return $this->idpop;
+    }*/
+
+    public function jsonSerialize() {
+        return array(
+            'id' => $this->getId(),
+            'sens'=> $this->getSens(),
+            'trace' => $this->getTrace()->__toString(),
+            'elevation' => $this->getElevation(),
+            'pog1' => $this->getPog1(),
+            'pog2' => $this->getPog2()
+        );
     }
 }
