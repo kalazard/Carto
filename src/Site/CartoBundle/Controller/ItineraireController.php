@@ -172,11 +172,11 @@ class ItineraireController extends Controller
             }
             fclose($fp);
 
-           // $manager->persist($route);
+            $manager->persist($route);
             $manager->persist($trace);
             $manager->persist($segment);
             $manager->flush();
-            $response = new Response(json_encode(array("result" => "success","code" => 200,"jsonObject" => json_encode($iti))));
+            $response = new Response(json_encode(array("result" => "success","code" => 200,"jsonObject" => json_encode($route))));
             $response->headers->set('Content-Type', 'application/json');
             return $response;            
         }
