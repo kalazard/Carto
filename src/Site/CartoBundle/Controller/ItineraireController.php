@@ -218,18 +218,10 @@ class ItineraireController extends Controller
         if ($request->isXMLHttpRequest()) 
         {
             $manager = $this->getDoctrine()->getManager();
-            $repositoryDiff=$manager->getRepository("SiteCartoBundle:Difficulteparcours");
-            $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
-            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
-            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
 
             $trace = new Trace();
             $filename = uniqid('trace_', true) . '.csv';
             $trace->setPath($filename);
-            $diff = $repositoryDiff->find($request->request->get("difficulte",""));
-            $user = $repositoryUser->find($request->request->get("auteur",""));
-            $status = $repositoryStatus->find($request->request->get("status",""));
-            $typechemin = $repositoryTypechemin->find($request->request->get("typechemin",""));
 
             $segment = new Segment();
             $pointArray = json_decode($request->request->get("points",""),true);
@@ -274,22 +266,6 @@ class ItineraireController extends Controller
             $segment->setPog1($pog1);
             $segment->setPog2($pog2);
 
-            $route = new Itineraire();
-            $route->setDatecreation(new \DateTime('now'));
-            $route->setLongueur($request->request->get("longueur",""));
-            $route->setDeniveleplus($request->request->get("denivelep",""));
-            $route->setDenivelemoins($request->request->get("denivelen",""));
-            $route->setTrace($trace);
-            $route->setNom($request->request->get("nom",""));
-            $route->setNumero($request->request->get("numero",""));
-            $route->setTypechemin($typechemin);
-            $route->setDescription($request->request->get("description",""));
-            $route->setDifficulte($diff);
-            $route->setAuteur($user);
-            $route->setStatus($status);
-            $route->setPublic($request->request->get("public",""));
-            $route->setSegment($segment);
-
             $json_obj = json_decode($request->request->get("points",""),true);
             $fp = fopen('../../Traces/'.$filename, 'w');
             $firstLineKeys = false;
@@ -305,7 +281,6 @@ class ItineraireController extends Controller
             }
             fclose($fp);
 
-            $manager->persist($route);
             $manager->persist($trace);
             $manager->persist($segment);
             $manager->flush();
