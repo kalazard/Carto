@@ -149,4 +149,9 @@ site_carto_searchitineraire:
     defaults: { _controller: SiteCartoBundle:Itineraire:search }
 site_carto_getByIditineraire:
     path:     /itineraire_getById/{id}
-    defaults: { _controller: SiteTrailBundle:Itiniraire:getById }
+    defaults: { _controller: SiteCartoBundle:Itineraire:getById }
+site_carto_itinerairedelete:
+    path:     /itineraire_delete/
+    defaults: { _controller: SiteCartoBundle:Itineraire:delete }
+    options:
+        expose: true

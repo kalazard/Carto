@@ -218,18 +218,10 @@ class ItineraireController extends Controller
         if ($request->isXMLHttpRequest()) 
         {
             $manager = $this->getDoctrine()->getManager();
-            $repositoryDiff=$manager->getRepository("SiteCartoBundle:Difficulteparcours");
-            $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
-            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
-            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
 
             $trace = new Trace();
             $filename = uniqid('trace_', true) . '.csv';
             $trace->setPath($filename);
-            $diff = $repositoryDiff->find($request->request->get("difficulte",""));
-            $user = $repositoryUser->find($request->request->get("auteur",""));
-            $status = $repositoryStatus->find($request->request->get("status",""));
-            $typechemin = $repositoryTypechemin->find($request->request->get("typechemin",""));
 
             $segment = new Segment();
             $pointArray = json_decode($request->request->get("points",""),true);
@@ -270,25 +262,9 @@ class ItineraireController extends Controller
 
             $segment->setTrace($ls);
             $segment->setElevation($elevationString);
-            $segment->setSens(0);
+            $segment->setSens(o);
             $segment->setPog1($pog1);
             $segment->setPog2($pog2);
-
-            $route = new Itineraire();
-            $route->setDatecreation(new \DateTime('now'));
-            $route->setLongueur($request->request->get("longueur",""));
-            $route->setDeniveleplus($request->request->get("denivelep",""));
-            $route->setDenivelemoins($request->request->get("denivelen",""));
-            $route->setTrace($trace);
-            $route->setNom($request->request->get("nom",""));
-            $route->setNumero($request->request->get("numero",""));
-            $route->setTypechemin($typechemin);
-            $route->setDescription($request->request->get("description",""));
-            $route->setDifficulte($diff);
-            $route->setAuteur($user);
-            $route->setStatus($status);
-            $route->setPublic($request->request->get("public",""));
-            $route->setSegment($segment);
 
             $json_obj = json_decode($request->request->get("points",""),true);
             $fp = fopen('../../Traces/'.$filename, 'w');
@@ -305,7 +281,6 @@ class ItineraireController extends Controller
             }
             fclose($fp);
 
-            $manager->persist($route);
             $manager->persist($trace);
             $manager->persist($segment);
             $manager->flush();
@@ -551,6 +526,28 @@ class ItineraireController extends Controller
 			$content = $this->get("templating")->render("SiteTrailBundle:Itiniraire:FicheItineraire.html.twig",array("resultats" => $res,"jsonObject" => $response));
 			return new Response($content);
 	}
+	
+	public function deleteAction(Request $request)
+    {
+      if ($request->isXMLHttpRequest()) 
+      {
+      	//Appel du service de sauvegarde
+        	$params = array();		
+			$params["id"] = $request->request->get("id");
+
+			$clientSOAP = new \SoapClient(null, array(
+	                    'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+	                    'trace' => true,
+	                    'exceptions' => true
+	                ));
+
+	        $response = $clientSOAP->__call('delete', $params);
+	        $res = json_decode($response);
+	        return new Response(json_encode(array("result" => "success","code" => 200)));      
+      }
+      return new Response('This is not ajax!', 400);
+    }
 
 	 
 }
