@@ -42,11 +42,6 @@ site_carto_savePoi:
     defaults: { _controller:SiteCartoBundle:Poi:savePoi}
     options:
         expose: true
-site_carto_getAllLieux:
-    path:    /poi_getAllLieux
-    defaults: { _controller:SiteCartoBundle:Typelieu:getAllLieux }
-    options:
-        expose: true
 site_carto_getAllPois:
     path:    /poi_getAllPois
     defaults: { _controller:SiteCartoBundle:Poi:getAllPois }
@@ -63,12 +58,27 @@ site_carto_upload:
 site_carto_submitupload:
     path:     /sub_upload
     defaults: { _controller: SiteCartoBundle:Map:submit }
-site_carto_uploadIcone:
-    path:     /uploadIcone
-    defaults: { _controller: SiteCartoBundle:Typelieu:uploadIcone }
+site_carto_saveTypelieu:
+    path:     /saveTypelieu
+    defaults: { _controller: SiteCartoBundle:Typelieu:saveTypelieu }
 site_carto_submituploadIcone:
     path:     /submituploadIcone/
     defaults: { _controller: SiteCartoBundle:Typelieu:submituploadIcone }
+    options:
+        expose: true
+site_carto_deleteTypelieu:
+    path:    /deleteTypelieu
+    defaults: { _controller: SiteTrailBundle:Typelieu:deleteTypelieu, idTypelieu: "" }
+    options:
+        expose: true
+site_carto_editTypelieu:
+    path:    /editTypelieu
+    defaults: { _controller: SiteTrailBundle:Typelieu:editTypelieu, idTypelieu: "" }
+    options:
+        expose: true 
+site_carto_typelieu:
+    path :    /typelieu
+    defaults: { _controller: SiteCartoBundle:Typelieu:index }
     options:
         expose: true
 site_carto_recherche_itineraire:

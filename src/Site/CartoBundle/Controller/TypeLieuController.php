@@ -1,5 +1,4 @@
 <?php
-
 namespace Site\CartoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -10,6 +9,7 @@ use Site\CartoBundle\Entity\Icone;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Validator\Constraints\DateTime;
 
@@ -17,14 +17,18 @@ class TypelieuController extends Controller
 {
     public function indexAction()
     {       
-        $content = $this->get("templating")->render("SiteCartoBundle:Typelieu:index.html.twig");        
+        $manager=$this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+        $listeTypelieu = $repository->findAll();     
+
+        $content = $this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", 
+                                                array("listeTypelieu" => $listeTypelieu)
+                                              );
         return new Response($content);
     }
 
-	//Récupération de la liste des lieux
-    public function getAllLieuxAction(Request $request) {
-      if ($request->isXMLHttpRequest()) 
-      {
+        //Récupération de la liste des types de lieu
+  /*  public function getAllTypelieuAction(Request $request) {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $lieux = $repository->findAll();
@@ -32,21 +36,34 @@ class TypelieuController extends Controller
         $response = new Response(json_encode($lieux));
         $response->headers->set('Content-Type', 'application/json');
         return $response;
-      }
+    }*/
 
-      return new Response('This is not ajax!', 400);
+    public function getTypelieuByIdAction()
+    {
+        $manager = $this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+        $id = $request->request->get('idTypelieu');
+        $typelieu = $repository->findOneById($id);
+
+        $response = new Response(json_encode($typelieu));
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
     }
 
-  public function uploadIconeAction()
+  public function saveTypelieuAction()
   {   
-    $content = $this->get("templating")->render("SiteCartoBundle:Typelieu:uploadIcone.html.twig");
-    return new Response($content);
+        $manager=$this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+        $listeTypelieu = $repository->findAll();     
+
+        $content = $this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", 
+                                                array("listeTypelieu" => $listeTypelieu)
+                                              );
+        return new Response($content);
   }
   
   public function submituploadIconeAction()
   { 
-    /*if ($request->isXMLHttpRequest())
-    {   */
       $return_message = "";
       $code = 200;
       $target_dir ="C:/wamp/www/Images/";
@@ -106,20 +123,89 @@ class TypelieuController extends Controller
             $manager->persist($typelieuUpload);
             $manager->flush();
 
-            return new JsonResponse(array('data' => 'Typelieu Crée'),200);
-                   
+            $response = new Response($this->render( $this->generateUrl('site_carto_saveTypelieu')));
         }
       }
       else
       {
         $response->setStatusCode(500);
       }
-    /*}
-    else
-    {
-      return new JsonResponse(array('data' => 'Typelieu crée'),200);
-    }*/
+
     
     return $response;
   }
+
+  public function editTypelieuAction(Request $request)
+    {
+        if($request->isXmlHttpRequest() && $this->getUser()->getRole()->getId() == 1)
+        {      
+            $idTypelieu = $request->request->get('idTypelieu', '');
+            
+            $manager=$this->getDoctrine()->getManager();
+            $repository=$manager->getRepository("SiteCartoBundle:Typelieu");        
+            $monTypelieu = $repository->findOneById($idTypelieu);
+
+            $formBuilder = $this->get('form.factory')->createBuilder('form', $monTypelieu);
+            $formBuilder
+                    ->setAction($this->generateUrl('site_carto_editTypelieu'))
+                    ->add('label', 'text', array('max_length' => 255,
+                                                    'data' => $monTypelieu->getLabel()));
+
+            $form = $formBuilder->getForm();
+            $form->handleRequest($request);
+
+            if ($form->isValid()) 
+            {
+                $manager = $this->getDoctrine()->getManager();
+                $manager->flush();
+                $request->getSession()->getFlashBag()->add('notice', 'Type de lieu ajouté');
+
+                return $this->redirect($this->generateUrl('site_carto_saveTypelieu'));
+            }
+            
+            $formulaire = $this->get("templating")->render("SiteCartoBundle:Typelieu:editTypelieuForm.html.twig", array(
+                                                                'typelieu' => $monTypelieu,
+                                                                'form' => $form->createView()
+                                                            ));
+
+            return new Response($formulaire);
+        }
+        else
+        {
+            throw new NotFoundHttpException('Impossible de trouver la page demandée');
+        }
+    }
+
+  public function deleteTypelieuAction(Request $request)
+    {
+        if($request->isXmlHttpRequest() && $this->getUser()->getRole()->getId() == 1)
+        {
+            $idTypelieu = $request->request->get('idTypelieu', '');
+            $manager=$this->getDoctrine()->getManager();
+
+            //On récupère l'objet typelieu
+            $repository=$manager->getRepository("SiteCartoBundle:Typelieu");        
+            $typelieu = $repository->findOneById($idTypelieu);
+
+            //On récupère l'icone liée au type de lieu
+            $repository=$manager->getRepository("SiteCartoBundle:Icone"); 
+            $icone = $repository->findBy(
+                array('typelieu' => $idTypelieu)
+            );
+
+            $manager->remove($icone);       
+
+            //Suppression de l'entité catégorie
+            $manager->remove($typelieu);
+            $manager->flush();
+
+            $request->getSession()->getFlashBag()->add('notice', 'Type de lieu supprimé');
+
+            return $this->redirect($this->generateUrl('site_carto_saveTypelieu'));
+        }
+        else
+        {
+            throw new NotFoundHttpException('Impossible de trouver la page demandée');
+        }
+    }
 }
