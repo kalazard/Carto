@@ -262,7 +262,7 @@ class ItineraireController extends Controller
 
             $segment->setTrace($ls);
             $segment->setElevation($elevationString);
-            $segment->setSens(o);
+            $segment->setSens(0);
             $segment->setPog1($pog1);
             $segment->setPog2($pog2);
 
