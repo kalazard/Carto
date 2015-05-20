@@ -1,0 +1,30 @@
+<div id="modalEditTypelieu" class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">     
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">Modifier un type de lieu</h4> 
+                            <div class="modal-body text-center">
+                                <form id="upload" method="post" action="{{ path("site_carto_submituploadIcone") }}" enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <label for="recipient-name" class="control-label">Nom :</label>
+                                        <input type="text" class="form-control" id="label" name="label" value="{{typelieu.getLabel()}}" placeholder="Nom">
+                                    </div>
+                                    <div id="drop">
+                                        <label for="recipient-name" class="control-label">Fichier à uploader :</label>
+                                        <input type="file" name="icone" value="{{typelieu.getIcone().getPath()}}" />
+                                    </div>
+                                    <ul>
+                                        <!-- The file uploads will be shown here -->
+                                        <span id="msgError"> </span>
+                                    </ul>   
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal" onclick="modifTypelieu({{typelieu.getId()}})">Modifier</button>
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                                    </div>
+                                </form>
+                              </div>
+                        </div>
+                    </div>
+                </div>       
+            </div>

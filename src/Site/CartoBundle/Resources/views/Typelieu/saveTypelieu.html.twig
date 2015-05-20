@@ -14,24 +14,12 @@
                 <div class="row move-bottom-xs">
                 	<a><img class="apercu" src="http://localhost/wamp/www/Image/{{typelieu.getIcone.getPath()}}" alt="-_-"></a>
                 </div>
-                <button id="supprTypelieu" type="button" class='btn btn-warning pull-right' onclick="supprTypelieuConfirm()">Supprimer le type de lieu</button>
-                <button id="modifTypelieu" type="button" class='btn btn-warning pull-right' onclick="modifTypelieu({{typelieu.getId()}})">Modifier le type de lieu</button>
+                <button id="supprTypelieu" type="button" class='btn btn-warning pull-right' onclick="supprTypelieuConfirm({{typelieu.getId()}})">Supprimer le type de lieu</button>
+                <button id="modifTypelieu" type="button" class='btn btn-warning pull-right' onclick="modifTypelieuForm({{typelieu.getId()}})">Modifier le type de lieu</button>
             </div>
 
-            <div id="modalWarningDelete" class="modal fade">
-	            <div class="modal-dialog">
-	                <div class="modal-content">      
-	                    <div class="modal-body text-center">
-	                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	                        <p>Etes-vous sûr de vouloir supprimer ce type de lieu ?</p>
-	                        <div class='wrapper text-center'>
-	                            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="suppressionTypelieu({{typelieu.getId()}})">Oui</button>
-	                            <button type="button" class="btn btn-default" data-dismiss="modal" >Non</button>
-	                        </div>
-	                    </div>
-	                </div>
-	            </div>       
-	        </div>
+
+            
         {% endfor %}
 
 	<div id="modalSaveTypelieu" class="modal fade">

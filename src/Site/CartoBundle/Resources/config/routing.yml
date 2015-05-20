@@ -61,19 +61,31 @@ site_carto_submitupload:
 site_carto_saveTypelieu:
     path:     /saveTypelieu
     defaults: { _controller: SiteCartoBundle:Typelieu:saveTypelieu }
+    options:
+        expose: true
 site_carto_submituploadIcone:
     path:     /submituploadIcone/
     defaults: { _controller: SiteCartoBundle:Typelieu:submituploadIcone }
     options:
         expose: true
+site_carto_afficheDeleteTypelieu:
+    path:    /afficheDeleteTypelieu
+    defaults: { _controller: SiteCartoBundle:Typelieu:afficheDeleteTypelieu, idTypelieu: "" }
+    options:
+        expose: true
 site_carto_deleteTypelieu:
     path:    /deleteTypelieu
-    defaults: { _controller: SiteTrailBundle:Typelieu:deleteTypelieu, idTypelieu: "" }
+    defaults: { _controller: SiteCartoBundle:Typelieu:deleteTypelieu, idTypelieu: "" }
+    options:
+        expose: true
+site_carto_afficheEditTypelieu:
+    path:    /afficheEditTypelieu
+    defaults: { _controller: SiteCartoBundle:Typelieu:afficheEditTypelieu, idTypelieu: "" }
     options:
         expose: true
 site_carto_editTypelieu:
     path:    /editTypelieu
-    defaults: { _controller: SiteTrailBundle:Typelieu:editTypelieu, idTypelieu: "" }
+    defaults: { _controller: SiteCartoBundle:Typelieu:editTypelieu, idTypelieu: "" }
     options:
         expose: true 
 site_carto_typelieu:
