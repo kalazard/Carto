@@ -556,6 +556,7 @@ class ItineraireController extends Controller {
             return new Response("success");
         }
         return new Response('This is not ajax!', 400);
+	}
 
     //fonction de recherche des itinéraires 
     public function searchAction(Request $request) {
