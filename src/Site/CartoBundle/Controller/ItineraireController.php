@@ -225,6 +225,7 @@ class ItineraireController extends Controller
 
             $segment = new Segment();
             $pointArray = json_decode($request->request->get("points",""),true);
+			
             $lsArray = [];
             $elevationString = "";
             $i = 0;
@@ -301,9 +302,23 @@ class ItineraireController extends Controller
 			//on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
 			
 			//requete pour trouver les résultats 
+			/*
+			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
+			
+			$repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
+            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
+            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
+			
+            $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
+			//$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
+            $listItiniraire = $query->getQuery()->getResult();
+			
+			//on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
+			
+            return json_encode(array("searchResults" => $listItiniraire));
 			
 			$response = new Response(json_encode(array("result" => "success","code" => 200)));
-			return $response; 
+			return $response; */
 		}
 		return new Response('This is not ajax!', 400);		
 	}

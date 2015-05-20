@@ -83,7 +83,7 @@ function init(callback,params)
 
 function loadLieux()
 {
-  var res = [];
+  /*var res = [];
 
   $.ajax({
        url : Routing.generate('site_carto_getAllLieux'),
@@ -101,7 +101,7 @@ function loadLieux()
        error : function(resultat, statut, erreur){
        }
     });
-  return res;
+  return res;*/
 }
 
 function loadPois()
@@ -179,6 +179,20 @@ function goToPosition(position) {
     }
 
     L.Draw.SegmentFeature = L.Draw.Feature.extend({
+            includes: L.Mixin.Events,
+
+        initialize: function (map, options) {
+          this._map = map;
+          this._container = map._container;
+          this._overlayPane = map._panes.overlayPane;
+          this._popupPane = map._panes.popupPane;
+
+          // Merge default shapeOptions options with custom shapeOptions
+          if (options && options.shapeOptions) {
+            options.shapeOptions = L.Util.extend({}, this.options.shapeOptions, options.shapeOptions);
+          }
+          L.setOptions(this, options);
+        },
         enable: function () {
           if (this._enabled) { return; }
 
@@ -197,7 +211,46 @@ function goToPosition(position) {
           this._map.fire('draw:segmentstop', { layerType: this.type });
 
           this.fire('disabled', { handler: this.type });
-        }
+        },
+        addHooks: function () {
+          var map = this._map;
+
+          if (map) {
+            L.DomUtil.disableTextSelection();
+
+            map.getContainer().focus();
+
+            this._tooltip = new L.Tooltip(this._map);
+
+            L.DomEvent.on(this._container, 'keyup', this._cancelDrawing, this);
+          }
+        },
+
+        removeHooks: function () {
+          if (this._map) {
+            L.DomUtil.enableTextSelection();
+
+            this._tooltip.dispose();
+            this._tooltip = null;
+
+            L.DomEvent.off(this._container, 'keyup', this._cancelDrawing, this);
+          }
+        },
+
+        setOptions: function (options) {
+          L.setOptions(this, options);
+        },
+
+        _fireCreatedEvent: function (layer) {
+          this._map.fire('draw:created', { layer: layer, layerType: this.type });
+        },
+
+        // Cancel drawing when the escape key is pressed
+        _cancelDrawing: function (e) {
+          if (e.keyCode === 27) {
+            this.disable();
+          }
+      }
     });
 
     //Création d'une polyline custom pour les segments
@@ -246,11 +299,11 @@ function goToPosition(position) {
         // Save the type so super can fire, need to do this as cannot do this.TYPE :(
         this.type = L.Draw.Polyline.TYPE;
 
-        L.Draw.Feature.prototype.initialize.call(this, map, options);
+        L.Draw.SegmentFeature.prototype.initialize.call(this, map, options);
       },
 
       addHooks: function () {
-        L.Draw.Feature.prototype.addHooks.call(this);
+        L.Draw.SegmentFeature.prototype.addHooks.call(this);
         if (this._map) {
           this._markers = [];
 
@@ -290,7 +343,7 @@ function goToPosition(position) {
       },
 
       removeHooks: function () {
-        L.Draw.Feature.prototype.removeHooks.call(this);
+        L.Draw.SegmentFeature.prototype.removeHooks.call(this);
 
         this._clearHideErrorTimeout();
 
@@ -631,13 +684,13 @@ function goToPosition(position) {
 
       _fireCreatedEvent: function () {
         var poly = new this.Poly(this._poly.getLatLngs(), this.options.shapeOptions);
-        L.Draw.Feature.prototype._fireCreatedEvent.call(this, poly);
+        L.Draw.SegmentFeature.prototype._fireCreatedEvent.call(this, poly);
       }
     });
 
     L.Draw.Segment = L.Draw.SegmentPolyline.extend({
         initialize: function (map, options) {
-            this.type = 'polyline';
+            this.type = 'segment';
 
             L.Draw.SegmentFeature.prototype.initialize.call(this, map, options);
         }
@@ -820,25 +873,7 @@ function drawRoute(event)
                 pointArray = [];
                 latlngArray = [];
                 map.on("click",function (ev){
-                    pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
-                    latlngArray.push(ev.latlng);
-                    if(pointArray.length > 1)
-                    {
-                        polyline = L.polyline(latlngArray);
-                        var URL = elevationURL + '&latLngCollection=';
-                        for(var i = 0; i < latlngArray.length; i++)
-                        {
-                          var lat = latlngArray[i].lat;
-                          var lng = latlngArray[i].lng;
-                          URL += lat + "," + lng;
-                          if(i !== latlngArray.length - 1){ URL += ","; }                            
-                        }
-                        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        elevationScript = document.createElement('script');
-                        elevationScript.type = 'text/javascript';
-                        elevationScript.src = URL;
-                        $("body").append(elevationScript);     
-                    }
+                    addPointOnMap(ev);
                   });
               }
 }
@@ -848,6 +883,7 @@ function saveRoute()
   loadDifficultes();
   loadStatus();
   loadTypechemin();
+  console.log(JSON.stringify(pointArray));
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
@@ -889,25 +925,7 @@ function drawSegment(event)
                 pointArray = [];
                 latlngArray = [];
                 map.on("click",function (ev){
-                    pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
-                    latlngArray.push(ev.latlng);
-                    if(pointArray.length > 1)
-                    {
-                        polyline = L.polyline(latlngArray);
-                        var URL = elevationURL + '&latLngCollection=';
-                        for(var i = 0; i < latlngArray.length; i++)
-                        {
-                          var lat = latlngArray[i].lat;
-                          var lng = latlngArray[i].lng;
-                          URL += lat + "," + lng;
-                          if(i !== latlngArray.length - 1){ URL += ","; }                            
-                        }
-                        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        elevationScript = document.createElement('script');
-                        elevationScript.type = 'text/javascript';
-                        elevationScript.src = URL;
-                        $("body").append(elevationScript);     
-                    }
+                    addPointOnMap(ev);
                   });
               }
 }
@@ -953,11 +971,12 @@ function savePoi()
 }
 
 function getElevation(response)
-{
+{  
   blockItineraireSave();
-  console.log("elevation");
   denivelen = 0;
   denivelep = 0;
+  console.log("Taille de pointArray : " + pointArray.length);
+  console.log(response.elevationProfile);
   for(var i = 0; i < pointArray.length; i++)
   {
     pointArray[i].elevation = response.elevationProfile[i].height;
@@ -996,39 +1015,9 @@ function getElevation(response)
     updateSegment(JSON.stringify(pointArray));
   }
   blockItineraireSave();
-}
-
-function getElevationUpdate(response)
-{
-  denivelen = 0;
-  denivelep = 0;
-  for(var i = 0; i < pointArray.length; i++)
-  {
-    pointArray[i].elevation = response.elevationProfile[i].height;
-    pointArray[i].distance = response.elevationProfile[i].distance;
-  }
-  for(var i = 0; i < pointArray.length - 1; i++)
-  {
-    var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
-    diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
-  }
-  $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
-  $("#denivp").text("Dénivelé positif : " + denivelep + "m");
-  $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
-  var geojson = tracepolyline.toGeoJSON();
-  for(var i = 0; i < geojson.geometry.coordinates.length; i++)
-  {
-    geojson.geometry.coordinates[i].push(pointArray[i].elevation);
-  }
-  if(mapgeojson !== undefined)
-  {
-    map.removeLayer(mapgeojson);
-  }
-  el.clear();
-  mapgeojson = L.geoJson(geojson,{
-      onEachFeature: el.addData.bind(el) //working on a better solution
+  map.on("click",function (ev){
+    addPointOnMap(ev);
   });
-  updateSegment(JSON.stringify(pointArray));
 }
 
 function loadDifficultes()
@@ -1261,5 +1250,31 @@ function blockItineraireSave()
   else
   {
     $("#saveiti").prop("disabled",false).change();
+  }
+}
+
+function addPointOnMap(ev)
+{
+
+  pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
+  console.log("Nouveau point ajouté, nouvelle taille : " + pointArray.length);
+  latlngArray.push(ev.latlng);
+  if(pointArray.length > 1)
+  {
+      polyline = L.polyline(latlngArray);
+      var URL = elevationURL + '&latLngCollection=';
+      for(var i = 0; i < latlngArray.length; i++)
+      {
+        var lat = latlngArray[i].lat;
+        var lng = latlngArray[i].lng;
+        URL += lat + "," + lng;
+        if(i !== latlngArray.length - 1){ URL += ","; }                            
+      }
+      URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      elevationScript = document.createElement('script');
+      elevationScript.type = 'text/javascript';
+      elevationScript.src = URL;
+      $("body").append(elevationScript);
+      map.off("click");     
   }
 }

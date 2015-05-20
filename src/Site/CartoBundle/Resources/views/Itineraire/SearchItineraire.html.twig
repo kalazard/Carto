@@ -17,6 +17,7 @@
 						<th><label for="datecrea">Date de création</label></th>
 						<th><label for="longueur">Longueur</label></th>
 						<th><label for="status">Statut</label></th>
+						<th><label for="supprimer">Supprimer</label></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -78,6 +79,7 @@
 						<th>Date de création</th>
 						<th>Longueur du parcours</th>
 						<th>Statut</th>
+						<th>supprimer</th>						
 					</tr>
 				</thead>
 				<tbody>
@@ -85,13 +87,18 @@
 					{% if list.list is not empty %}
 						{% for itineraire in list.list %}
 							{% if itineraire.public == 1 or itineraire.auteur.id == app.user.id %}
-						<tr>
+						<tr id={{ itineraire.id }}>
 							<td><a href="{{ path('site_carto_getByIditineraire', {'id': itineraire.id}) }}">{{itineraire.nom}}</a></td>
 							<td>{{itineraire.typechemin.label}}</td>
 							<td>{{itineraire.difficulte.label}}</td>
 							<td>{{itineraire.datecreation}}</td>
 							<td>{{itineraire.longueur}}km</td>
 							<td>{{itineraire.status.label}}</td>
+								{% if (app.user.role.label == "cartographe" or app.user.id == itineraire.auteur.id) %}
+								<td><p data-placement='top' data-toggle='tooltip' title='Delete'>
+									<button class='btn btn-danger btn-xs btn_edit' id="delete" type='button' onclick="Delete({{itineraire.id}})"><span class='glyphicon glyphicon-remove'></span></button>
+								</p></td>
+								{% endif %}
 						</tr>
 							{% endif %}
 						{% endfor %}
@@ -99,13 +106,18 @@
 				  {% else %}
 						{% if resultats.searchResults is not empty %}
 							{% for itineraire in resultats.searchResults %}
-								<tr>
+								<tr id={{ itineraire.id }}>
 									<td><a href="{{ path('site_carto_getByIditineraire', {'id': itineraire.id}) }}">{{itineraire.nom}}</a></td>
 									<td>{{itineraire.typechemin.label}}</td>
 									<td>{{itineraire.difficulte.label}}</td>
 									<td>{{itineraire.datecreation}}</td>
 									<td>{{itineraire.longueur}}km</td>
 									<td>{{itineraire.status.label}}</td>
+									{% if (app.user.role.label == "cartographe" or app.user.id == itineraire.auteur.id) %}
+										<td><p data-placement='top' data-toggle='tooltip' title='Delete'>
+											<button class='btn btn-danger btn-xs btn_edit' id="delete" type='button' onclick="Delete({{itineraire.id}})"><span class='glyphicon glyphicon-remove'></span></button>
+										</p></td>
+									{% endif %}
 								</tr>
 							{% endfor %}
 						{% endif %}
@@ -113,6 +125,25 @@
 				</tbody>
 			   </table>
 		</div>
+		
+	<script>
+	function Delete(itiid)
+	{
+		$.post(Routing.generate('site_carto_itinerairedelete'),
+        {
+               id : itiid
+        })
+        .done(function(data, status){
+          $.notify("Itinéraire supprimé", "success");
+          $("#" + itiid).remove();
+       })
+        .fail(function(data,status){
+          $.notify("Erreur lors de la suppression", "error");
+        });
+	}
+	</script>
+	
+	
 	 {% else %}
 	     <p>Vous n'avez pas accès à cette page</p>
 	 {% endif %}
