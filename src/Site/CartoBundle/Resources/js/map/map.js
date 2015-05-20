@@ -83,7 +83,7 @@ function init(callback,params)
 
 function loadLieux()
 {
-  var res = [];
+  /*var res = [];
 
   $.ajax({
        url : Routing.generate('site_carto_getAllLieux'),
@@ -101,7 +101,7 @@ function loadLieux()
        error : function(resultat, statut, erreur){
        }
     });
-  return res;
+  return res;*/
 }
 
 function loadPois()
@@ -848,6 +848,7 @@ function saveRoute()
   loadDifficultes();
   loadStatus();
   loadTypechemin();
+  console.log(JSON.stringify(pointArray));
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
