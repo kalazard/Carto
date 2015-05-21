@@ -1,8 +1,27 @@
-{% extends "SiteCartoBundle::layout.html.twig" %}
-{% block title %} - Type de lieu{% endblock %}
-	{% block body %}
+<!DOCTYPE HTML>
+<html>
+ <head>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
+		{% stylesheets filter='cssrewrite'
+        '@SiteCartoBundle/Resources/css/design/*'
+        %}
+        <link rel="stylesheet" href="{{ asset_url }}" type="text/css" />
+        {% endstylesheets %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src='http://fullcalendar.io/js/fullcalendar-2.1.1/lib/moment.min.js'></script>
+        <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery-ui.custom.min.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <script src='http://fullcalendar.io/js/fullcalendar-2.1.1/fullcalendar.min.js'></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+        <script src="{{ asset('bundles/fosjsrouting/js/router.js') }}"></script>
+        <script src="{{ path('fos_js_routing_js', {"callback": "fos.Router.setData"}) }}"></script>
+    <title>{% block title %} - Type de lieu{% endblock %}</title>
+  </head>
+	<body>
 
 	<div class="container">
+		<h1> Type de lieu </h1>
         <div class="col-sm-12">
                  <button id="saveTypelieu" type="button" class='btn btn-warning pull-right' onclick="creerTypelieu()">Ajouter un type de lieu</button>	
 		</div>
@@ -12,7 +31,9 @@
             	<div class="row move-bottom-xs"> Id : {{typelieu.getId()}} </div>
             	<div class="row move-bottom-xs"> Label : {{typelieu.getLabel()}} </div>
                 <div class="row move-bottom-xs">
-                	<a><img class="apercu" src="http://localhost/wamp/www/Image/{{typelieu.getIcone.getPath()}}" alt="-_-"></a>
+                	<div>
+	                	<div id="avatar" class="img-size" style="background-image: url('{{typelieu.getIcone.getPath()}}');"></div>
+                	</div>
                 </div>
                 <button id="supprTypelieu" type="button" class='btn btn-warning pull-right' onclick="supprTypelieuConfirm({{typelieu.getId()}})">Supprimer le type de lieu</button>
                 <button id="modifTypelieu" type="button" class='btn btn-warning pull-right' onclick="modifTypelieuForm({{typelieu.getId()}})">Modifier le type de lieu</button>
@@ -57,6 +78,9 @@
 
 		
 		{% javascripts '@SiteCartoBundle/Resources/js/*' '@SiteCartoBundle/Resources/js/typelieu/*' %}
-        	<script type="text/javascript" src="{{ asset_url }}"></script>
-    	{% endjavascripts %}	
-	{% endblock %}
+		        <script type="text/javascript" src="{{ asset_url }}"></script>
+		{% endjavascripts %}
+		{% block body %}
+		{% endblock %}
+	</body>
+</html>

@@ -52,6 +52,8 @@ class TypelieuController extends Controller
 
   public function saveTypelieuAction()
   {   
+    if ($this->get('security.context')->isGranted('ROLE_Administrateur')) 
+    {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $listeTypelieu = $repository->findAll();     
@@ -60,12 +62,18 @@ class TypelieuController extends Controller
                                                 array("listeTypelieu" => $listeTypelieu)
                                               );
         return new Response($content);
+    }
+    else
+    {
+      throw $this->createNotFoundException("Vous n'avez pas accès à cette page.");
+    }
   }
   
   public function submituploadIconeAction()
   { 
       $return_message = "";
       $code = 200;
+      //$target_dir ="var/www/Images/";
       $target_dir ="C:/wamp/www/Images/";
       $upload = 1;
 
@@ -113,7 +121,8 @@ class TypelieuController extends Controller
             $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
 
             $iconeUpload = new Icone();
-            $iconeUpload->setPath($icone_name);
+            //$iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
+            $iconeUpload->setPath("http://localhost/Images/".$icone_name);
 
             $typelieuUpload = new Typelieu();
             $typelieuUpload->setLabel($labelTypelieu);
@@ -123,7 +132,13 @@ class TypelieuController extends Controller
             $manager->persist($typelieuUpload);
             $manager->flush();
 
-            $response = new Response($this->render( $this->generateUrl('site_carto_saveTypelieu')));
+            $manager=$this->getDoctrine()->getManager();
+            $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+            $listeTypelieu = $repository->findAll(); 
+
+            $response = new Response($this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", array(
+                                                'listeTypelieu' => $listeTypelieu
+                                              )));
         }
       }
       else
@@ -155,10 +170,13 @@ class TypelieuController extends Controller
     {
       $return_message = "";
       $code = 200;
+      //$target_dir ="var/www/Images/";
       $target_dir ="C:/wamp/www/Images/";
-      $upload = 1;
+      $upload = 1; 
+
       var_dump($_FILES);
       var_dump($_REQUEST);
+
       if (!isset($_POST["label"]) )
       {
         $upload=0;
@@ -181,7 +199,13 @@ class TypelieuController extends Controller
         $manager->persist($typelieuUpload);
         $manager->flush();
 
-        return new Response($this->render( $this->generateUrl('site_carto_saveTypelieu')));
+        $manager=$this->getDoctrine()->getManager();
+        $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+        $listeTypelieu = $repository->findAll();
+
+        return new Response($this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", array(
+                                                'listeTypelieu' => $listeTypelieu
+                                              )));
       }
       else
       {
@@ -217,7 +241,8 @@ class TypelieuController extends Controller
             $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
 
             $iconeUpload = new Icone();
-            $iconeUpload->setPath($icone_name);
+            //$iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
+            $iconeUpload->setPath("http://localhost/Images/".$icone_name);
 
             $idTypelieu = $request->request->get('typelieuid', '');
             $manager=$this->getDoctrine()->getManager();
@@ -233,7 +258,13 @@ class TypelieuController extends Controller
             $manager->persist($typelieuUpload);
             $manager->flush();
 
-            $response = new Response($this->render( $this->generateUrl('site_carto_saveTypelieu')));
+            $manager=$this->getDoctrine()->getManager();
+            $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
+            $listeTypelieu = $repository->findAll();
+
+            $response = new Response($this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", array(
+                                                'listeTypelieu' => $listeTypelieu
+                                              )));
         }
       }
       else
