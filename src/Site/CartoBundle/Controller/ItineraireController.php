@@ -396,7 +396,7 @@ class ItineraireController extends Controller {
 	
 	public function loadSegmentAction(Request $request)
 	{
-		if($request->isXMLHttpRequest()) 
+		/*if($request->isXMLHttpRequest()) 
       {
 			$northeast = $request->request->get("northeast","");
 			$southwest = $request->request->get("southwest","");
@@ -409,9 +409,7 @@ class ItineraireController extends Controller {
                     new MySQLPoint($southeast["lng"], $southeast["lat"])]]);
 
 			$query = $repository->createQueryBuilder('i')->where("MBRContains(:bounds, i.segment.pog1)")->setParameter('bounds', $bounds);
-      $sql = 'SELECT SiteCartoBundle:Itineraire i WHERE MBRContains($bounds, i.segment.pog1)'; //dz.area is of type polygon
-      $q = $this->entityManager>createQuery($sql); //$address->getPoint returns an CrEOF\Spatial\PHP\Types\Geometry\Point object
-      return $q->getOneOrNullResult();
+      $$listSegment = $query->getQuery()->getResult();*/
 			//requete pour trouver les résultats 
 			/*
 			
