@@ -54,7 +54,7 @@ class TypelieuController extends Controller
   {   
     if ($this->get('security.context')->isGranted('ROLE_Administrateur')) 
     {
-        $manager=$this->getDoctrine()->getManeager();
+        $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $listeTypelieu = $repository->findAll();     
 
