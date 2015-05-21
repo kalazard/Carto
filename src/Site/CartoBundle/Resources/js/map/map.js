@@ -1,8 +1,9 @@
 var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,
-denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation;
+denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation,traceData;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
+var isLoadingMap = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display","none");
@@ -801,6 +802,17 @@ function goToPosition(position) {
     });
     $("#map").css("cursor","move"); 
   loadPois();
+  if(isLoadingMap)
+  {
+    segmentID = traceData.segment.id;
+    displayTrace(traceData.segment.trace,traceData.segment.elevation);
+    $("#denivp").text("Dénivelé positif : " + traceData.deniveleplus + "m");
+    $("#denivn").text("Dénivelé négatif : " + traceData.denivelemoins + "m");
+    $("#long").text("Longueur : " + traceData.longueur + "km");
+    $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
+    isLoadingMap = false;
+  }
+  
 }
 
 function addOverlay()
@@ -1224,13 +1236,7 @@ function displayTrace(trace,elevation)
 function loadMap(json)
 {
   isLoadingMap = true;
-  segmentID = json.segment.id;
-  displayTrace(json.segment.trace,json.segment.elevation);
-  $("#denivp").text("Dénivelé positif : " + json.deniveleplus + "m");
-  $("#denivn").text("Dénivelé négatif : " + json.denivelemoins + "m");
-  $("#long").text("Longueur : " + json.longueur + "km");
-  $("#diffiDisplay").text("Difficulté : " + json.difficulte.label);
-  isLoadingMap = false;
+  traceData = json;
 }
 
 function surbrillance(object)
@@ -1299,4 +1305,23 @@ function addPointOnMap(ev)
       $("body").append(elevationScript);  
       map.off("click");
   }
+}
+
+function loadSegments()
+{
+  var bounds = map.getBounds();
+  $.post(Routing.generate('site_carto_loadSegment'),
+                            {
+                                   northeast : JSON.stringify(new Point(bounds._northEast.lat,bounds._northEast.lng)),
+                                   southwest : JSON.stringify(new Point(bounds._southWest.lat,bounds._southWest.lng)),
+                                   northwest : JSON.stringify(new Point(bounds._northEast.lat,bounds._southWest.lng)),
+                                   southeast : JSON.stringify(new Point(bounds._southWest.lat,bounds._northEast.lng))
+                                },
+                            function(data, status){
+
+                                //$.notify("Segment mis à jour", "success");
+                            }
+      ).fail(function() {
+        $.notify("Erreur", "error");
+      });
 }

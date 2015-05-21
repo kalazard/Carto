@@ -397,11 +397,17 @@ class ItineraireController extends Controller {
 	public function loadSegmentAction(Request $request)
 	{
 		if($request->isXMLHttpRequest()) 
-        {
-			$north = $request->request->get("north","");
-			$south = $request->request->get("south","");
-			
-			//on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
+      {
+			$northeast = $request->request->get("northeast","");
+			$southwest = $request->request->get("southwest","");
+      $northewest = $request->request->get("northewest","");
+      $southeast = $request->request->get("southeast","");	
+
+      $bounds = $polygon = new Polygon([new LineString[new MySQLPoint($northeast["lng"], $northeast["lat"]),
+                    new MySQLPoint($southwest["lng"], $southwest["lat"]),
+                    new MySQLPoint($northewest["lng"], $northewest["lat"]),
+                    new MySQLPoint($southeast["lng"], $southeast["lat"])]]);
+
 			
 			//requete pour trouver les résultats 
 			/*
