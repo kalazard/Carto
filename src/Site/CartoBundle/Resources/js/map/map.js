@@ -822,7 +822,7 @@ map.on('draw:segmentcreated', function (e) {
      });
 
     map.on('draw:edited', function (e) {
-      isEditSegment = false;
+      
     });
     $("#map").css("cursor","move"); 
   loadPois();
@@ -1191,7 +1191,10 @@ function displayTrace(trace,elevation)
   }
 
   //On crée la polyline et on ajoute les points
+
   polyline = L.polyline(latlngArr, {color: 'blue'});
+  drawnItems.addLayer(polyline);
+  console.log(drawnItems.getLayers());
   surbrillance(polyline);
   polyline.markers = [];
   for(var i = 0; i < latlngArr.length; i++)
@@ -1240,6 +1243,7 @@ function displayTrace(trace,elevation)
           if(i !== latlngs.length - 1){ URL += ","; }
         }
         URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        elevationScript = document.createElement('script');
         elevationScript.type = 'text/javascript';
         elevationScript.src = URL;
         $("body").append(elevationScript);   
@@ -1291,6 +1295,7 @@ function updateSegment(points)
       ).fail(function() {
         $.notify("Erreur lors de la mise à jour", "error");
       });
+      isEditSegment = false;
 }
 
 function blockItineraireSave()
