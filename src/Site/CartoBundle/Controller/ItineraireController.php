@@ -403,16 +403,19 @@ class ItineraireController extends Controller {
       $northewest = $request->request->get("northewest","");
       $southeast = $request->request->get("southeast","");	
 
-      $bounds = $polygon = new Polygon([new LineString[new MySQLPoint($northeast["lng"], $northeast["lat"]),
+      $bounds = new Polygon([new LineString[new MySQLPoint($northeast["lng"], $northeast["lat"]),
                     new MySQLPoint($southwest["lng"], $southwest["lat"]),
                     new MySQLPoint($northewest["lng"], $northewest["lat"]),
                     new MySQLPoint($southeast["lng"], $southeast["lat"])]]);
 
-			
+			$query = $repository->createQueryBuilder('i')->where("MBRContains(:bounds, i.segment.pog1)")->setParameter('bounds', $bounds);
+      $sql = 'SELECT SiteCartoBundle:Itineraire i WHERE MBRContains($bounds, i.segment.pog1)'; //dz.area is of type polygon
+      $q = $this->entityManager>createQuery($sql); //$address->getPoint returns an CrEOF\Spatial\PHP\Types\Geometry\Point object
+      return $q->getOneOrNullResult();
 			//requete pour trouver les résultats 
 			/*
-			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
 			
+			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
 			$repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
             $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
             $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
