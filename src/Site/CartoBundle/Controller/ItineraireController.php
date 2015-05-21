@@ -651,7 +651,7 @@ class ItineraireController extends Controller {
 
         $res = json_decode($response);
 
-        $content = $this->get("templating")->render("SiteCartoBundle:Itiniraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
+        $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
         return new Response($content);
     }
 
