@@ -50,11 +50,11 @@ class TypelieuController extends Controller
         return $response;
     }
 
-  public function saveTypelieuAction()
+  public function enregistreTypelieuAction()
   {   
     if ($this->get('security.context')->isGranted('ROLE_Administrateur')) 
     {
-        $manager=$this->getDoctrine()->getManager();
+        $manager=$this->getDoctrine()->getManeager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $listeTypelieu = $repository->findAll();     
 

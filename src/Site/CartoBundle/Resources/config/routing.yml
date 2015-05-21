@@ -60,7 +60,7 @@ site_carto_submitupload:
     defaults: { _controller: SiteCartoBundle:Map:submit }
 site_carto_saveTypelieu:
     path:     /saveTypelieu
-    defaults: { _controller: SiteCartoBundle:Typelieu:saveTypelieu }
+    defaults: { _controller: SiteCartoBundle:Typelieu:enregistreTypelieu }
     options:
         expose: true
 site_carto_submituploadIcone:
