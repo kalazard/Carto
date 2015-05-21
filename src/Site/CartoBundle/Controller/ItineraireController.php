@@ -414,34 +414,44 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
+	
+	public function loadSegmentAction(Request $request)
+	{
+		/*if($request->isXMLHttpRequest()) 
+      {
+			$northeast = $request->request->get("northeast","");
+			$southwest = $request->request->get("southwest","");
+      $northewest = $request->request->get("northewest","");
+      $southeast = $request->request->get("southeast","");	
 
-    public function loadSegmentAction(Request $request) {
-        if ($request->isXMLHttpRequest()) {
-            $north = $request->request->get("north", "");
-            $south = $request->request->get("south", "");
+      $bounds = new Polygon([new LineString[new MySQLPoint($northeast["lng"], $northeast["lat"]),
+                    new MySQLPoint($southwest["lng"], $southwest["lat"]),
+                    new MySQLPoint($northewest["lng"], $northewest["lat"]),
+                    new MySQLPoint($southeast["lng"], $southeast["lat"])]]);
 
-            //on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
-            //requete pour trouver les résultats 
-            /*
-              $repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
-
-              $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
-              $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
-              $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
-
-              $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-              //$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
-              $listItiniraire = $query->getQuery()->getResult();
-
-              //on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
-
-              return json_encode(array("searchResults" => $listItiniraire));
-
-              $response = new Response(json_encode(array("result" => "success","code" => 200)));
-              return $response; */
-        }
-        return new Response('This is not ajax!', 400);
-    }
+			$query = $repository->createQueryBuilder('i')->where("MBRContains(:bounds, i.segment.pog1)")->setParameter('bounds', $bounds);
+      $$listSegment = $query->getQuery()->getResult();*/
+			//requete pour trouver les résultats 
+			/*
+			
+			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
+			$repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
+            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
+            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
+			
+            $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
+			//$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
+            $listItiniraire = $query->getQuery()->getResult();
+			
+			//on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
+			
+            return json_encode(array("searchResults" => $listItiniraire));
+			
+			$response = new Response(json_encode(array("result" => "success","code" => 200)));
+			return $response; 
+		}
+		return new Response('This is not ajax!', 400);*/		
+	}
 
     public function getSegmentByIdAction(Request $request) {
         //on récupère l'id de l'itinéraire à charger 
