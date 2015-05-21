@@ -52,8 +52,6 @@ class TypelieuController extends Controller
 
   public function enregistreTypelieuAction()
   {   
-    if ($this->get('security.context')->isGranted('ROLE_Administrateur')) 
-    {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $listeTypelieu = $repository->findAll();     
@@ -62,11 +60,6 @@ class TypelieuController extends Controller
                                                 array("listeTypelieu" => $listeTypelieu)
                                               );
         return new Response($content);
-    }
-    else
-    {
-      throw $this->createNotFoundException("Vous n'avez pas accès à cette page.");
-    }
   }
   
   public function submituploadIconeAction()

@@ -90,7 +90,6 @@ function loadLieux()
   $.ajax({
        url : Routing.generate('site_carto_getAllLieux'),
        type : 'GET', 
-       async : false,
        dataType : 'json',
        success : function(json, statut){
            for(var i = 0; i < json.length; i++)
@@ -118,7 +117,7 @@ function loadPois()
            for(var i = 0; i < json.length; i++)
            {
               icone = L.icon({
-                      iconUrl : "http://130.79.214.167/Images/" + json[i].typelieu.icone.path,
+                      iconUrl : json[i].typelieu.icone.path,
                       iconSize : [30, 30]
                     });
               marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
