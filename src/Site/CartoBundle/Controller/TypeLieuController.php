@@ -170,12 +170,9 @@ class TypelieuController extends Controller
     {
       $return_message = "";
       $code = 200;
-      $target_dir ="var/www/Images/";
+      $target_dir ="../../Images/";
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1; 
-
-      var_dump($_FILES);
-      var_dump($_REQUEST);
 
       if (!isset($_POST["label"]) )
       {
