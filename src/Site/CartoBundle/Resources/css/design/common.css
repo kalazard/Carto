@@ -76,7 +76,7 @@ a:focus
 
 a:hover
 {
-	color: #F79B23;
+	color: #5bd868;
 }
 
 
@@ -84,7 +84,7 @@ a:hover
 
 .navbar-default
 {
-	background-color: #F79B23;
+	background-color: #5bd868;
 }
 
 .navbar-default .navbar-brand {
@@ -106,13 +106,13 @@ a:hover
 .navbar-default .navbar-nav > .active > a:hover, 
 .navbar-default .navbar-nav > .active > a:focus {
     color: #fff;
-    background-color: #F79B23;
+    background-color: #5bd868;
 }
 .navbar-default .navbar-nav > .open > a, 
 .navbar-default .navbar-nav > .open > a:hover, 
 .navbar-default .navbar-nav > .open > a:focus {
     color: #fff;
-    background-color: #F79B23;
+    background-color: #5bd868;
 }
 
 .navbar-default .navbar-toggle,
@@ -120,7 +120,7 @@ a:hover
 .navbar-default .navbar-toggle:focus
 {
 	color: #fff;
-    background-color: #F79B23;
+    background-color: #5bd868;
 	border: none;
 }
 
@@ -140,13 +140,13 @@ a:hover
 h1,
 .h1
 {
-	color: #F79B23;
+	color: #5bd868;
 	margin-bottom: 20px;
 }
 
 .colored
 {
-	color: #F79B23;
+	color: #5bd868;
 }
 
 .move-bottom-xs
