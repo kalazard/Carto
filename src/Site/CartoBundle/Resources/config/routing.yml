@@ -42,6 +42,11 @@ site_carto_savePoi:
     defaults: { _controller:SiteCartoBundle:Poi:savePoi}
     options:
         expose: true
+site_carto_getAllLieux:
+    path:    /poi_getAllLieux
+    defaults: { _controller:SiteCartoBundle:Poi:getAllLieux }
+    options:
+        expose: true
 site_carto_getAllPois:
     path:    /poi_getAllPois
     defaults: { _controller:SiteCartoBundle:Poi:getAllPois }

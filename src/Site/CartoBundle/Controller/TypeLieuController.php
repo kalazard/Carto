@@ -28,7 +28,7 @@ class TypelieuController extends Controller
     }
 
         //Récupération de la liste des types de lieu
-  /*  public function getAllTypelieuAction(Request $request) {
+    public function getAllTypelieuAction(Request $request) {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $lieux = $repository->findAll();
@@ -36,7 +36,7 @@ class TypelieuController extends Controller
         $response = new Response(json_encode($lieux));
         $response->headers->set('Content-Type', 'application/json');
         return $response;
-    }*/
+    }
 
     public function getTypelieuByIdAction()
     {
