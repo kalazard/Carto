@@ -1,7 +1,9 @@
 var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,
-denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation;
+denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation,traceData;
 var isCreateRoute = false;
 var isCreateSegment = false;
+var isEditSegment = false;
+var isLoadingMap = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display","none");
@@ -173,10 +175,12 @@ function goToPosition(position) {
 
     drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
-    if(tracepolyline !== undefined)
-    {
-      drawnItems.addLayer(tracepolyline);
+    map.eachLayer(function (layer) {
+        if ((layer instanceof L.Polyline) && ! (layer instanceof L.Polygon)) {
+        drawnItems.addLayer(layer);
     }
+    });
+    
 
     L.Draw.SegmentFeature = L.Draw.Feature.extend({
             includes: L.Mixin.Events,
@@ -742,6 +746,33 @@ function goToPosition(position) {
         var type = e.layerType,
             layer = e.layer;
         drawnItems.addLayer(layer);
+        polyline = layer;
+        map.off("click");
+        console.log("poly coords : " + polyline._latlngs.length);
+        for(var i = 0 ; i < polyline._latlngs.length ; i++)
+        {
+            pointArray[i] = new Point(polyline._latlngs[i].lat,polyline._latlngs[i].lng);
+        }
+        console.log("pointArray length : " +  pointArray.length);
+        isCreateRoute = false;
+        isCreateSegment = false;
+        var URL = elevationURL + '&latLngCollection=';
+        for(var i = 0; i < pointArray.length; i++)
+        {
+          var lat = pointArray[i].lat;
+          var lng = pointArray[i].lng;
+          URL += lat + "," + lng;
+          if(i !== pointArray.length - 1){ URL += ","; }                            
+        }
+        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        elevationScript = document.createElement('script');
+        elevationScript.type = 'text/javascript';
+        elevationScript.src = URL;
+        $("body").append(elevationScript);
+        map.off("click"); 
+        saveRoute();
+        $("#denivp").text("");
+        $("#denivn").text("");
     });
 
     map.on('draw:drawstart', function (e) {
@@ -749,10 +780,7 @@ function goToPosition(position) {
           });
 
     map.on('draw:drawstop', function (e) {
-        map.off("click");
-        $("#denivp").text("");
-        $("#denivn").text("");
-        saveRoute();
+        
     });
 
     map.on('draw:segmentstart', function (e) {
@@ -766,15 +794,25 @@ function goToPosition(position) {
     });
 
     map.on('draw:editstart', function (e) {
-          editDrawControl = new editDraw();
-          map.addControl(editDrawControl);
+      isEditSegment = true;
      });
 
-    map.on('draw:editstop', function (e) {
-          map.removeControl(editDrawControl);
-     });
+    map.on('draw:edited', function (e) {
+      isEditSegment = false;
+    });
     $("#map").css("cursor","move"); 
   loadPois();
+  if(isLoadingMap)
+  {
+    segmentID = traceData.segment.id;
+    displayTrace(traceData.segment.trace,traceData.segment.elevation);
+    $("#denivp").text("Dénivelé positif : " + traceData.deniveleplus + "m");
+    $("#denivn").text("Dénivelé négatif : " + traceData.denivelemoins + "m");
+    $("#long").text("Longueur : " + traceData.longueur + "km");
+    $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
+    isLoadingMap = false;
+  }
+  
 }
 
 function addOverlay()
@@ -913,7 +951,7 @@ function saveRoute()
         
     });
 
-  isCreateRoute = false;
+  
 
 }
 
@@ -943,7 +981,7 @@ function saveSegment()
         $.notify("Erreur lors de la sauvegarde", "error");
       });
 
-  isCreateSegment = false;
+  
 
 }
 
@@ -976,7 +1014,7 @@ function getElevation(response)
   denivelen = 0;
   denivelep = 0;
   console.log("Taille de pointArray : " + pointArray.length);
-  console.log(response.elevationProfile);
+  console.log(response);
   for(var i = 0; i < pointArray.length; i++)
   {
     pointArray[i].elevation = response.elevationProfile[i].height;
@@ -990,14 +1028,7 @@ function getElevation(response)
   $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
   $("#denivp").text("Dénivelé positif : " + denivelep + "m");
   $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
-  if(isCreateRoute || isCreateSegment)
-  {
-    var geojson = polyline.toGeoJSON();
-  }
-  else
-  {
-    var geojson = tracepolyline.toGeoJSON();
-  }
+  var geojson = polyline.toGeoJSON();
   for(var i = 0; i < geojson.geometry.coordinates.length; i++)
   {
     geojson.geometry.coordinates[i].push(pointArray[i].elevation);
@@ -1010,9 +1041,10 @@ function getElevation(response)
   mapgeojson = L.geoJson(geojson,{
       onEachFeature: el.addData.bind(el) //working on a better solution
   });
-  if(!isCreateRoute && !isCreateSegment)
+  if(isEditSegment)
   {
     updateSegment(JSON.stringify(pointArray));
+    
   }
   blockItineraireSave();
   map.on("click",function (ev){
@@ -1135,19 +1167,19 @@ function displayTrace(trace,elevation)
   }
 
   //On crée la polyline et on ajoute les points
-  tracepolyline = L.polyline(latlngArr, {color: 'blue'});
-  surbrillance(tracepolyline);
-  tracepolyline.markers = [];
+  polyline = L.polyline(latlngArr, {color: 'blue'});
+  surbrillance(polyline);
+  polyline.markers = [];
   for(var i = 0; i < latlngArr.length; i++)
   {
     var marker = L.circleMarker([latlngArr[i].lat, latlngArr[i].lng]);
     surbrillance(marker);
     map.addLayer(marker);
-    tracepolyline.markers.push(marker);
+    polyline.markers.push(marker);
   }
 
   //On ajoute le profil altimétrique
-  var geojson = tracepolyline.toGeoJSON();
+  var geojson = polyline.toGeoJSON();
   var elevations = elevation.split(";");
   for(var i = 0; i < geojson.geometry.coordinates.length; i++)
   {
@@ -1157,28 +1189,28 @@ function displayTrace(trace,elevation)
       onEachFeature: el.addData.bind(el)
   }); 
 
-  tracepolyline.addTo(map);
+  polyline.addTo(map);
   
   
   
   //Events de la polyline, on retire les points selon les différents cas
   map.on('draw:editstart', function (e) {
-        for(var i = 0; i < tracepolyline.markers.length; i++)
+        for(var i = 0; i < polyline.markers.length; i++)
         {
-          map.removeLayer(tracepolyline.markers[i]);
+          map.removeLayer(polyline.markers[i]);
         }
     });
-  map.on('draw:editstop', function (e) {
-        tracepolyline.markers = [];
+  map.on('draw:edited', function (e) {
+        polyline.markers = [];
         pointArray = [];
-        var latlngs = tracepolyline.getLatLngs();
+        var latlngs = polyline.getLatLngs();
         var URL = elevationUpdateURL + '&latLngCollection=';
         for(var i = 0; i < latlngs.length; i++)
         {
           var marker = L.circleMarker([latlngs[i].lat, latlngs[i].lng]);
           surbrillance(marker);
           map.addLayer(marker);
-          tracepolyline.markers.push(marker);
+          polyline.markers.push(marker);
           pointArray.push(new Point(latlngs[i].lat,latlngs[i].lng));
           URL += latlngs[i].lat + "," + latlngs[i].lng;
           if(i !== latlngs.length - 1){ URL += ","; }
@@ -1190,25 +1222,21 @@ function displayTrace(trace,elevation)
         
     });
   map.on('draw:deletestart', function (e) {
-      tracepolyline.on("click",function(){
-          for(var i = 0; i < tracepolyline.markers.length; i++)
+      polyline.on("click",function(){
+          for(var i = 0; i < polyline.markers.length; i++)
           {
-            map.removeLayer(tracepolyline.markers[i]);
+            map.removeLayer(polyline.markers[i]);
           }
       })
     });
 
-  map.fitBounds(tracepolyline.getBounds());//On centre la map sur la polyline
+  map.fitBounds(polyline.getBounds());//On centre la map sur la polyline
 }
 
 function loadMap(json)
 {
-  segmentID = json.segment.id;
-  displayTrace(json.segment.trace,json.segment.elevation);
-  $("#denivp").text("Dénivelé positif : " + json.deniveleplus + "m");
-  $("#denivn").text("Dénivelé négatif : " + json.denivelemoins + "m");
-  $("#long").text("Longueur : " + json.longueur + "km");
-  $("#diffiDisplay").text("Difficulté : " + json.difficulte.label);
+  isLoadingMap = true;
+  traceData = json;
 }
 
 function surbrillance(object)
@@ -1274,7 +1302,26 @@ function addPointOnMap(ev)
       elevationScript = document.createElement('script');
       elevationScript.type = 'text/javascript';
       elevationScript.src = URL;
-      $("body").append(elevationScript);
-      map.off("click");     
+      $("body").append(elevationScript);  
+      map.off("click");
   }
+}
+
+function loadSegments()
+{
+  var bounds = map.getBounds();
+  $.post(Routing.generate('site_carto_loadSegment'),
+                            {
+                                   northeast : JSON.stringify(new Point(bounds._northEast.lat,bounds._northEast.lng)),
+                                   southwest : JSON.stringify(new Point(bounds._southWest.lat,bounds._southWest.lng)),
+                                   northwest : JSON.stringify(new Point(bounds._northEast.lat,bounds._southWest.lng)),
+                                   southeast : JSON.stringify(new Point(bounds._southWest.lat,bounds._northEast.lng))
+                                },
+                            function(data, status){
+
+                                //$.notify("Segment mis à jour", "success");
+                            }
+      ).fail(function() {
+        $.notify("Erreur", "error");
+      });
 }
