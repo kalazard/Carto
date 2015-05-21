@@ -246,7 +246,7 @@ function goToPosition(position) {
         },
 
         _fireCreatedEvent: function (layer) {
-          this._map.fire('draw:created', { layer: layer, layerType: this.type });
+          this._map.fire('draw:segmentcreated', { layer: layer, layerType: this.type });
         },
 
         // Cancel drawing when the escape key is pressed
@@ -748,17 +748,12 @@ function goToPosition(position) {
         drawnItems.addLayer(layer);
         polyline = layer;
         map.off("click");
-      if(isCreateRoute)
-      {
-
-        console.log("poly coords : " + polyline._latlngs.length);
+        //console.log("poly coords : " + polyline._latlngs.length);
         for(var i = 0 ; i < polyline._latlngs.length ; i++)
         {
             pointArray[i] = new Point(polyline._latlngs[i].lat,polyline._latlngs[i].lng);
         }
-        console.log("pointArray length : " +  pointArray.length);
-        /*isCreateRoute = false;
-        isCreateSegment = false;*/
+        //console.log("pointArray length : " +  pointArray.length);
         var URL = elevationURL + '&latLngCollection=';
         for(var i = 0; i < pointArray.length; i++)
         {
@@ -772,19 +767,37 @@ function goToPosition(position) {
         elevationScript.type = 'text/javascript';
         elevationScript.src = URL;
         $("body").append(elevationScript);
-      }
-        
-        //map.off("click");
-        if(isCreateRoute)
-        {
-          saveRoute();
+        saveRoute();
+        $("#denivp").text("");
+        $("#denivn").text("");
+    });
 
-        } 
-        else if(isCreateSegment)
+map.on('draw:segmentcreated', function (e) {
+      var type = e.layerType,
+            layer = e.layer;
+        drawnItems.addLayer(layer);
+        polyline = layer;
+        map.off("click");
+        //console.log("poly coords : " + polyline._latlngs.length);
+        for(var i = 0 ; i < polyline._latlngs.length ; i++)
         {
-          saveSegment();
+            pointArray[i] = new Point(polyline._latlngs[i].lat,polyline._latlngs[i].lng);
         }
-        
+        //console.log("pointArray length : " +  pointArray.length);
+        var URL = elevationURL + '&latLngCollection=';
+        for(var i = 0; i < pointArray.length; i++)
+        {
+          var lat = pointArray[i].lat;
+          var lng = pointArray[i].lng;
+          URL += lat + "," + lng;
+          if(i !== pointArray.length - 1){ URL += ","; }                            
+        }
+        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        elevationScript = document.createElement('script');
+        elevationScript.type = 'text/javascript';
+        elevationScript.src = URL;
+        $("body").append(elevationScript);
+        setTimeout(saveSegment,5000);
         $("#denivp").text("");
         $("#denivn").text("");
     });
@@ -794,17 +807,15 @@ function goToPosition(position) {
           });
 
     map.on('draw:drawstop', function (e) {
-        
+        map.off("click");
     });
 
     map.on('draw:segmentstart', function (e) {
-              console.log("segment");
               drawSegment(e);
           });
 
     map.on('draw:segmentstop', function (e) {
         map.off("click");
-        //saveSegment();
     });
 
     map.on('draw:editstart', function (e) {
@@ -935,7 +946,7 @@ function saveRoute()
   loadDifficultes();
   loadStatus();
   loadTypechemin();
-  console.log(JSON.stringify(pointArray));
+  //console.log(JSON.stringify(pointArray));
   $("#save").modal('show');
   $("#saveiti").on("click",function()
     {
@@ -965,7 +976,7 @@ function saveRoute()
         
     });
 
-  
+  isCreateRoute = false;
 
 }
 
@@ -983,7 +994,7 @@ function drawSegment(event)
 }
 
 function saveSegment()
-{  console.log(JSON.stringify(pointArray));
+{  //console.log(JSON.stringify(pointArray));
  $.post(Routing.generate('site_carto_saveSegment'),
                             {
                                    points: JSON.stringify(pointArray)
@@ -994,7 +1005,7 @@ function saveSegment()
       ).fail(function() {
         $.notify("Erreur lors de la sauvegarde", "error");
       });
-
+isCreateSegment = false;
   
 
 }
@@ -1016,7 +1027,7 @@ function savePoi()
                                 },
                             function(data, status){
                                 /*alert("Data: " + data + "\nStatus: " + status);*/
-                                console.log(data);
+                                //console.log(data);
                             });
       var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
       $("#addpoi").modal('hide');
@@ -1027,8 +1038,8 @@ function getElevation(response)
   blockItineraireSave();
   denivelen = 0;
   denivelep = 0;
-  console.log("Taille de pointArray : " + pointArray.length);
-  console.log(response);
+  //console.log("Taille de pointArray : " + pointArray.length);
+  //console.log(response);
   for(var i = 0; i < pointArray.length; i++)
   {
     pointArray[i].elevation = response.elevationProfile[i].height;
@@ -1299,7 +1310,7 @@ function addPointOnMap(ev)
 {
 
   pointArray.push(new Point(ev.latlng.lat,ev.latlng.lng));
-  console.log("Nouveau point ajouté, nouvelle taille : " + pointArray.length);
+  //console.log("Nouveau point ajouté, nouvelle taille : " + pointArray.length);
   latlngArray.push(ev.latlng);
   if(pointArray.length > 1)
   {
