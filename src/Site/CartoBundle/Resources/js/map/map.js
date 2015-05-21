@@ -743,19 +743,22 @@ function goToPosition(position) {
     map.addControl(drawControl);
 
     map.on('draw:created', function (e) {
-        var type = e.layerType,
+      var type = e.layerType,
             layer = e.layer;
         drawnItems.addLayer(layer);
         polyline = layer;
         map.off("click");
+      if(isCreateRoute)
+      {
+
         console.log("poly coords : " + polyline._latlngs.length);
         for(var i = 0 ; i < polyline._latlngs.length ; i++)
         {
             pointArray[i] = new Point(polyline._latlngs[i].lat,polyline._latlngs[i].lng);
         }
         console.log("pointArray length : " +  pointArray.length);
-        isCreateRoute = false;
-        isCreateSegment = false;
+        /*isCreateRoute = false;
+        isCreateSegment = false;*/
         var URL = elevationURL + '&latLngCollection=';
         for(var i = 0; i < pointArray.length; i++)
         {
@@ -769,8 +772,19 @@ function goToPosition(position) {
         elevationScript.type = 'text/javascript';
         elevationScript.src = URL;
         $("body").append(elevationScript);
-        map.off("click"); 
-        saveRoute();
+      }
+        
+        //map.off("click");
+        if(isCreateRoute)
+        {
+          saveRoute();
+
+        } 
+        else if(isCreateSegment)
+        {
+          saveSegment();
+        }
+        
         $("#denivp").text("");
         $("#denivn").text("");
     });
@@ -790,7 +804,7 @@ function goToPosition(position) {
 
     map.on('draw:segmentstop', function (e) {
         map.off("click");
-        saveSegment();
+        //saveSegment();
     });
 
     map.on('draw:editstart', function (e) {
@@ -969,7 +983,7 @@ function drawSegment(event)
 }
 
 function saveSegment()
-{  
+{  console.log(JSON.stringify(pointArray));
  $.post(Routing.generate('site_carto_saveSegment'),
                             {
                                    points: JSON.stringify(pointArray)
