@@ -7,8 +7,6 @@ function creerTypelieu()
 //Afficher le modal de modification d'un type de lieu
 function modifTypelieuForm(idTypelieu)
 {
-    console.log("1");
-    console.log("3");
     $('#modalEditTypelieu').children().remove();
     $('#modalEditTypelieu').remove();
         
@@ -20,7 +18,6 @@ function modifTypelieuForm(idTypelieu)
         success: function(data){
             $('body').append(data);
             $("#modalEditTypelieu").modal('show');
-            console.log("2");
         }
     });
 }
@@ -42,7 +39,6 @@ function modifTypelieu(idTypelieu)
 //Afficher le modal de confirmation de suppression d'un type de lieu
 function supprTypelieuConfirm(idTypelieu)
 {
-    console.log("1");
     $('#modalWarningDelete').children().remove();
     $('#modalWarningDelete').remove();
         
@@ -54,7 +50,6 @@ function supprTypelieuConfirm(idTypelieu)
         success: function(data){
             $('body').append(data);
             $("#modalWarningDelete").modal('show');
-            console.log("2");
         }
     });
 }

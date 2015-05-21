@@ -73,8 +73,8 @@ class TypelieuController extends Controller
   { 
       $return_message = "";
       $code = 200;
-      //$target_dir ="var/www/Images/";
-      $target_dir ="C:/wamp/www/Images/";
+      $target_dir ="var/www/Images/";
+      //$target_dir ="C:/wamp/www/Images/";
       $upload = 1;
 
       if (!isset($_POST["label"]) )
@@ -121,8 +121,8 @@ class TypelieuController extends Controller
             $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
 
             $iconeUpload = new Icone();
-            //$iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
-            $iconeUpload->setPath("http://localhost/Images/".$icone_name);
+            $iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
+            //$iconeUpload->setPath("http://localhost/Images/".$icone_name);
 
             $typelieuUpload = new Typelieu();
             $typelieuUpload->setLabel($labelTypelieu);
@@ -170,8 +170,8 @@ class TypelieuController extends Controller
     {
       $return_message = "";
       $code = 200;
-      //$target_dir ="var/www/Images/";
-      $target_dir ="C:/wamp/www/Images/";
+      $target_dir ="var/www/Images/";
+      //$target_dir ="C:/wamp/www/Images/";
       $upload = 1; 
 
       var_dump($_FILES);
@@ -241,8 +241,8 @@ class TypelieuController extends Controller
             $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
 
             $iconeUpload = new Icone();
-            //$iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
-            $iconeUpload->setPath("http://localhost/Images/".$icone_name);
+            $iconeUpload->setPath("http://130.79.214.167/Images/".$icone_name);
+            //$iconeUpload->setPath("http://localhost/Images/".$icone_name);
 
             $idTypelieu = $request->request->get('typelieuid', '');
             $manager=$this->getDoctrine()->getManager();
