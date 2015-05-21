@@ -427,9 +427,9 @@ class ItineraireController extends Controller {
             return json_encode(array("searchResults" => $listItiniraire));
 			
 			$response = new Response(json_encode(array("result" => "success","code" => 200)));
-			return $response; */
+			return $response; 
 		}
-		return new Response('This is not ajax!', 400);		
+		return new Response('This is not ajax!', 400);*/		
 	}
 
     public function getSegmentByIdAction(Request $request) {
