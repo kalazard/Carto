@@ -73,7 +73,7 @@ class TypelieuController extends Controller
   { 
       $return_message = "";
       $code = 200;
-      $target_dir ="http://130.79.214.167/Images/";
+      $target_dir ="../../Images/";
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1;
 
