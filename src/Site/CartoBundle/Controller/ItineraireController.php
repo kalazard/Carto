@@ -175,7 +175,7 @@ class ItineraireController extends Controller {
 
             $trace = new Trace();
             $filename = uniqid('trace_', true) . '.gpx';
-            $trace->setPath($filename);
+            $trace->setPath('/Traces/'.$filename);
             $diff = $repositoryDiff->find($request->request->get("difficulte", ""));
             $user = $repositoryUser->find($request->request->get("auteur", ""));
             $status = $repositoryStatus->find($request->request->get("status", ""));
@@ -239,7 +239,7 @@ class ItineraireController extends Controller {
             $route->setSegment($segment);
 
             $json_obj = json_decode($request->request->get("points", ""), true);
-            
+
 
             $manager->persist($route);
             $manager->persist($trace);
@@ -251,6 +251,21 @@ class ItineraireController extends Controller {
             return $response;
         }
         return new Response('This is not ajax!', 400);
+    }
+
+    public function downloadGPXAction($id) {
+
+
+        $filename = uniqid('trace_', true) . '.gpx';
+        $itineraire = $this->saveGpx($id, $filename);
+        $chemin = "../.."; // emplacement ../../Traces/filename
+        $fichier = $itineraire->getTrace()->getPath();
+        $response = new Response();
+        $response->setContent(file_get_contents($chemin . $fichier));
+        $response->headers->set('Content-Type', 'application/force-download'); // modification du content-type pour forcer le téléchargement (sinon le navigateur internet essaie d'afficher le document)
+        $response->headers->set('Content-disposition', 'filename=' . $itineraire->getNom().'.gpx');
+
+        return $response;
     }
 
     public function saveGpx($id_itineraire, $filename) {
@@ -291,6 +306,12 @@ class ItineraireController extends Controller {
         $racine->appendChild($track);
         $dom->appendChild($racine);
         $dom->save('../../Traces/' . $filename);
+        $itineraire->getTrace()->setPath('/Traces/' . $filename);
+
+        $manager->flush();
+
+        //On return l'url l'itineraire
+        return $itineraire;
     }
 
     public function loadAction($id) {
@@ -330,7 +351,7 @@ class ItineraireController extends Controller {
 
             $segment = new Segment();
 
-            $pointArray = json_decode($request->request->get("points",""),true);
+            $pointArray = json_decode($request->request->get("points", ""), true);
 
             $lsArray = [];
             $elevationString = "";
@@ -393,37 +414,34 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
-	
-	public function loadSegmentAction(Request $request)
-	{
-		if($request->isXMLHttpRequest()) 
-        {
-			$north = $request->request->get("north","");
-			$south = $request->request->get("south","");
-			
-			//on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
-			
-			//requete pour trouver les résultats 
-			/*
-			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
-			
-			$repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
-            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
-            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
-			
-            $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-			//$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
-            $listItiniraire = $query->getQuery()->getResult();
-			
-			//on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
-			
-            return json_encode(array("searchResults" => $listItiniraire));
-			
-			$response = new Response(json_encode(array("result" => "success","code" => 200)));
-			return $response; */
-		}
-		return new Response('This is not ajax!', 400);		
-	}
+
+    public function loadSegmentAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            $north = $request->request->get("north", "");
+            $south = $request->request->get("south", "");
+
+            //on calcul les deux autres points pour former un rectangle de la taille de l'écran 			
+            //requete pour trouver les résultats 
+            /*
+              $repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
+
+              $repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
+              $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
+              $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
+
+              $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
+              //$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
+              $listItiniraire = $query->getQuery()->getResult();
+
+              //on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
+
+              return json_encode(array("searchResults" => $listItiniraire));
+
+              $response = new Response(json_encode(array("result" => "success","code" => 200)));
+              return $response; */
+        }
+        return new Response('This is not ajax!', 400);
+    }
 
     public function getSegmentByIdAction(Request $request) {
         //on récupère l'id de l'itinéraire à charger 
@@ -556,7 +574,7 @@ class ItineraireController extends Controller {
             return new Response("success");
         }
         return new Response('This is not ajax!', 400);
-	}
+    }
 
     //fonction de recherche des itinéraires 
     public function searchAction(Request $request) {
@@ -623,7 +641,7 @@ class ItineraireController extends Controller {
 
         $res = json_decode($response);
 
-        $content = $this->get("templating")->render("SiteTrailBundle:Itiniraire:FicheItineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
+        $content = $this->get("templating")->render("SiteCartoBundle:Itiniraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
         return new Response($content);
     }
 

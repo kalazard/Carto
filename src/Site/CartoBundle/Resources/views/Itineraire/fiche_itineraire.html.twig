@@ -3,197 +3,199 @@
 {% block title %}{{ parent() }} - Fiche d'itinéraire{% endblock %}
 
 {% block body %}
-  {% if app.user %}
-			<table class="table">
-				<thead>
-	        		<th>Nom</th>
-              <th>Numéro</th>
-	        		<th>Longueur</th>
-	        		<th>Dénivelé positif</th>
-	        		<th>Dénivelé négatif</th>
-	        		<th>Difficulté</th>
-	        		<th>Type de chemin</th>
-	        		<th>Status</th>
-	        		<th>Auteur</th>
-	        		<th>Date de création</th>
-	        		<th>Description</th>
-					<th>Visibilité</th>
-	        		{% if app.user.id == auteur_id %}
-						<th>Modifier</th>			
-					{% endif %}    
-	        	</thead>
-                    <tbody>
-                      <tr>
-                        <td><span id="nom">{{nom}}</span></td>
+    {% if app.user %}
+        <table class="table">
+            <thead>
+            <th>Nom</th>
+            <th>Numéro</th>
+            <th>Longueur</th>
+            <th>Dénivelé positif</th>
+            <th>Dénivelé négatif</th>
+            <th>Difficulté</th>
+            <th>Type de chemin</th>
+            <th>Status</th>
+            <th>Auteur</th>
+            <th>Date de création</th>
+            <th>Description</th>
+            <th>Visibilité</th>
+                {% if app.user.id == auteur_id %}
+                <th>Modifier</th>			
+                {% endif %}    
+        </thead>
+        <tbody>
+            <tr>
+                <td><span id="nom">{{nom}}</span></td>
 
-                        <td><span id="numero">{{numero}}</span></td>
+                <td><span id="numero">{{numero}}</span></td>
 
-                        <td><span id="longueur">{{longueur}} km</span></td>
+                <td><span id="longueur">{{longueur}} km</span></td>
 
-                        <td><span id="denivelep">{{deniv_plus}} m</span></td>
- 
-	                    <td><span id="denivelen">{{deniv_moins}} m</span></td>
+                <td><span id="denivelep">{{deniv_plus}} m</span></td>
 
-                        <td><span id="difficulte" value="{{difficulte_id}}">{{difficulte}}</span></td>
+                <td><span id="denivelen">{{deniv_moins}} m</span></td>
 
-                        <td><span id="typechemin" value="{{type_id}}">{{type}}</span></td>
+                <td><span id="difficulte" value="{{difficulte_id}}">{{difficulte}}</span></td>
 
-                        <td><span id="status" value="{{status_id}}">{{status}}</span></td>                           
+                <td><span id="typechemin" value="{{type_id}}">{{type}}</span></td>
 
-						<td><span id="auteur">{{auteur}}</span></td>  	                   
+                <td><span id="status" value="{{status_id}}">{{status}}</span></td>                           
 
-                        <td><span id="datecreation">{{date|date('d/m/Y',false)}}</span></td>                           
+                <td><span id="auteur">{{auteur}}</span></td>  	                   
 
-						<td><span id="description">{{description}}</span></td>  
-						
-						<td><span id="public">{{public}}</span></td>
-						
-                        {% if app.user.id == auteur_id %}
-      									<td>
-      										<p data-placement='top' data-toggle='tooltip' title='Edit'>
-      											<button class='btn btn-primary btn-xs btn_edit' id="edit" disabled><span class='glyphicon glyphicon-pencil'></span></button>
-      										</p>
-      									</td>
-						{% endif %}  
-	
-                      </tr>
-                    </tbody>
-                  </table>
-				  
+                <td><span id="datecreation">{{date|date('d/m/Y',false)}}</span></td>                           
+
+                <td><span id="description">{{description}}</span></td>  
+
+                <td><span id="public">{{public}}</span></td>
+
+                {% if app.user.id == auteur_id %}
+                    <td>
+                        <p data-placement='top' data-toggle='tooltip' title='Edit'>
+                            <button class='btn btn-primary btn-xs btn_edit' id="edit" disabled><span class='glyphicon glyphicon-pencil'></span></button>
+                        </p>
+                    </td>
+                {% endif %}  
+
+            </tr>
+        </tbody>
+    </table><p class="text-center" data-placement='top' data-toggle='tooltip' title='GPX'>
+        <a href="http://localhost/Carto/web/app_dev.php/download/gpx/{{id}}" class='btn btn-success btn_edit'><span class='glyphicon glyphicon-download'></span> Télécharger l'itinéraire au format GPX</a>
+    </p>
+
     <div class="modal fade" id="update">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Mise à jour de l'itinéraire</h4>
-          </div>
-          <div class="modal-body">
-            <form>
-              <div class="form-group">
-                <label for="recipient-name" class="control-label">Nom :</label>
-                <input type="text" class="form-control" id="editnom">
-              </div>
-              <div class="form-group">
-                <label for="message-text" class="control-label">Numéro :</label>
-                <input type="number" class="form-control" id="editnumero">
-              </div>
-              <div class="form-group">
-                <label for="message-text" class="control-label">Description :</label>
-                <textarea class="form-control" id="editdescription"></textarea>
-              </div>
-              <div class="form-group">
-                <label for="recipient-name" class="control-label">Difficulté:</label>
-                <select id="editdifficulte"></select>
-              </div>
-              <div class="form-group">
-                <label for="message-text" class="control-label">Status :</label>
-                <select id="editstatus"></select>
-              </div>
-              <div class="form-group">
-                <label for="recipient-name" class="control-label">Type de chemin :</label>
-                <select id="edittypechemin"></select>
-              </div>
-              <div class="form-group">
-                <label for="message-text" class="control-label">Visibilité :</label>
-                <select id="editpublic">
-                  <option value="0">Privé</option>
-                  <option value="1">Publique</option>
-                </select>
-              </div>
-              {% if app.user %}
-              <input type="hidden" class="form-control" id="iditi" value={{id}}>
-              {% endif %}
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
-            <button type="button" class="btn btn-primary" id="updateiti">Mise à jour</button>
-          </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-	  
-    </div>
-		
-	<iframe class="map-iframe" 
-	frameborder="0" 
-	src="http://localhost/Carto/web/app_dev.php/itineraire_load/{{id}}" 
-	id="mapframe"></iframe>	
-		
-	<script>
-	
-    $(window).load(function(){
-	  $.ajax({
-		 url :  Routing.generate("site_carto_ficheitineraireformdata") ,
-		 type : 'GET',
-		 dataType : "json",
-		 success : function(data){
-			console.dir(data);
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Mise à jour de l'itinéraire</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Nom :</label>
+                            <input type="text" class="form-control" id="editnom">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Numéro :</label>
+                            <input type="number" class="form-control" id="editnumero">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Description :</label>
+                            <textarea class="form-control" id="editdescription"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Difficulté:</label>
+                            <select id="editdifficulte"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Status :</label>
+                            <select id="editstatus"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Type de chemin :</label>
+                            <select id="edittypechemin"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Visibilité :</label>
+                            <select id="editpublic">
+                                <option value="0">Privé</option>
+                                <option value="1">Publique</option>
+                            </select>
+                        </div>
+                        {% if app.user %}
+                            <input type="hidden" class="form-control" id="iditi" value={{id}}>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="updateiti">Mise à jour</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
 
-			 for(var i = 0; i < data.difficulte.length; i++)
-			 {
-			  var opt = $("<option>").attr("value",data.difficulte[i].niveau).text(data.difficulte[i].texte);
-			  opt.appendTo("#editdifficulte");
-			 }
-			 
-			 for(var i = 0; i < data.status.length; i++)
-			 {
-			  var opt = $("<option>").attr("value",data.status[i].id).text(data.status[i].texte);
-			  opt.appendTo("#editstatus");
-			 }
-			 for(var i = 0; i < data.type.length; i++)
-			 {
-			  var opt = $("<option>").attr("value",data.type[i].id).text(data.type[i].texte);
-			  opt.appendTo("#edittypechemin");
-			 }
-			 
-			 $("#edit").prop("disabled",false); 
-		 }
-	  }); 
-	});
-	
-	$("#edit").on("click",function()
-	{
-        $("#editnom").val($("#nom").text());
-        $("#editnumero").val($("#numero").text());
-        $("#editdescription").val($("#description").text());
-        $("#editdifficulte option[value='" + $("#difficulte").attr("value") + "']").prop("selected",true);
-        $("#editstatus option[value='" + $("#status").attr("value") + "']").prop("selected",true);
-        $("#edittypechemin option[value='" + $("#typechemin").attr("value") + "']").prop("selected",true);
-        $("#editpublic option[value='" + $("#public").attr("value") + "']").prop("selected",true);              
-        $("#update").modal('show');
-	});
-	
-    $("#updateiti").on("click",function()
-    {
-        $.post(Routing.generate('site_carto_itineraireupdate'),
-        {
-               nom : $("#editnom").val(),
-               numero : $("#editnumero").val(),
-               typechemin : $("#edittypechemin option:selected").val(),
-               description : $("#editdescription").val(),
-               difficulte : $("#editdifficulte option:selected").val(),
-               auteur : $("#editauteur").val(),
-               status : $("#editstatus option:selected").val(),
-               public : $("#editpublic option:selected").val(),
-               id : $("#iditi").val()
-        })
-        .done(function(data, status){
-          $.notify("Itinéraire mis à jour", "success");
-          $("#nom").text($("#editnom").val());
-          $("#numero").text($("#editnumero").val());
-          $("#description").text($("edit#description").val());
-          $("#difficulte").text($("#editdifficulte option:selected").text()).attr("value",$("#editdifficulte option:selected").val());
-          $("#status").text($("#editstatus option:selected").text()).attr("value",$("#editstatus option:selected").val());
-          $("#typechemin").text($("#edittypechemin option:selected").text()).attr("value",$("#edittypechemin option:selected").val());
-          $("#public").text($("#editpublic option:selected").text()).attr("value",$("#editpublic option:selected").val());
-       })
-        .fail(function(data,status){
-          $.notify("Erreur lors de la mise à jour", "error");
+    </div>
+
+    <iframe class="map-iframe" 
+            frameborder="0" 
+            src="http://localhost/Carto/web/app_dev.php/itineraire_load/{{id}}" 
+            id="mapframe"></iframe>	
+
+    <script>
+
+        $(window).load(function () {
+            $.ajax({
+                url: Routing.generate("site_carto_ficheitineraireformdata"),
+                type: 'GET',
+                dataType: "json",
+                success: function (data) {
+                    console.dir(data);
+
+                    for (var i = 0; i < data.difficulte.length; i++)
+                    {
+                        var opt = $("<option>").attr("value", data.difficulte[i].niveau).text(data.difficulte[i].texte);
+                        opt.appendTo("#editdifficulte");
+                    }
+
+                    for (var i = 0; i < data.status.length; i++)
+                    {
+                        var opt = $("<option>").attr("value", data.status[i].id).text(data.status[i].texte);
+                        opt.appendTo("#editstatus");
+                    }
+                    for (var i = 0; i < data.type.length; i++)
+                    {
+                        var opt = $("<option>").attr("value", data.type[i].id).text(data.type[i].texte);
+                        opt.appendTo("#edittypechemin");
+                    }
+
+                    $("#edit").prop("disabled", false);
+                }
+            });
         });
-      $("#update").modal('hide');
-    });
-	</script>
- {% else %}
-     <p>Vous n'avez pas accès à cette page</p>
- {% endif %}
+
+        $("#edit").on("click", function ()
+        {
+            $("#editnom").val($("#nom").text());
+            $("#editnumero").val($("#numero").text());
+            $("#editdescription").val($("#description").text());
+            $("#editdifficulte option[value='" + $("#difficulte").attr("value") + "']").prop("selected", true);
+            $("#editstatus option[value='" + $("#status").attr("value") + "']").prop("selected", true);
+            $("#edittypechemin option[value='" + $("#typechemin").attr("value") + "']").prop("selected", true);
+            $("#editpublic option[value='" + $("#public").attr("value") + "']").prop("selected", true);
+            $("#update").modal('show');
+        });
+
+        $("#updateiti").on("click", function ()
+        {
+            $.post(Routing.generate('site_carto_itineraireupdate'),
+                    {
+                        nom: $("#editnom").val(),
+                        numero: $("#editnumero").val(),
+                        typechemin: $("#edittypechemin option:selected").val(),
+                        description: $("#editdescription").val(),
+                        difficulte: $("#editdifficulte option:selected").val(),
+                        auteur: $("#editauteur").val(),
+                        status: $("#editstatus option:selected").val(),
+                        public: $("#editpublic option:selected").val(),
+                        id: $("#iditi").val()
+                    })
+                    .done(function (data, status) {
+                        $.notify("Itinéraire mis à jour", "success");
+                        $("#nom").text($("#editnom").val());
+                        $("#numero").text($("#editnumero").val());
+                        $("#description").text($("edit#description").val());
+                        $("#difficulte").text($("#editdifficulte option:selected").text()).attr("value", $("#editdifficulte option:selected").val());
+                        $("#status").text($("#editstatus option:selected").text()).attr("value", $("#editstatus option:selected").val());
+                        $("#typechemin").text($("#edittypechemin option:selected").text()).attr("value", $("#edittypechemin option:selected").val());
+                        $("#public").text($("#editpublic option:selected").text()).attr("value", $("#editpublic option:selected").val());
+                    })
+                    .fail(function (data, status) {
+                        $.notify("Erreur lors de la mise à jour", "error");
+                    });
+            $("#update").modal('hide');
+        });
+    </script>
+{% else %}
+    <p>Vous n'avez pas accès à cette page</p>
+{% endif %}
 {% endblock %}

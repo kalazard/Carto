@@ -177,3 +177,6 @@ site_carto_itinerairedelete:
     defaults: { _controller: SiteCartoBundle:Itineraire:delete }
     options:
         expose: true
+site_carto_downlaodGPX:
+    path:     /download/gpx/{id}
+    defaults: { _controller: SiteCartoBundle:Itineraire:downloadGPX }
