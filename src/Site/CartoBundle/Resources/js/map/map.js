@@ -1,5 +1,5 @@
 var map, GPX, routeCreateControl,routeSaveControl,pointArray,latlngArray, polyline,tracepolyline, elevationScript, elevationChartScript,
-denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation,traceData;
+denivelep,denivelen,drawnItems,drawControl,currentLayer,el,mapgeojson,editDrawControl,segmentID,fetchingElevation,traceData,formerZoom,markerGroup;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -124,6 +124,7 @@ function loadPois()
                       iconSize : [30, 30]
                     });
               marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
+              markerGroup.addLayer(marker);
            }
          },
 
@@ -162,6 +163,7 @@ function goToPosition(position) {
   $("#map").css("height", "100%").css("width", "100%").css("margin","auto");
   var zoom = 3;
   if(position.coords.latitude !== 0 && position.coords.longitude !== 0){zoom = 13;}
+  formerZoom = zoom;
   map.setView([position.coords.latitude, position.coords.longitude], zoom);
 
   L.Control.geocoder().addTo(map);
@@ -175,6 +177,7 @@ function goToPosition(position) {
   //Définition de l'écouteur
   $("#okVille").click(geocode);
 
+    markerGroup = new L.LayerGroup();
     drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
     map.eachLayer(function (layer) {
@@ -827,6 +830,30 @@ map.on('draw:segmentcreated', function (e) {
     map.on('draw:edited', function (e) {
       
     });
+
+    map.on("zoomend",function (e){
+      if(map.getZoom() < 10 && formerZoom >= 10)
+      {
+        markerGroup.eachLayer(function (layer){
+          map.removeLayer(layer);
+        });
+        drawnItems.eachLayer(function (layer){
+          map.removeLayer(layer);
+        });
+        
+      }
+      else if(map.getZoom() >= 10 && formerZoom < 10)
+      {
+        markerGroup.eachLayer(function (layer){
+          layer.addTo(map);
+        });
+        drawnItems.eachLayer(function (layer){
+          layer.addTo(map);
+        });
+        
+      }
+      formerZoom = map.getZoom();
+    })
     $("#map").css("cursor","move"); 
   loadPois();
   if(isLoadingMap)
@@ -1031,6 +1058,7 @@ function savePoi()
                                 //console.log(data);
                                 var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
                                 var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
+                                markerGroup.addLayer(marker);
                             });
       
       $("#addpoi").modal('hide');
@@ -1203,9 +1231,12 @@ function displayTrace(trace,elevation)
   polyline.markers = [];
   for(var i = 0; i < latlngArr.length; i++)
   {
-    var marker = L.circleMarker([latlngArr[i].lat, latlngArr[i].lng]);
-    surbrillance(marker);
-    map.addLayer(marker);
+    var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng],{icon: new L.DivIcon({iconSize: new L.Point(8, 8),
+      className: 'leaflet-div-icon leaflet-editing-icon'})
+    });
+    //surbrillance(marker);
+    marker.addTo(map);
+    markerGroup.addLayer(marker);
     polyline.markers.push(marker);
   }
 
@@ -1231,6 +1262,12 @@ function displayTrace(trace,elevation)
           map.removeLayer(polyline.markers[i]);
         }
     });
+  map.on("draw:editstop",function(){
+        for(var i = 0; i < polyline.markers.length; i++)
+        {
+          polyline.markers[i].addTo(map);
+        }
+  })
   map.on('draw:edited', function (e) {
         polyline.markers = [];
         pointArray = [];
@@ -1238,10 +1275,12 @@ function displayTrace(trace,elevation)
         var URL = elevationUpdateURL + '&latLngCollection=';
         for(var i = 0; i < latlngs.length; i++)
         {
-          var marker = L.circleMarker([latlngs[i].lat, latlngs[i].lng]);
-          surbrillance(marker);
-          map.addLayer(marker);
+          var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng],{icon: new L.DivIcon({iconSize: new L.Point(8, 8),
+            className: 'leaflet-div-icon leaflet-editing-icon'})
+          });
+          marker.addTo(map);
           polyline.markers.push(marker);
+          markerGroup.addLayer(marker);
           pointArray.push(new Point(latlngs[i].lat,latlngs[i].lng));
           URL += latlngs[i].lat + "," + latlngs[i].lng;
           if(i !== latlngs.length - 1){ URL += ","; }
