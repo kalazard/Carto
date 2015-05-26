@@ -28,7 +28,7 @@ class TypelieuController extends Controller
     }
 
         //Récupération de la liste des types de lieu
-  /*  public function getAllTypelieuAction(Request $request) {
+    public function getAllTypelieuAction(Request $request) {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $lieux = $repository->findAll();
@@ -36,7 +36,7 @@ class TypelieuController extends Controller
         $response = new Response(json_encode($lieux));
         $response->headers->set('Content-Type', 'application/json');
         return $response;
-    }*/
+    }
 
     public function getTypelieuByIdAction()
     {
@@ -50,10 +50,8 @@ class TypelieuController extends Controller
         return $response;
     }
 
-  public function saveTypelieuAction()
+  public function enregistreTypelieuAction()
   {   
-    if ($this->get('security.context')->isGranted('ROLE_Administrateur')) 
-    {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
         $listeTypelieu = $repository->findAll();     
@@ -62,18 +60,13 @@ class TypelieuController extends Controller
                                                 array("listeTypelieu" => $listeTypelieu)
                                               );
         return new Response($content);
-    }
-    else
-    {
-      throw $this->createNotFoundException("Vous n'avez pas accès à cette page.");
-    }
   }
   
   public function submituploadIconeAction()
   { 
       $return_message = "";
       $code = 200;
-      $target_dir ="var/www/Images/";
+      $target_dir ="../../Images/";
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1;
 
@@ -170,12 +163,9 @@ class TypelieuController extends Controller
     {
       $return_message = "";
       $code = 200;
-      $target_dir ="var/www/Images/";
+      $target_dir ="../../Images/";
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1; 
-
-      var_dump($_FILES);
-      var_dump($_REQUEST);
 
       if (!isset($_POST["label"]) )
       {

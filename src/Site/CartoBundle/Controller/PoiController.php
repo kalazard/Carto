@@ -64,8 +64,8 @@ class PoiController extends Controller
 
     public function savePoiAction(Request $request)
     {
-        if ($request->isXMLHttpRequest()) 
-        {
+        //if ($request->isXMLHttpRequest()) 
+        //{
             $manager=$this->getDoctrine()->getManager();
 
             $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
@@ -87,9 +87,9 @@ class PoiController extends Controller
             $manager->persist($typelieu);
             $manager->persist($poi);
             $manager->flush();
-            return new JsonResponse(array('data' => 'Poi Crée'),200);
-        }
+            return new JsonResponse(array('message' => 'Poi Crée',"path" => $typelieu->getIcone()->getPath()),200);
+        //}
       
-        return new Response('This is not ajax!', 400);
+        //return new Response('This is not ajax!', 400);
     }
 }

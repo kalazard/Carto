@@ -42,6 +42,11 @@ site_carto_savePoi:
     defaults: { _controller:SiteCartoBundle:Poi:savePoi}
     options:
         expose: true
+site_carto_getAllLieux:
+    path:    /typelieu_getAllLieux
+    defaults: { _controller:SiteCartoBundle:Typelieu:getAllTypelieu }
+    options:
+        expose: true
 site_carto_getAllPois:
     path:    /poi_getAllPois
     defaults: { _controller:SiteCartoBundle:Poi:getAllPois }
@@ -60,7 +65,7 @@ site_carto_submitupload:
     defaults: { _controller: SiteCartoBundle:Map:submit }
 site_carto_saveTypelieu:
     path:     /saveTypelieu
-    defaults: { _controller: SiteCartoBundle:Typelieu:saveTypelieu }
+    defaults: { _controller: SiteCartoBundle:Typelieu:enregistreTypelieu }
     options:
         expose: true
 site_carto_submituploadIcone:
