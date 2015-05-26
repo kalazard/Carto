@@ -87,7 +87,7 @@ class PoiController extends Controller
             $manager->persist($typelieu);
             $manager->persist($poi);
             $manager->flush();
-            return new JsonResponse(array('data' => 'Poi Crée'),200);
+            return new JsonResponse(array('message' => 'Poi Crée',"path" => $typelieu->getIcone()->getPath()),200);
         //}
       
         //return new Response('This is not ajax!', 400);

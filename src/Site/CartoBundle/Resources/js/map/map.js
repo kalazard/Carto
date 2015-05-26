@@ -60,8 +60,11 @@ function init(callback,params)
       contextmenuWidth: 140,
       contextmenuItems: [{
           text: 'Ajouter POI',
-          callback: function()
+          callback: function(data)
           {
+            latPoi = data.latlng.lat;
+            lngPoi = data.latlng.lng;
+            altPoi = 1;
             $("#addpoi").modal('show');
           }
       }]
@@ -1025,10 +1028,11 @@ function savePoi()
                                    //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
                                 },
                             function(data, status){
-                                /*alert("Data: " + data + "\nStatus: " + status);*/
                                 //console.log(data);
+                                var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
+                                var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
                             });
-      var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
+      
       $("#addpoi").modal('hide');
 }
 
