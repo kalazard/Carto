@@ -243,7 +243,7 @@ class PoiController extends Controller
                 $poi->setDescription($request->request->get("description","Aucune description disponible"));
                 $poi->setCoordonnees($coord);
                 $poi->setTypelieu($typelieu);
-                $poi->setImage($manager->getRepository("SiteCartoBundle:Image")->find^$newImage->getId());
+                $poi->setImage($manager->getRepository("SiteCartoBundle:Image")->find($newImage->getId()));
                 $manager->persist($coord);
                 $manager->persist($typelieu);
                 $manager->persist($poi);
