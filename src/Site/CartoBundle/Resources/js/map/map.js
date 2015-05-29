@@ -123,7 +123,21 @@ function loadPois()
                       iconUrl : json[i].typelieu.icone.path,
                       iconSize : [30, 30]
                     });
-              marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
+              if(json[i].image != null)
+              {
+                if(json[i].image.path != null)
+                {
+                  marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<div id='imgPoi' class='img-size' style='background-image: url(" + json[i].image.path + ");'></div> <p><b>" + json[i].titre + "</b></p><p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+                }
+                else
+                {
+                  marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+                }
+              }
+              else
+              {
+                marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+              }
            }
          },
 
@@ -131,15 +145,6 @@ function loadPois()
        }
     });
 }
-
-/*
-var eauIcone = L.icon({
-    iconUrl: '../eau.png',
-    iconSize:     [30, 85], // size of the icon
-});
-
-var marker = L.marker([event.latlng.lat, event.latlng.lng], {icon: eauIcone}).addTo(map);
-*/
 
 //Coordonnées à partir du navigateur
 function getLocation() 
@@ -1030,10 +1035,43 @@ function savePoi()
                             function(data, status){
                                 //console.log(data);
                                 var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
-                                var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
+                                var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + $("#titre").val() + "</b></p><p>" + $("#descriptionPoi").val() + "</p>");
+                                console.log(marker);
                             });
       
       $("#addpoi").modal('hide');
+}
+
+//Afficher le modal de confirmation de suppression d'un poi
+function supprPoiConfirm(idPoi)
+{
+    $('#modalWarningDeletePoi').children().remove();
+    $('#modalWarningDeletePoi').remove();
+        
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_afficheDeletePoi'),
+        cache: false,
+        data: {"idPoi" : idPoi},
+        success: function(data){
+            $('body').append(data);
+            $("#modalWarningDeletePoi").modal('show');
+        }
+    });
+}
+
+//Suppression d'un poi
+function suppressionPoi(idPoi)
+{    
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_deletePoi'),
+        data: {"idPoi" : idPoi},
+        cache: false,
+        success: function(){
+            console.log('map.remove(marker);');
+        }
+    });
 }
 
 function getElevation(response)

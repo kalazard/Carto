@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Site\CartoBundle\Entity\Poi;
 use Site\CartoBundle\Entity\Coordonnees;
 use Site\CartoBundle\Entity\Typelieu;
+use Site\CartoBundle\Entity\Image;
 
 
 use Symfony\Component\HttpFoundation\Request;
@@ -78,8 +79,8 @@ class PoiController extends Controller
             $coord->setAltitude($request->request->get("alt",1));
 
             $poi = new Poi();
-            $poi->setTitre($request->request->get("titre","montitre"));
-            $poi->setDescription($request->request->get("description","madescription"));
+            $poi->setTitre($request->request->get("titre","Aucun titre disponible"));
+            $poi->setDescription($request->request->get("description","Aucune description disponible"));
             $poi->setCoordonnees($coord);
             $poi->setTypelieu($typelieu);
 
@@ -91,5 +92,49 @@ class PoiController extends Controller
         //}
       
         //return new Response('This is not ajax!', 400);
+    }
+
+    public function afficheDeletePoiAction(Request $request)
+    {
+        $idPoi = $request->request->get('idPoi', '');
+        $formulaire = $this->get("templating")->render("SiteCartoBundle:Poi:deletePoi.html.twig", array(
+                                                                'idPoi' => $idPoi
+                                                            ));
+
+        return new Response($formulaire);
+    }
+
+    public function deletePoiAction(Request $request)
+    {
+        /*if($request->isXmlHttpRequest() && $this->getUser()->getRole()->getId() == 1)
+        {*/
+            $idPoi = $request->request->get('idPoi', '');
+            $manager=$this->getDoctrine()->getManager();
+
+            //On récupère l'objet poi
+            $repository=$manager->getRepository("SiteCartoBundle:Poi");        
+            $poi = $repository->findOneById($idPoi);
+            var_dump($poi);
+
+            $image = $poi->getImage();
+
+            //Suppression de l'entité poi
+            $manager->remove($poi);
+
+            if($image != null)
+            {
+                $manager->remove($image);
+            }       
+
+            $manager->flush();
+
+            $request->getSession()->getFlashBag()->add('notice', 'Poi supprimé');
+
+            return new Response();
+        /*}
+        else
+        {
+            throw new NotFoundHttpException('Impossible de trouver la page demandée');
+        }*/
     }
 }

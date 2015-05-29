@@ -8,7 +8,7 @@ use JsonSerializable;
 /**
  * Poi
  *
- * @ORM\Table(name="poi", indexes={@ORM\Index(name="fk_poi_typelieu1_idx", columns={"typelieu"}), @ORM\Index(name="fk_poi_coordonnees1_idx", columns={"coordonnees"})})
+ * @ORM\Table(name="poi", indexes={@ORM\Index(name="fk_poi_typelieu1_idx", columns={"typelieu"}), @ORM\Index(name="fk_poi_coordonnees1_idx", columns={"coordonnees"}), @ORM\Index(name="fk_poi_image1_idx", columns={"image"})})
  * @ORM\Entity
  */
 class Poi implements JsonSerializable
@@ -55,6 +55,16 @@ class Poi implements JsonSerializable
      * })
      */
     private $coordonnees;
+
+    /**
+     * @var \Image
+     *
+     * @ORM\ManyToOne(targetEntity="Image")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="image", referencedColumnName="id")
+     * })
+     */
+    private $image;
 
 
 
@@ -160,6 +170,29 @@ class Poi implements JsonSerializable
         return $this->coordonnees;
     }
 
+    /**
+     * Set image
+     *
+     * @param \Site\CartoBundle\Entity\Image $image
+     * @return Poi
+     */
+    public function setImage($image)
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * Get image
+     *
+     * @return \Site\CartoBundle\Entity\Image 
+     */
+    public function getImage()
+    {
+        return $this->image;
+    }
+
         public function jsonSerialize() {
         return array(
             'id' => $this->getId(),
@@ -167,6 +200,7 @@ class Poi implements JsonSerializable
             'description' => $this->getDescription(),
             'typelieu' => $this->getTypelieu(),
             'coordonnees' => $this->getCoordonnees(),
+            'image' => $this->getImage(),
         );
     }
 }
