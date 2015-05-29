@@ -8,10 +8,14 @@ use Site\CartoBundle\Entity\Poi;
 use Site\CartoBundle\Entity\Coordonnees;
 use Site\CartoBundle\Entity\TypeLieu;
 use Site\CartoBundle\Entity\Icone;
-use Site\CartoBundle\Entity\Itiniraire;
+use Site\CartoBundle\Entity\Itineraire;
 use Site\CartoBundle\Entity\Gpx;
+use Site\CartoBundle\Entity\Segment;
 use Site\CartoBundle\Entity\Trace;
 use Site\CartoBundle\Entity\DifficulteParcours;
+use CrEOF\Spatial\PHP\Types\Geography\Point as MySQLPoint;
+use CrEOF\Spatial\PHP\Types\Geography\LineString;
+use Site\CartoBundle\Entity\Point;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -103,12 +107,85 @@ class MapController extends Controller
 				if(move_uploaded_file($_FILES['upl']['tmp_name'], $target_file))
 				{
 					//si l'upload a réussi, on sauvegarde le chemin de destination dans la base de données (table Trace)
-					$trace = new Trace();
-					$trace->setPath($target_file);
+				$trace = new Trace();
+				$trace->setPath($target_file);
+				
+				$em = $this->getDoctrine()->getManager();
+				
+				$repositoryDiff = $em->getRepository("SiteCartoBundle:Difficulteparcours");
+				$repositoryUser = $em->getRepository("SiteCartoBundle:Utilisateur");
+				$repositoryStatus = $em->getRepository("SiteCartoBundle:Status");
+				$repositoryTypechemin = $em->getRepository("SiteCartoBundle:Typechemin");
+				
+				$diff = $repositoryDiff->find(1);
+				$user = $repositoryUser->find( $this->getUser()->getId());
+				$status = $repositoryStatus->find(1);
+				$typechemin = $repositoryTypechemin->find(1);
 					
-					$em = $this->getDoctrine()->getManager();
-					$em->persist($trace);
-					$em->flush();
+				$segment = new Segment();
+				$pointArray = simplexml_load_file($target_file);
+				$lsArray = [];
+				$elevationString = "";
+				$i = 0;
+				foreach ($pointArray->trk->trkseg->{'trkpt'} as $pt) {
+					$newPoint = new MySQLPoint(floatval($pt->attributes()->lon), floatval($pt->attributes()->lat));
+					array_push($lsArray, $newPoint);
+					$elevationString = $elevationString . $pt->ele;
+					if (++$i != count($pointArray)) {
+						$elevationString = $elevationString . ";";
+					}
+				}
+                $lsArray = $this->RamerDouglasPeucker($lsArray,0.0015);
+				$ls = new LineString($lsArray);
+				
+				$pog1 = new Point();
+				$coords1 = new Coordonnees();
+				$coords1->setLatitude($pointArray->trk->trkseg->trkpt->attributes()->lat);
+				$coords1->setLongitude($pointArray->trk->trkseg->trkpt->attributes()->lon);
+				$coords1->setAltitude($pointArray->trk->trkseg->trkpt->ele);
+				$pog1->setCoords($coords1);
+				$pog1->setOrdre(1);
+				$em->persist($coords1);
+				$em->persist($pog1);
+
+				$pog2 = new Point();
+				$coords2 = new Coordonnees();
+				$coords2->setLatitude($pointArray->trk->trkseg->trkpt->attributes()->lat);
+				$coords2->setLongitude($pointArray->trk->trkseg->trkpt->attributes()->lon);
+				$coords2->setAltitude($pointArray->trk->trkseg->trkpt->ele);
+				$pog2->setCoords($coords2);
+				$pog2->setOrdre(2);
+				$em->persist($coords2);
+				$em->persist($pog2);
+				
+				$segment->setTrace($ls);
+				$segment->setElevation($elevationString);
+				$segment->setSens(0);
+				$segment->setPog1($pog1);
+				$segment->setPog2($pog2);
+					
+				//sauvegarde dans la table itinéraire 
+				$iti = new Itineraire();
+				$iti->setDatecreation(new \DateTime('now'));
+				$iti->setLongueur(0);
+				$iti->setDeniveleplus(0);
+				$iti->setDenivelemoins(0);
+				$iti->setTrace($trace);
+				$iti->setNom("upload");
+				$iti->setNumero("10");
+				$iti->setTypechemin($typechemin);
+				$iti->setDescription("description");
+				$iti->setDifficulte($diff);
+				$iti->setAuteur($user);
+				$iti->setStatus($status);
+				$iti->setPublic(0);
+				$iti->setSegment($segment);
+				
+				$em->persist($trace);
+				$em->persist($iti);
+				$em->persist($segment);
+				$em->flush();
+					
 					
 					//if(!empty($trace->getId()))
 					//{
@@ -170,7 +247,66 @@ class MapController extends Controller
 	
 	//fonction de modification d'un segment 
 	//séparation d'un segment en deux autre tronçon suivant le points d'insertion.a
+
+    public function perpendicularDistance($ptX, $ptY, $l1x, $l1y, $l2x, $l2y)
+    {
+        $result = 0;
+        if ($l2x == $l1x)
+        {
+            //vertical lines - treat this case specially to avoid divide by zero
+            $result = abs($ptX - $l2x);
+        }
+        else
+        {
+            $slope = (($l2y-$l1y) / ($l2x-$l1x));
+            $passThroughY = (0-$l1x)*$slope + $l1y;
+            $result = (abs(($slope * $ptX) - $ptY + $passThroughY)) / (sqrt($slope*$slope + 1));
+        }
+        return $result;
+    }
+
+    public function RamerDouglasPeucker($pointList, $epsilon)
+    {
+        // Find the point with the maximum distance
+        $dmax = 0;
+        $index = 0;
+        $totalPoints = count($pointList);
+        for ($i = 1; $i < ($totalPoints - 1); $i++)
+        {
+            $d = $this->perpendicularDistance($pointList[$i]->getX(), $pointList[$i]->getY(),
+                                       $pointList[0]->getX(), $pointList[0]->getY(),
+                                       $pointList[$totalPoints-1]->getX(), $pointList[$totalPoints-1]->getY());
+                   
+            if ($d > $dmax)
+            {
+                $index = $i;
+                $dmax = $d;
+            }
+        }
+
+        $resultList = array();
+        
+        // If max distance is greater than epsilon, recursively simplify
+        if ($dmax >= $epsilon)
+        {
+            // Recursive call
+            $recResults1 = $this->RamerDouglasPeucker(array_slice($pointList, 0, $index + 1), $epsilon);
+            $recResults2 = $this->RamerDouglasPeucker(array_slice($pointList, $index, $totalPoints - $index), $epsilon);
+
+            // Build the result list
+            $resultList = array_merge(array_slice($recResults1, 0, count($recResults1) - 1),
+                                      array_slice($recResults2, 0, count($recResults2)));
+        }
+        else
+        {
+            $resultList = array($pointList[0], $pointList[$totalPoints-1]);
+        }
+        // Return the result
+        return $resultList;
+    }
 }
+
+
 
 /* 
  * To change this license header, choose License Headers in Project Properties.
