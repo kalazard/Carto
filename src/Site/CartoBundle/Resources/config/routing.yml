@@ -205,3 +205,6 @@ site_carto_itinerairedelete:
 site_carto_downlaodGPX:
     path:     /download/gpx/{id}
     defaults: { _controller: SiteCartoBundle:Itineraire:downloadGPX }
+site_carto_savePoiPicture:
+    path:     /poi/save_with_picture
+    defaults: { _controller: SiteCartoBundle:Poi:savePoiWithPicture }

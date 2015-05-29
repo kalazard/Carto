@@ -175,4 +175,84 @@ class PoiController extends Controller
         return new Response();
     }
 
+    public function savePoiWithPictureAction(Request $request){
+        //Récupération de la photo
+        //Sauvegarde du fichier   
+        //$target_dir = "C:/testUp/";
+        $target_dir = "/var/www/uploads/";
+        $target_file = $target_dir . basename($_FILES["fichier"]["name"]);
+        $uploadOk = 1;
+        $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
+        
+        // Check if image file is a actual image or fake image
+        if(isset($_POST["submit"])) {
+            $check = getimagesize($_FILES["fichier"]["tmp_name"]);
+            if($check !== false) {
+                //echo "File is an image - " . $check["mime"] . ".";
+                $uploadOk = 1;
+            } else {
+                //echo "Le fichier n'est pas une image.";
+                $uploadOk = 0;
+            }
+        }
+        
+        //On vérifie la taille du fichier
+        if ($_FILES["fichier"]["size"] > 5000000) {
+            //echo "L'image est trop volomineuse.";
+            $uploadOk = 0;
+        }
+        
+        //Autorisation de certaines extensions de fichier
+        if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+        && $imageFileType != "gif" ) {
+            //echo "Seules les extensions JPG, JPEG, PNG & GIF sont autorisées.";
+            $uploadOk = 0;
+        }
+        
+        //On vérifie qu'il n'y a pas eu d'erreurs lors de l'upload
+        if ($uploadOk == 0)
+        {
+            //echo "Il y a eu un problème lors de l'envoi du fichier.";
+        }
+        else
+        {
+            $date = new \DateTime;
+            $fileName = "image".date_format($date, 'U').".".$imageFileType;
+            $newFile = $target_dir.$fileName;
+                
+            if (move_uploaded_file($_FILES["fichier"]["tmp_name"], $newFile)) {                
+                $manager = $this->getDoctrine()->getManager();
+                $repository = $manager->getRepository("SiteCartoBundle:Image");
+                $newImage = new Image();
+                $newImage->setPath("http://130.79.214.167/uploads/".$fileName);
+                $manager->persist($newImage);
+                $manager->flush();  
+                $manager=$this->getDoctrine()->getManager();
+
+                $repositoryTypelieu=$manager->getRepository("SiteCartoBundle:Typelieu");
+                
+                $typelieu = $repositoryTypelieu->find($request->request->get("idLieu",1));
+
+                $coord = new Coordonnees();
+                $coord->setLongitude($request->request->get("lng",1));
+                $coord->setLatitude($request->request->get("lat",1));
+                $coord->setAltitude($request->request->get("alt",1));
+
+                $poi = new Poi();
+                $poi->setTitre($request->request->get("titre","Aucun titre disponible"));
+                $poi->setDescription($request->request->get("description","Aucune description disponible"));
+                $poi->setCoordonnees($coord);
+                $poi->setTypelieu($typelieu);
+                $poi->setImage($manager->getRepository("SiteCartoBundle:Image")->find^$newImage->getId());
+                $manager->persist($coord);
+                $manager->persist($typelieu);
+                $manager->persist($poi);
+                $manager->flush();
+                return new JsonResponse(array('message' => 'Poi Crée',"path" => $typelieu->getIcone()->getPath()),200);              
+            } else {
+                return new JsonResponse(array('message' => "Probleme lors de l'upload du fichier"),500);
+            }
+        }
+    }
+
 }
