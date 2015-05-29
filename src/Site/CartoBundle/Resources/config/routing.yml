@@ -62,6 +62,16 @@ site_carto_deletePoi:
     defaults: { _controller: SiteCartoBundle:Poi:deletePoi, idPoi: "" }
     options:
         expose: true
+site_carto_afficheEditPoi:
+    path:    /afficheEditPoi
+    defaults: { _controller: SiteCartoBundle:Poi:afficheEditPoi, idPoi: "" }
+    options:
+        expose: true
+site_carto_editPoi:
+    path:    /editPoi
+    defaults: { _controller: SiteCartoBundle:Poi:editPoi, idPoi: "" }
+    options:
+        expose: true 
 site_carto_getAllIcones:
     path:    /poi_getAllIcones
     defaults: { _controller:SiteCartoBundle:Icones:getAllIcones }

@@ -1073,6 +1073,38 @@ function savePoi()
       $("#addpoi").modal('hide');
 }
 
+//Afficher le modal de modification d'un poi
+function modifPoiForm(idPoi)
+{
+    $('#modalEditPoi').children().remove();
+    $('#modalEditPoi').remove();
+        
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_afficheEditPoi'),
+        cache: false,
+        data: {"idPoi" : idPoi},
+        success: function(data){
+            $('body').append(data);
+            $("#modalEditPoi").modal('show');
+        }
+    });
+}
+
+//Modification d'un poi
+function modifPoi(idPoi)
+{
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_editPoi'),
+        data: {"idPoi" : idPoi},
+        cache: false,
+        success: function(){
+            console.log('editer le marker');
+        }
+    });
+}
+
 //Afficher le modal de confirmation de suppression d'un poi
 function supprPoiConfirm(idPoi)
 {

@@ -137,4 +137,42 @@ class PoiController extends Controller
             throw new NotFoundHttpException('Impossible de trouver la page demandée');
         }*/
     }
+
+    public function afficheEditPoiAction(Request $request)
+    {
+      $idPoi = $request->request->get('idPoi', '');
+      $manager=$this->getDoctrine()->getManager();
+
+      //On récupère l'objet poi
+      $repository=$manager->getRepository("SiteCartoBundle:Poi");        
+      $poi= $repository->findOneById($idPoi);
+
+      $formulaire = $this->get("templating")->render("SiteCartoBundle:Poi:editPoi.html.twig", array(
+                                                                'poi' => $poi
+                                                            ));
+
+      return new Response($formulaire);
+    }
+
+    public function editPoiAction(Request $request)
+    {
+        $idPoi = $request->request->get('poiid', '');
+        $titrePoi = $request->request->get('titre', '');
+        $descriptionPoi = $request->request->get('description', '');
+        $manager=$this->getDoctrine()->getManager();
+
+        //On récupère l'objet typelieu
+        $repository=$manager->getRepository("SiteCartoBundle:Poi");        
+        $poi = $repository->findOneById($idPoi);
+        
+        $poi->setTitre($titrePoi);
+        $poi->setDescription($descriptionPoi);
+
+        $manager->persist($poi);
+        $manager->flush();
+
+        $request->getSession()->getFlashBag()->add('notice', 'Poi modifié');
+        return new Response();
+    }
+
 }
