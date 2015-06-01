@@ -1,11 +1,11 @@
-<div id="modalWarningDelete" class="modal fade">
+<div id="modalWarningDeletePoi" class="modal fade">
 	            <div class="modal-dialog">
 	                <div class="modal-content">      
 	                    <div class="modal-body text-center">
 	                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	                        <p>Etes-vous sûr de vouloir supprimer ce type de lieu ? </br> Cela supprimera tous les POIs utilisant ce type de lieu.</p>
+	                        <p>Etes-vous sûr de vouloir supprimer ce poi ? {{idPoi}} </p>
 	                        <div class='wrapper text-center'>
-	                            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="suppressionTypelieu({{idTypelieu}})">Oui</button>
+	                            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="suppressionPoi({{idPoi}})">Oui</button>
 	                            <button type="button" class="btn btn-default" data-dismiss="modal" >Non</button>
 	                        </div>
 	                    </div>

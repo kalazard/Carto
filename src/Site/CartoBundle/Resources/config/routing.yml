@@ -52,6 +52,26 @@ site_carto_getAllPois:
     defaults: { _controller:SiteCartoBundle:Poi:getAllPois }
     options:
         expose: true
+site_carto_afficheDeletePoi:
+    path:    /afficheDeletePoi
+    defaults: { _controller: SiteCartoBundle:Poi:afficheDeletePoi, idPoi: "" }
+    options:
+        expose: true
+site_carto_deletePoi:
+    path:    /deletePoi
+    defaults: { _controller: SiteCartoBundle:Poi:deletePoi, idPoi: "" }
+    options:
+        expose: true
+site_carto_afficheEditPoi:
+    path:    /afficheEditPoi
+    defaults: { _controller: SiteCartoBundle:Poi:afficheEditPoi, idPoi: "" }
+    options:
+        expose: true
+site_carto_editPoi:
+    path:    /editPoi
+    defaults: { _controller: SiteCartoBundle:Poi:editPoi, idPoi: "" }
+    options:
+        expose: true 
 site_carto_getAllIcones:
     path:    /poi_getAllIcones
     defaults: { _controller:SiteCartoBundle:Icones:getAllIcones }
@@ -185,3 +205,6 @@ site_carto_itinerairedelete:
 site_carto_downlaodGPX:
     path:     /download/gpx/{id}
     defaults: { _controller: SiteCartoBundle:Itineraire:downloadGPX }
+site_carto_savePoiPicture:
+    path:     /poi/save_with_picture
+    defaults: { _controller: SiteCartoBundle:Poi:savePoiWithPicture }

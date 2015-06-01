@@ -90,21 +90,40 @@ function loadLieux() {
     return res;
 }
 
-function loadPois() {
+function loadPois()
+{
     $.ajax({
-        url: Routing.generate('site_carto_getAllPois'),
-        type: 'GET',
-        dataType: 'json',
-        success: function (json, statut) {
+        url : Routing.generate('site_carto_getAllPois'),
+        type : 'GET',
+        dataType : 'json',
+        success : function(json, statut){
             var icone;
             var marker;
-            for (var i = 0; i < json.length; i++) {
+            for(var i = 0; i < json.length; i++)
+            {
                 icone = L.icon({
-                    iconUrl: json[i].typelieu.icone.path,
-                    iconSize: [30, 30]
+                    iconUrl : json[i].typelieu.icone.path,
+                    iconSize : [30, 30]
                 });
-                marker = L.marker([json[i].coordonnees.latitude, json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<b>" + json[i].titre + "</b><br>" + json[i].description);
-                markerGroup.addLayer(marker);
+
+                if(json[i].image != null)
+                {
+                    if(json[i].image.path != null)
+                    {
+                        marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<div id='imgPoi' class='img-size' style='background-image: url(" + json[i].image.path + ");'></div> <p><b>" + json[i].titre + "</b></p><p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+                        markerGroup.addLayer(marker);
+                    }
+                    else
+                    {
+                        marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+                        markerGroup.addLayer(marker);
+                    }
+                }
+                else
+                {
+                    marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
+                    markerGroup.addLayer(marker);
+                }
             }
         },
 
@@ -1013,66 +1032,138 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
 
 }
 
-function savePoi() {
-    $.post(Routing.generate('site_carto_savePoi'),
-        {
-            lat: latPoi,
-            lng: lngPoi,
-            alt: altPoi,
-            idLieu: $("#typelieu option:selected").val(),
-            titre: $("#titre").val(),
-            description: $("#descriptionPoi").val()
-            //labellieu : labelLieu,
-            //idicone : idIcone,
-            //pathicone : pathIcone
-            //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
-        },
-        function (data, status) {
-            //console.log(data);
-            var iconePoi = L.icon({iconUrl: data.path, iconSize: [30, 30]});
-            var marker = L.marker([latPoi, lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<b>" + $("#titre").val() + "</b><br>" + $("#descriptionPoi").val());
-            markerGroup.addLayer(marker);
-        });
-
-    $("#addpoi").modal('hide');
+function savePoi()
+{
+      $.post(Routing.generate('site_carto_savePoi'),
+                            {
+                                   lat: latPoi,
+                                   lng : lngPoi,
+                                   alt : altPoi,
+                                   idLieu : $("#typelieu option:selected").val(),
+                                   titre : $("#titre").val(),
+                                   description : $("#descriptionPoi").val()
+                                   //labellieu : labelLieu,
+                                   //idicone : idIcone,
+                                   //pathicone : pathIcone
+                                   //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
+                                },
+                            function(data, status){
+                                //console.log(data);
+                                var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
+                                var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + $("#titre").val() + "</b></p><p>" + $("#descriptionPoi").val() + "</p>");
+                                console.log(marker);
+                                markerGroup.addLayer(marker);
+                            });
+      
+      $("#addpoi").modal('hide');
 }
 
-function getElevation(response) {
-    blockItineraireSave();
-    denivelen = 0;
-    denivelep = 0;
-    //console.log("Taille de pointArray : " + pointArray.length);
-    //console.log(response);
-    for (var i = 0; i < pointArray.length; i++) {
-        pointArray[i].elevation = response.elevationProfile[i].height;
-        pointArray[i].distance = response.elevationProfile[i].distance;
-    }
-    for (var i = 0; i < pointArray.length - 1; i++) {
-        var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
-        diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
-    }
-    $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
-    $("#denivp").text("Dénivelé positif : " + denivelep + "m");
-    $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
-    var geojson = polyline.toGeoJSON();
-    for (var i = 0; i < geojson.geometry.coordinates.length; i++) {
-        geojson.geometry.coordinates[i].push(pointArray[i].elevation);
-    }
-    if (mapgeojson !== undefined) {
-        map.removeLayer(mapgeojson);
-    }
-    el.clear();
-    mapgeojson = L.geoJson(geojson, {
-        onEachFeature: el.addData.bind(el) //working on a better solution
+//Afficher le modal de modification d'un poi
+function modifPoiForm(idPoi)
+{
+    $('#modalEditPoi').children().remove();
+    $('#modalEditPoi').remove();
+        
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_afficheEditPoi'),
+        cache: false,
+        data: {"idPoi" : idPoi},
+        success: function(data){
+            $('body').append(data);
+            $("#modalEditPoi").modal('show');
+        }
     });
-    if (isEditSegment) {
-        updateSegment(JSON.stringify(pointArray));
+}
 
-    }
-    blockItineraireSave();
-    map.on("click", function (ev) {
-        addPointOnMap(ev);
+//Modification d'un poi
+function modifPoi(idPoi)
+{
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_editPoi'),
+        data: {"idPoi" : idPoi},
+        cache: false,
+        success: function(){
+            console.log('editer le marker');
+        }
     });
+}
+
+//Afficher le modal de confirmation de suppression d'un poi
+function supprPoiConfirm(idPoi)
+{
+    $('#modalWarningDeletePoi').children().remove();
+    $('#modalWarningDeletePoi').remove();
+        
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_afficheDeletePoi'),
+        cache: false,
+        data: {"idPoi" : idPoi},
+        success: function(data){
+            $('body').append(data);
+            $("#modalWarningDeletePoi").modal('show');
+        }
+    });
+}
+
+//Suppression d'un poi
+function suppressionPoi(idPoi)
+{    
+    $.ajax({
+        type: "POST",
+        url: Routing.generate('site_carto_deletePoi'),
+        data: {"idPoi" : idPoi},
+        cache: false,
+        success: function(){
+            console.log('map.remove(marker);');
+        }
+    });
+}
+
+function getElevation(response)
+{  
+  blockItineraireSave();
+  denivelen = 0;
+  denivelep = 0;
+  //console.log("Taille de pointArray : " + pointArray.length);
+  //console.log(response);
+  for(var i = 0; i < pointArray.length; i++)
+  {
+    pointArray[i].elevation = response.elevationProfile[i].height;
+    pointArray[i].distance = response.elevationProfile[i].distance;
+  }
+  for(var i = 0; i < pointArray.length - 1; i++)
+  {
+    var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
+    diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+  }
+  $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
+  $("#denivp").text("Dénivelé positif : " + denivelep + "m");
+  $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+  var geojson = polyline.toGeoJSON();
+  for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+  {
+    geojson.geometry.coordinates[i].push(pointArray[i].elevation);
+  }
+  if(mapgeojson !== undefined)
+  {
+    map.removeLayer(mapgeojson);
+  }
+  el.clear();
+  mapgeojson = L.geoJson(geojson,{
+      onEachFeature: el.addData.bind(el) //working on a better solution
+  });
+  if(isEditSegment)
+  {
+    updateSegment(JSON.stringify(pointArray));
+    
+  }
+  blockItineraireSave();
+  map.on("click",function (ev){
+    addPointOnMap(ev);
+  });
 }
 
 function loadDifficultes() {
