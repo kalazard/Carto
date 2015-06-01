@@ -70,6 +70,10 @@ doctrine:
     orm:
         auto_generate_proxy_classes: "%kernel.debug%"
         auto_mapping: true
+        dql:
+            numeric_functions :
+              MBRContains:     CrEOF\Spatial\ORM\Query\AST\Functions\MySql\MBRContains
+              GeomFromText:     CrEOF\Spatial\ORM\Query\AST\Functions\MySql\GeomFromText
 
 # Swiftmailer Configuration
 swiftmailer:

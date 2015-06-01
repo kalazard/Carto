@@ -15,6 +15,7 @@ use Site\CartoBundle\Entity\Segment;
 use Site\CartoBundle\Entity\Point;
 use Site\CartoBundle\Entity\Coordonnees;
 use CrEOF\Spatial\PHP\Types\Geography\Point as MySQLPoint;
+use CrEOF\Spatial\PHP\Types\Geography\Polygon;
 use CrEOF\Spatial\PHP\Types\Geography\LineString;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -417,40 +418,50 @@ class ItineraireController extends Controller {
 	
 	public function loadSegmentAction(Request $request)
 	{
-		/*if($request->isXMLHttpRequest()) 
-      {
-			$northeast = $request->request->get("northeast","");
-			$southwest = $request->request->get("southwest","");
-      $northewest = $request->request->get("northewest","");
-      $southeast = $request->request->get("southeast","");	
+		if($request->isXMLHttpRequest()) 
+        {
+            $manager = $this->getDoctrine()->getManager();
+            $repository = $manager->getRepository('SiteCartoBundle:Segment');
+            $northeast = json_decode($request->request->get("northeast",""),true);
+            $southwest = json_decode($request->request->get("southwest",""),true);
+            $northwest = json_decode($request->request->get("northwest",""),true);
+            $southeast = json_decode($request->request->get("southeast",""),true);
 
-      $bounds = new Polygon([new LineString[new MySQLPoint($northeast["lng"], $northeast["lat"]),
-                    new MySQLPoint($southwest["lng"], $southwest["lat"]),
-                    new MySQLPoint($northewest["lng"], $northewest["lat"]),
-                    new MySQLPoint($southeast["lng"], $southeast["lat"])]]);
+            $bounds = new Polygon(array(new LineString(array(
+                                        new MySQLPoint($northeast["lng"], $northeast["lat"]),
+                                        new MySQLPoint($southeast["lng"], $southeast["lat"]),
+                                        new MySQLPoint($southwest["lng"], $southwest["lat"]),
+                                        new MySQLPoint($northwest["lng"], $northwest["lat"]),
+                                        new MySQLPoint($northeast["lng"], $northeast["lat"])
+                                    ))));
 
-			$query = $repository->createQueryBuilder('i')->where("MBRContains(:bounds, i.segment.pog1)")->setParameter('bounds', $bounds);
-      $$listSegment = $query->getQuery()->getResult();*/
-			//requete pour trouver les résultats 
-			/*
-			
-			$repository = $this->entityManager->getRepository('SiteCartoBundle:Segment');
-			$repositoryUser=$manager->getRepository("SiteCartoBundle:Utilisateur");
-            $repositoryStatus=$manager->getRepository("SiteCartoBundle:Status");
-            $repositoryTypechemin=$manager->getRepository("SiteCartoBundle:Typechemin");
-			
-            $query = $repository->createQueryBuilder('i')->where('i.nom LIKE :nom')->setParameter('nom', '%'.$nom.'%');
-			//$query->andWhere('i.typechemin = :typechemin')->setParameter('typechemin', $typechemin);
-            $listItiniraire = $query->getQuery()->getResult();
-			
+            $res = $repository->findAll();
+
+
+			//requete pour trouver les résultats
+            $req = "SELECT MBRContains(GeomFromText(:bounds), GeomFromText(:pt)), MBRContains(GeomFromText(:bounds), GeomFromText(:pt2)) FROM SiteCartoBundle:Segment s WHERE s.id = :segid";
+            $query = $manager->createQuery($req);
+            $query->setParameter('bounds', $bounds,'point');
+            foreach($res as $key => $seg)
+            {
+                $query->setParameter('pt', new MySQLPoint($seg->getPog1()->getCoords()->getLongitude(),$seg->getPog1()->getCoords()->getLatitude()), 'point');
+                $query->setParameter('pt2', new MySQLPoint($seg->getPog2()->getCoords()->getLongitude(),$seg->getPog2()->getCoords()->getLatitude()), 'point');
+                $query->setParameter('segid', $seg->getId());
+                $val = $query->getResult();
+                if($val[0][1] != '1' && $val[0][2] != '1')
+                {
+                    unset($res[$key]);
+                }
+
+            }
 			//on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
 			
-            return json_encode(array("searchResults" => $listItiniraire));
+            return new Response(json_encode(array("searchResults" => $res)));
 			
-			$response = new Response(json_encode(array("result" => "success","code" => 200)));
-			return $response; 
+			/*$response = new Response(json_encode(array("result" => "success","code" => 200)));
+			return $response;*/
 		}
-		return new Response('This is not ajax!', 400);*/		
+		return new Response('This is not ajax!', 400);		
 	}
 
     public function getSegmentByIdAction(Request $request) {
