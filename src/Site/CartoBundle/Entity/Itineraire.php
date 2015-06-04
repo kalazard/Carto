@@ -129,12 +129,9 @@ class Itineraire implements JsonSerializable
     private $public;
 
     /**
-     * @var \Segment
+     * @var linestring
      *
-     * @ORM\ManyToOne(targetEntity="Segment",cascade={"persist"})
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="segment", referencedColumnName="id")
-     * })
+     * @ORM\Column(name="segment", type="linestring", nullable=false)
      */
     private $segment;
 
@@ -372,7 +369,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get status
      *
-     * @return Site\CartoBundle\Entity\Status 
+     * @return \Site\CartoBundle\Entity\Status
      */
     public function getStatus()
     {
@@ -474,10 +471,10 @@ class Itineraire implements JsonSerializable
     /**
      * Set segment
      *
-     * @param \Site\CartoBundle\Entity\Segment $segment
+     * @param linestring $segment
      * @return Itineraire
      */
-    public function setSegment(\Site\CartoBundle\Entity\Segment $segment = null)
+    public function setSegment($segment)
     {
         $this->segment = $segment;
 
@@ -487,7 +484,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get segment
      *
-     * @return \Site\CartoBundle\Entity\Segment 
+     * @return linestring
      */
     public function getSegment()
     {
