@@ -1,5 +1,5 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
-    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray;
+    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray, radiusGroup;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -8,6 +8,8 @@ var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7
 var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
+var pass = 0;
+var radius = 0;
 
 var Point = function (lat, lng) {
     this.lat = lat;
@@ -163,12 +165,9 @@ function goToPosition(position) {
         attribution: 'Landscape'
     }).addTo(map);
 
-
-    //Définition de l'écouteur
-    $("#okVille").click(geocode);
-
     markerGroup = new L.LayerGroup();
     drawnItems = new L.FeatureGroup();
+	radiusGroup = new L.FeatureGroup();
     map.addLayer(drawnItems);
     map.eachLayer(function (layer) {
         if ((layer instanceof L.Polyline) && !(layer instanceof L.Polygon)) {
@@ -500,6 +499,64 @@ function goToPosition(position) {
         },
 
         _createMarker: function (latlng) {
+		
+			var number_point = Object.keys(this._markerGroup._layers);
+	  
+			  //stockage des points dans un tableau indépendant 
+			  
+			//si on a pas encore de points dans le markerGroup de la polyline this :
+			
+			//taille de base 50 
+			
+			//calcul du radius des marqueurs par rapport au zoom
+			/*
+			radius = 20*(18-map.getZoom()+1);
+			
+			radius = radius + (50 * (18-map.getZoom()));
+			
+			if(18-map.getZoom() == 1)
+			{
+				radius = radius - 20;
+			}	
+			*/
+			
+			//calcul de la zone de détection en fonction du radius
+			
+			var number_temp = 0;
+			
+			number_temp = 0.0001*((15/10)*(18-map.getZoom()+1));
+			
+			number_temp = number_temp + (0.0001*((15/10) * (18-map.getZoom())));
+			
+			
+			//if(number_point.length == 0)
+			//{		
+				//fonction de détection d'un point existant 
+				
+				var full_poly_tab = drawnItems;
+				var base_lat = latlng.lat;
+				var base_lng = latlng.lng;
+				
+				$.each(full_poly_tab._layers, function(key, val) {
+					$.each(val._latlngs, function(key, points) 
+					{
+						//si il y a une concordance (on arrondis pour éliminer les imperfections), 
+						//on sauvegarde toute la polyline dans le tableau temp_redraw
+						
+						dif_lat = base_lat - points.lat;
+						dif_lng = base_lng - points.lng;
+						
+						//récupération du zoom 
+						
+						if((dif_lat < number_temp && dif_lat > -1*number_temp ) && (dif_lng < number_temp*2 && dif_lng > -1*number_temp*2))
+						{	
+							latlng.lat = points.lat;
+							latlng.lng = points.lng;
+						}
+					});
+				});		
+			//}	
+		
             var marker = new L.Marker(latlng, {
                 icon: this.options.icon,
                 zIndexOffset: this.options.zIndexOffset * 2
@@ -698,6 +755,358 @@ function goToPosition(position) {
             L.Draw.SegmentFeature.prototype.initialize.call(this, map, options);
         }
     });
+	
+	///////////////////////////// class edit poly
+
+/*
+ * L.Edit.Poly is an editing handler for polylines and polygons.
+ */
+
+L.Edit.Poly = L.Handler.extend({
+	options: {
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: 'leaflet-div-icon leaflet-editing-icon'
+		})
+	},
+
+	initialize: function (poly, options) {
+		this._poly = poly;
+		L.setOptions(this, options);
+	},
+
+	addHooks: function () {
+		var poly = this._poly;
+
+		if (!(poly instanceof L.Polygon)) {
+			//poly.options.editing.fill = false;
+		}
+
+		poly.setStyle(poly.options.editing);
+
+		if (this._poly._map) {
+			if (!this._markerGroup) {
+				this._initMarkers();
+			}
+			this._poly._map.addLayer(this._markerGroup);
+		}
+	},
+
+	removeHooks: function () {
+		var poly = this._poly;
+
+		poly.setStyle(poly.options.original);
+
+		if (poly._map) {
+			poly._map.removeLayer(this._markerGroup);
+			delete this._markerGroup;
+			delete this._markers;
+		}
+	},
+
+	updateMarkers: function () {
+		this._markerGroup.clearLayers();
+		this._initMarkers();
+	},
+
+	_initMarkers: function () {
+		if (!this._markerGroup) {
+			this._markerGroup = new L.LayerGroup();
+		}
+		this._markers = [];
+
+		var latlngs = this._poly._latlngs,
+			i, j, len, marker;
+
+		// TODO refactor holes implementation in Polygon to support it here
+
+		for (i = 0, len = latlngs.length; i < len; i++) {
+
+			marker = this._createMarker(latlngs[i], i);
+			marker.on('click', this._onMarkerClick, this);
+			this._markers.push(marker);
+		}
+
+		var markerLeft, markerRight;
+
+		for (i = 0, j = len - 1; i < len; j = i++) {
+			if (i === 0 && !(L.Polygon && (this._poly instanceof L.Polygon))) {
+				continue;
+			}
+
+			markerLeft = this._markers[j];
+			markerRight = this._markers[i];
+
+			this._createMiddleMarker(markerLeft, markerRight);
+			this._updatePrevNext(markerLeft, markerRight);
+		}
+	},
+
+	_createMarker: function (latlng, index) {
+		var marker = new L.Marker(latlng, {
+			draggable: true,
+			icon: this.options.icon
+		});
+
+		marker._origLatLng = latlng;
+		marker._index = index;
+
+		marker.on('drag', this._onMarkerDrag, this);
+		marker.on('dragend', this._fireEdit, this);
+
+		this._markerGroup.addLayer(marker);
+
+		return marker;
+	},
+
+	_removeMarker: function (marker) {
+		var i = marker._index;
+
+		this._markerGroup.removeLayer(marker);
+		this._markers.splice(i, 1);
+		this._poly.spliceLatLngs(i, 1);
+		this._updateIndexes(i, -1);
+
+		marker
+			.off('drag', this._onMarkerDrag, this)
+			.off('dragend', this._fireEdit, this)
+			.off('click', this._onMarkerClick, this);
+	},
+
+	_fireEdit: function () {
+		this._poly.edited = true;
+		this._poly.fire('edit');
+	},
+
+	_onMarkerDrag: function (e) {
+		var marker = e.target;
+		
+		//on récupère les coordonnées du point que l'on a sélectionné
+		var base_lat = e.target._latlng.lat;
+		var base_lng = e.target._latlng.lng;
+		
+		var temp_redraw = [];
+		
+		var dif_lat = 1000;
+		var_dif_lng = 1000;
+		
+		//y a un problème avec le drawnItems
+		//le tableau est modifié pendant que la boucle foreach est effectué, donc il faut partir sur une copie du tableau 
+		
+		var full_poly_tab = drawnItems;
+		
+		//detection des collisions
+		
+		if(pass == 0)
+		{
+			pass = 1;
+			//comparaison avec les points du tableau full_poly_tab
+			$.each(full_poly_tab._layers, function(key, val) {
+				//on lis ensuite tout les points de toutes les polylines et on les save dans le tableau temp_poly
+				
+				//val est une polyline -> a save dans un tableau provisoire
+		
+				//vérifier que la polyline courante ne met pas à jour son propre point.
+				
+				/*
+					val._latlngs[0].lat = 48;
+					val._latlngs[0].lng = 7;
+				*/
+				
+				/*temp_redraw.push(val);
+				console.log(temp_redraw);*/
+				
+				//pour chaque polyline on parcourt la liste des points.
+				
+				console.log(val);
+				
+				$.each(val._latlngs, function(key, points) 
+				{
+					//si il y a une concordance (on arrondis pour éliminer les imperfections), 
+					//on sauvegarde toute la polyline dans le tableau temp_redraw
+					console.log(points.lat);
+					console.log(base_lat);
+					
+					dif_lat = base_lat - points.lat;
+					dif_lng = base_lng - points.lng;
+					
+					console.log(dif_lat);
+					
+					if((dif_lat < 0.0001 && dif_lat > -0.0001 ) && (dif_lng < 0.0001 && dif_lng > -0.0001))
+					{
+						//insertion dans le tableau de la polyline (sauf si elle existe déjà)
+						console.log("detection");
+					}
+					
+				
+				});
+			});		
+		}
+		
+		/*console.log("tableau final");
+		console.log(temp_redraw);*/
+		
+		//commentaire de recherche : this._getMiddleLatLng(marker._prev, marker) -> contient l'objet point (similaire au point sauvegarder dans DrawnItems)
+		L.extend(marker._origLatLng, marker._latlng);
+		if (marker._middleLeft) {
+			marker._middleLeft.setLatLng(this._getMiddleLatLng(marker._prev, marker));
+		}
+		if (marker._middleRight) {
+			marker._middleRight.setLatLng(this._getMiddleLatLng(marker, marker._next));
+		}
+
+		this._poly.redraw();
+	},
+
+	_onMarkerClick: function (e) {
+		var minPoints = L.Polygon && (this._poly instanceof L.Polygon) ? 4 : 3,
+			marker = e.target;
+
+		// If removing this point would create an invalid polyline/polygon don't remove
+		if (this._poly._latlngs.length < minPoints) {
+			return;
+		}
+
+		// remove the marker
+		this._removeMarker(marker);
+
+		// update prev/next links of adjacent markers
+		this._updatePrevNext(marker._prev, marker._next);
+
+		// remove ghost markers near the removed marker
+		if (marker._middleLeft) {
+			this._markerGroup.removeLayer(marker._middleLeft);
+		}
+		if (marker._middleRight) {
+			this._markerGroup.removeLayer(marker._middleRight);
+		}
+
+		// create a ghost marker in place of the removed one
+		if (marker._prev && marker._next) {
+			this._createMiddleMarker(marker._prev, marker._next);
+
+		} else if (!marker._prev) {
+			marker._next._middleLeft = null;
+
+		} else if (!marker._next) {
+			marker._prev._middleRight = null;
+		}
+
+		this._fireEdit();
+	},
+
+	_updateIndexes: function (index, delta) {
+		this._markerGroup.eachLayer(function (marker) {
+			if (marker._index > index) {
+				marker._index += delta;
+			}
+		});
+	},
+
+	_createMiddleMarker: function (marker1, marker2) {
+		var latlng = this._getMiddleLatLng(marker1, marker2),
+		    marker = this._createMarker(latlng),
+		    onClick,
+		    onDragStart,
+		    onDragEnd;
+
+		marker.setOpacity(0.6);
+
+		marker1._middleRight = marker2._middleLeft = marker;
+
+		onDragStart = function () {
+			var i = marker2._index;
+
+			marker._index = i;
+
+			marker
+			    .off('click', onClick, this)
+			    .on('click', this._onMarkerClick, this);
+
+			latlng.lat = marker.getLatLng().lat;
+			latlng.lng = marker.getLatLng().lng;
+			this._poly.spliceLatLngs(i, 0, latlng);
+			this._markers.splice(i, 0, marker);
+
+			marker.setOpacity(1);
+
+			this._updateIndexes(i, 1);
+			marker2._index++;
+			this._updatePrevNext(marker1, marker);
+			this._updatePrevNext(marker, marker2);
+
+			this._poly.fire('editstart');
+		};
+
+		onDragEnd = function () {
+			marker.off('dragstart', onDragStart, this);
+			marker.off('dragend', onDragEnd, this);
+
+			this._createMiddleMarker(marker1, marker);
+			this._createMiddleMarker(marker, marker2);
+		};
+
+		onClick = function () {
+			onDragStart.call(this);
+			onDragEnd.call(this);
+			this._fireEdit();
+		};
+
+		marker
+		    .on('click', onClick, this)
+		    .on('dragstart', onDragStart, this)
+		    .on('dragend', onDragEnd, this);
+
+		this._markerGroup.addLayer(marker);
+	},
+
+	_updatePrevNext: function (marker1, marker2) {
+		if (marker1) {
+			marker1._next = marker2;
+		}
+		if (marker2) {
+			marker2._prev = marker1;
+		}
+	},
+
+	_getMiddleLatLng: function (marker1, marker2) {
+		var map = this._poly._map,
+		    p1 = map.project(marker1.getLatLng()),
+		    p2 = map.project(marker2.getLatLng());
+
+		return map.unproject(p1._add(p2)._divideBy(2));
+	}
+});
+
+L.Polyline.addInitHook(function () {
+
+	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.Poly) {
+		this.editing = new L.Edit.Poly(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on('add', function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on('remove', function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
+});
+
+/////////////////////////////
 
     L.DrawToolbar.include({
         getModeHandlers: function (map) {
@@ -849,8 +1258,47 @@ function goToPosition(position) {
                 layer.addTo(map);
             });
             loadSegments();
-        }
+        }		
         formerZoom = map.getZoom();
+		
+		// création des cercles 	
+	//suppression de tout les marqueurs précédent.
+	
+	/*$.each(radiusGroup._layers, function(key, radius) {
+		radius.removeLayer();
+	});*/
+	radiusGroup.eachLayer(function (layer){
+		map.removeLayer(layer);
+	});
+
+	//création de tout les cercles des polylines 
+		
+	var full_poly_tab = drawnItems;
+	
+	//calcul du radius en fonction du zoom
+	
+	radius = 20*(18-map.getZoom()+1);
+	
+	radius = radius + (50 * (18-map.getZoom()));
+	
+	if(18-map.getZoom() == 1)
+	{
+		radius = radius - 20;
+	}	
+	  
+	$.each(full_poly_tab._layers, function(key, val) {
+		$.each(val._latlngs, function(key, points) 
+		{
+		//	if()
+		//	{
+				console.log(radius);
+				var circle = new L.circle([points.lat, points.lng], radius).addTo(map);
+				//ajout du cercle à un layer groupe
+				radiusGroup.addLayer(circle);
+		//	}
+		});
+	});			
+	  ///////////FIN DU CALCUL
     })
 
     map.on('dragend', function () {
