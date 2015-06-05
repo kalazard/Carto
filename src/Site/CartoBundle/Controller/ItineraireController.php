@@ -182,7 +182,6 @@ class ItineraireController extends Controller {
             $status = $repositoryStatus->find($request->request->get("status", ""));
             $typechemin = $repositoryTypechemin->find($request->request->get("typechemin", ""));
 
-            $segment = new Segment();
             $pointArray = json_decode($request->request->get("points", ""), true);
             $lsArray = [];
             $elevationString = "";
@@ -196,32 +195,6 @@ class ItineraireController extends Controller {
                 }
             }
             $ls = new LineString($lsArray);
-
-            $pog1 = new Point();
-            $coords1 = new Coordonnees();
-            $coords1->setLatitude($pointArray[0]["lat"]);
-            $coords1->setLongitude($pointArray[0]["lng"]);
-            $coords1->setAltitude($pointArray[0]["elevation"]);
-            $pog1->setCoords($coords1);
-            $pog1->setOrdre(1);
-            $manager->persist($coords1);
-            $manager->persist($pog1);
-
-            $pog2 = new Point();
-            $coords2 = new Coordonnees();
-            $coords2->setLatitude($pointArray[count($pointArray) - 1]["lat"]);
-            $coords2->setLongitude($pointArray[count($pointArray) - 1]["lng"]);
-            $coords2->setAltitude($pointArray[count($pointArray) - 1]["elevation"]);
-            $pog2->setCoords($coords2);
-            $pog2->setOrdre(2);
-            $manager->persist($coords2);
-            $manager->persist($pog2);
-
-            $segment->setTrace($ls);
-            $segment->setElevation($elevationString);
-            $segment->setSens(0);
-            $segment->setPog1($pog1);
-            $segment->setPog2($pog2);
 
             $route = new Itineraire();
             $route->setDatecreation(new \DateTime('now'));
@@ -237,14 +210,14 @@ class ItineraireController extends Controller {
             $route->setAuteur($user);
             $route->setStatus($status);
             $route->setPublic($request->request->get("public", ""));
-            $route->setSegment($segment);
+            $route->setSegment($ls);
+            $route->setElevation($elevationString);
 
             $json_obj = json_decode($request->request->get("points", ""), true);
 
 
             $manager->persist($route);
             $manager->persist($trace);
-            $manager->persist($segment);
             $manager->flush();
             $this->saveGpx($route->getId(), $filename);
             $response = new Response(json_encode(array("result" => "success", "code" => 200, "jsonObject" => json_encode($route))));
@@ -272,8 +245,8 @@ class ItineraireController extends Controller {
     public function saveGpx($id_itineraire, $filename) {
         $manager = $this->getDoctrine()->getManager();
         $itineraire = $manager->getRepository("SiteCartoBundle:Itineraire")->find($id_itineraire);
-        $linestring = $itineraire->getSegment()->getTrace();
-        $elevationString = $itineraire->getSegment()->getElevation();
+        $linestring = $itineraire->getSegment();
+        $elevationString = $itineraire->getElevation();
         //Contient un tableau de points séparés par des espaces
         $points = explode(",", $linestring);
         //Tableau qui contient les élévations de chaque points

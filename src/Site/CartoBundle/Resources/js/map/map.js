@@ -1,5 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
-    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup;
+    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
+    radiusGroup, potentialPoly, routeButton, routeSaveButton;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -9,6 +10,9 @@ var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=F
 var graph = $("<img>").css("display", "none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
 var markerSelectionne;
+var pass = 0;
+var radius = 0;
+
 
 var Point = function (lat, lng) {
     this.lat = lat;
@@ -170,12 +174,9 @@ function goToPosition(position) {
         attribution: 'Landscape'
     }).addTo(map);
 
-
-    //Définition de l'écouteur
-    $("#okVille").click(geocode);
-
     markerGroup = new L.LayerGroup();
     drawnItems = new L.FeatureGroup();
+	radiusGroup = new L.FeatureGroup();
     map.addLayer(drawnItems);
     map.eachLayer(function (layer) {
         if ((layer instanceof L.Polyline) && !(layer instanceof L.Polygon)) {
@@ -507,6 +508,64 @@ function goToPosition(position) {
         },
 
         _createMarker: function (latlng) {
+		
+			var number_point = Object.keys(this._markerGroup._layers);
+	  
+			  //stockage des points dans un tableau indépendant 
+			  
+			//si on a pas encore de points dans le markerGroup de la polyline this :
+			
+			//taille de base 50 
+			
+			//calcul du radius des marqueurs par rapport au zoom
+			/*
+			radius = 20*(18-map.getZoom()+1);
+			
+			radius = radius + (50 * (18-map.getZoom()));
+			
+			if(18-map.getZoom() == 1)
+			{
+				radius = radius - 20;
+			}	
+			*/
+			
+			//calcul de la zone de détection en fonction du radius
+			
+			var number_temp = 0;
+			
+			number_temp = 0.0001*((15/10)*(18-map.getZoom()+1));
+			
+			number_temp = number_temp + (0.0001*((15/10) * (18-map.getZoom())));
+			
+			
+			//if(number_point.length == 0)
+			//{		
+				//fonction de détection d'un point existant 
+				
+				var full_poly_tab = drawnItems;
+				var base_lat = latlng.lat;
+				var base_lng = latlng.lng;
+				
+				$.each(full_poly_tab._layers, function(key, val) {
+					$.each(val._latlngs, function(key, points) 
+					{
+						//si il y a une concordance (on arrondis pour éliminer les imperfections), 
+						//on sauvegarde toute la polyline dans le tableau temp_redraw
+						
+						dif_lat = base_lat - points.lat;
+						dif_lng = base_lng - points.lng;
+						
+						//récupération du zoom 
+						
+						if((dif_lat < number_temp && dif_lat > -1*number_temp ) && (dif_lng < number_temp*2 && dif_lng > -1*number_temp*2))
+						{	
+							latlng.lat = points.lat;
+							latlng.lng = points.lng;
+						}
+					});
+				});		
+			//}	
+		
             var marker = new L.Marker(latlng, {
                 icon: this.options.icon,
                 zIndexOffset: this.options.zIndexOffset * 2
@@ -705,6 +764,358 @@ function goToPosition(position) {
             L.Draw.SegmentFeature.prototype.initialize.call(this, map, options);
         }
     });
+	
+	///////////////////////////// class edit poly
+
+/*
+ * L.Edit.Poly is an editing handler for polylines and polygons.
+ */
+
+L.Edit.Poly = L.Handler.extend({
+	options: {
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: 'leaflet-div-icon leaflet-editing-icon'
+		})
+	},
+
+	initialize: function (poly, options) {
+		this._poly = poly;
+		L.setOptions(this, options);
+	},
+
+	addHooks: function () {
+		var poly = this._poly;
+
+		if (!(poly instanceof L.Polygon)) {
+			//poly.options.editing.fill = false;
+		}
+
+		poly.setStyle(poly.options.editing);
+
+		if (this._poly._map) {
+			if (!this._markerGroup) {
+				this._initMarkers();
+			}
+			this._poly._map.addLayer(this._markerGroup);
+		}
+	},
+
+	removeHooks: function () {
+		var poly = this._poly;
+
+		poly.setStyle(poly.options.original);
+
+		if (poly._map) {
+			poly._map.removeLayer(this._markerGroup);
+			delete this._markerGroup;
+			delete this._markers;
+		}
+	},
+
+	updateMarkers: function () {
+		this._markerGroup.clearLayers();
+		this._initMarkers();
+	},
+
+	_initMarkers: function () {
+		if (!this._markerGroup) {
+			this._markerGroup = new L.LayerGroup();
+		}
+		this._markers = [];
+
+		var latlngs = this._poly._latlngs,
+			i, j, len, marker;
+
+		// TODO refactor holes implementation in Polygon to support it here
+
+		for (i = 0, len = latlngs.length; i < len; i++) {
+
+			marker = this._createMarker(latlngs[i], i);
+			marker.on('click', this._onMarkerClick, this);
+			this._markers.push(marker);
+		}
+
+		var markerLeft, markerRight;
+
+		for (i = 0, j = len - 1; i < len; j = i++) {
+			if (i === 0 && !(L.Polygon && (this._poly instanceof L.Polygon))) {
+				continue;
+			}
+
+			markerLeft = this._markers[j];
+			markerRight = this._markers[i];
+
+			this._createMiddleMarker(markerLeft, markerRight);
+			this._updatePrevNext(markerLeft, markerRight);
+		}
+	},
+
+	_createMarker: function (latlng, index) {
+		var marker = new L.Marker(latlng, {
+			draggable: true,
+			icon: this.options.icon
+		});
+
+		marker._origLatLng = latlng;
+		marker._index = index;
+
+		marker.on('drag', this._onMarkerDrag, this);
+		marker.on('dragend', this._fireEdit, this);
+
+		this._markerGroup.addLayer(marker);
+
+		return marker;
+	},
+
+	_removeMarker: function (marker) {
+		var i = marker._index;
+
+		this._markerGroup.removeLayer(marker);
+		this._markers.splice(i, 1);
+		this._poly.spliceLatLngs(i, 1);
+		this._updateIndexes(i, -1);
+
+		marker
+			.off('drag', this._onMarkerDrag, this)
+			.off('dragend', this._fireEdit, this)
+			.off('click', this._onMarkerClick, this);
+	},
+
+	_fireEdit: function () {
+		this._poly.edited = true;
+		this._poly.fire('edit');
+	},
+
+	_onMarkerDrag: function (e) {
+		var marker = e.target;
+		
+		//on récupère les coordonnées du point que l'on a sélectionné
+		var base_lat = e.target._latlng.lat;
+		var base_lng = e.target._latlng.lng;
+		
+		var temp_redraw = [];
+		
+		var dif_lat = 1000;
+		var_dif_lng = 1000;
+		
+		//y a un problème avec le drawnItems
+		//le tableau est modifié pendant que la boucle foreach est effectué, donc il faut partir sur une copie du tableau 
+		
+		var full_poly_tab = drawnItems;
+		
+		//detection des collisions
+		
+		if(pass == 0)
+		{
+			pass = 1;
+			//comparaison avec les points du tableau full_poly_tab
+			$.each(full_poly_tab._layers, function(key, val) {
+				//on lis ensuite tout les points de toutes les polylines et on les save dans le tableau temp_poly
+				
+				//val est une polyline -> a save dans un tableau provisoire
+		
+				//vérifier que la polyline courante ne met pas à jour son propre point.
+				
+				/*
+					val._latlngs[0].lat = 48;
+					val._latlngs[0].lng = 7;
+				*/
+				
+				/*temp_redraw.push(val);
+				console.log(temp_redraw);*/
+				
+				//pour chaque polyline on parcourt la liste des points.
+				
+				console.log(val);
+				
+				$.each(val._latlngs, function(key, points) 
+				{
+					//si il y a une concordance (on arrondis pour éliminer les imperfections), 
+					//on sauvegarde toute la polyline dans le tableau temp_redraw
+					console.log(points.lat);
+					console.log(base_lat);
+					
+					dif_lat = base_lat - points.lat;
+					dif_lng = base_lng - points.lng;
+					
+					console.log(dif_lat);
+					
+					if((dif_lat < 0.0001 && dif_lat > -0.0001 ) && (dif_lng < 0.0001 && dif_lng > -0.0001))
+					{
+						//insertion dans le tableau de la polyline (sauf si elle existe déjà)
+						console.log("detection");
+					}
+					
+				
+				});
+			});		
+		}
+		
+		/*console.log("tableau final");
+		console.log(temp_redraw);*/
+		
+		//commentaire de recherche : this._getMiddleLatLng(marker._prev, marker) -> contient l'objet point (similaire au point sauvegarder dans DrawnItems)
+		L.extend(marker._origLatLng, marker._latlng);
+		if (marker._middleLeft) {
+			marker._middleLeft.setLatLng(this._getMiddleLatLng(marker._prev, marker));
+		}
+		if (marker._middleRight) {
+			marker._middleRight.setLatLng(this._getMiddleLatLng(marker, marker._next));
+		}
+
+		this._poly.redraw();
+	},
+
+	_onMarkerClick: function (e) {
+		var minPoints = L.Polygon && (this._poly instanceof L.Polygon) ? 4 : 3,
+			marker = e.target;
+
+		// If removing this point would create an invalid polyline/polygon don't remove
+		if (this._poly._latlngs.length < minPoints) {
+			return;
+		}
+
+		// remove the marker
+		this._removeMarker(marker);
+
+		// update prev/next links of adjacent markers
+		this._updatePrevNext(marker._prev, marker._next);
+
+		// remove ghost markers near the removed marker
+		if (marker._middleLeft) {
+			this._markerGroup.removeLayer(marker._middleLeft);
+		}
+		if (marker._middleRight) {
+			this._markerGroup.removeLayer(marker._middleRight);
+		}
+
+		// create a ghost marker in place of the removed one
+		if (marker._prev && marker._next) {
+			this._createMiddleMarker(marker._prev, marker._next);
+
+		} else if (!marker._prev) {
+			marker._next._middleLeft = null;
+
+		} else if (!marker._next) {
+			marker._prev._middleRight = null;
+		}
+
+		this._fireEdit();
+	},
+
+	_updateIndexes: function (index, delta) {
+		this._markerGroup.eachLayer(function (marker) {
+			if (marker._index > index) {
+				marker._index += delta;
+			}
+		});
+	},
+
+	_createMiddleMarker: function (marker1, marker2) {
+		var latlng = this._getMiddleLatLng(marker1, marker2),
+		    marker = this._createMarker(latlng),
+		    onClick,
+		    onDragStart,
+		    onDragEnd;
+
+		marker.setOpacity(0.6);
+
+		marker1._middleRight = marker2._middleLeft = marker;
+
+		onDragStart = function () {
+			var i = marker2._index;
+
+			marker._index = i;
+
+			marker
+			    .off('click', onClick, this)
+			    .on('click', this._onMarkerClick, this);
+
+			latlng.lat = marker.getLatLng().lat;
+			latlng.lng = marker.getLatLng().lng;
+			this._poly.spliceLatLngs(i, 0, latlng);
+			this._markers.splice(i, 0, marker);
+
+			marker.setOpacity(1);
+
+			this._updateIndexes(i, 1);
+			marker2._index++;
+			this._updatePrevNext(marker1, marker);
+			this._updatePrevNext(marker, marker2);
+
+			this._poly.fire('editstart');
+		};
+
+		onDragEnd = function () {
+			marker.off('dragstart', onDragStart, this);
+			marker.off('dragend', onDragEnd, this);
+
+			this._createMiddleMarker(marker1, marker);
+			this._createMiddleMarker(marker, marker2);
+		};
+
+		onClick = function () {
+			onDragStart.call(this);
+			onDragEnd.call(this);
+			this._fireEdit();
+		};
+
+		marker
+		    .on('click', onClick, this)
+		    .on('dragstart', onDragStart, this)
+		    .on('dragend', onDragEnd, this);
+
+		this._markerGroup.addLayer(marker);
+	},
+
+	_updatePrevNext: function (marker1, marker2) {
+		if (marker1) {
+			marker1._next = marker2;
+		}
+		if (marker2) {
+			marker2._prev = marker1;
+		}
+	},
+
+	_getMiddleLatLng: function (marker1, marker2) {
+		var map = this._poly._map,
+		    p1 = map.project(marker1.getLatLng()),
+		    p2 = map.project(marker2.getLatLng());
+
+		return map.unproject(p1._add(p2)._divideBy(2));
+	}
+});
+
+L.Polyline.addInitHook(function () {
+
+	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.Poly) {
+		this.editing = new L.Edit.Poly(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on('add', function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on('remove', function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
+});
+
+/////////////////////////////
 
     L.DrawToolbar.include({
         getModeHandlers: function (map) {
@@ -748,6 +1159,17 @@ function goToPosition(position) {
     });
     L.drawLocal.draw.toolbar.buttons.polyline = 'Tracer un parcours';
     map.addControl(drawControl);
+
+    routeButton = L.easyButton('fa-pencil',
+     function (){
+         console.log("test");
+         createRoute();
+     },
+        "Tracer un itinéraire"
+     );
+
+    L.control.scale().addTo(map);
+
 
     map.on('draw:created', function (e) {
         var type = e.layerType,
@@ -851,8 +1273,47 @@ function goToPosition(position) {
                 layer.addTo(map);
             });
             loadSegments();
-        }
+        }		
         formerZoom = map.getZoom();
+		
+		// création des cercles 	
+	//suppression de tout les marqueurs précédent.
+	
+	/*$.each(radiusGroup._layers, function(key, radius) {
+		radius.removeLayer();
+	});*/
+	radiusGroup.eachLayer(function (layer){
+		map.removeLayer(layer);
+	});
+
+	//création de tout les cercles des polylines 
+		
+	var full_poly_tab = drawnItems;
+	
+	//calcul du radius en fonction du zoom
+	
+	radius = 20*(18-map.getZoom()+1);
+	
+	radius = radius + (50 * (18-map.getZoom()));
+	
+	if(18-map.getZoom() == 1)
+	{
+		radius = radius - 20;
+	}	
+	  
+	$.each(full_poly_tab._layers, function(key, val) {
+		$.each(val._latlngs, function(key, points) 
+		{
+		//	if()
+		//	{
+				console.log(radius);
+				var circle = new L.circle([points.lat, points.lng], radius).addTo(map);
+				//ajout du cercle à un layer groupe
+				radiusGroup.addLayer(circle);
+		//	}
+		});
+	});			
+	  ///////////FIN DU CALCUL
     })
 
     map.on('dragend', function () {
@@ -863,21 +1324,26 @@ function goToPosition(position) {
             drawnItems.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });
-            loadSegments();
+            if (!isLoadingMap) {
+                loadSegments();
+            }
+
         }
     })
     $("#map").css("cursor", "move");
     loadPois();
 
-    loadSegments();
     if (isLoadingMap) {
         segmentID = traceData.segment.id;
-        displayTrace(traceData.segment.trace, traceData.segment.elevation);
+        displayTrace(traceData.segment, traceData.elevation);
         $("#denivp").text("Dénivelé positif : " + traceData.deniveleplus + "m");
         $("#denivn").text("Dénivelé négatif : " + traceData.denivelemoins + "m");
         $("#long").text("Longueur : " + traceData.longueur + "km");
         $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
         isLoadingMap = false;
+    }
+    else{
+        loadSegments();
     }
 
 }
@@ -956,12 +1422,26 @@ function geocode() {
         .search($("#ville").val());
 }
 
-function createRoute(event) {
-    //event.stopPropagation();
+function createRoute() {
     if (!isCreateRoute) {
         isCreateRoute = true;
+        routeButton.removeFrom(map);
+        routeSaveButton = L.easyButton('fa-floppy-o',
+            function (){
+                saveRoute();
+            },
+            "Sauvegarder l'itinéraire"
+        );
         pointArray = [];
         latlngArray = [];
+        polyArray = [];
+        potentialPoly = [];
+        drawnItems.eachLayer(function(layer){
+            layer.on("click",function (e){
+                console.log(e);
+                buildRoute(e);
+            });
+        });
     }
 }
 
@@ -980,7 +1460,15 @@ function saveRoute() {
     loadDifficultes();
     loadStatus();
     loadTypechemin();
-    //console.log(JSON.stringify(pointArray));
+    jQuery.each(polyArray,function(i,v){
+        jQuery.each(v._latlngs,function(index,value)
+        {
+            var point = new Point(value.lat,value.lng);
+            point.elevation = value.elevation;
+            point.distance = value.distance;
+            pointArray.push(point);
+        })
+    })
     $("#save").modal('show');
     $("#saveiti").on("click", function () {
         $.post(Routing.generate('site_carto_saveItineraire'),
@@ -1009,6 +1497,7 @@ function saveRoute() {
 
     });
 
+    routeSaveButton.removeFrom(map);
     isCreateRoute = false;
 
 }
@@ -1025,6 +1514,7 @@ function drawSegment(event) {
 }
 
 function saveSegment() {  //console.log(JSON.stringify(pointArray));
+    pointArray.splice(pointArray.length - 2,1);
     $.post(Routing.generate('site_carto_saveSegment'),
         {
             points: JSON.stringify(pointArray)
@@ -1073,7 +1563,7 @@ function modifPoiForm(idPoi)
 {
     $('#modalEditPoi').children().remove();
     $('#modalEditPoi').remove();
-        
+
     $.ajax({
         type: "POST",
         url: Routing.generate('site_carto_afficheEditPoi'),
@@ -1122,7 +1612,7 @@ function supprPoiConfirm(idPoi)
 {
     $('#modalWarningDeletePoi').children().remove();
     $('#modalWarningDeletePoi').remove();
-        
+
     $.ajax({
         type: "POST",
         url: Routing.generate('site_carto_afficheDeletePoi'),
@@ -1137,7 +1627,7 @@ function supprPoiConfirm(idPoi)
 
 //Suppression d'un poi
 function suppressionPoi(idPoi)
-{    
+{
     $.ajax({
         type: "POST",
         url: Routing.generate('site_carto_deletePoi'),
@@ -1151,47 +1641,54 @@ function suppressionPoi(idPoi)
 }
 
 function getElevation(response)
-{  
-  blockItineraireSave();
-  denivelen = 0;
-  denivelep = 0;
-  //console.log("Taille de pointArray : " + pointArray.length);
-  //console.log(response);
-  for(var i = 0; i < pointArray.length; i++)
-  {
-    pointArray[i].elevation = response.elevationProfile[i].height;
-    pointArray[i].distance = response.elevationProfile[i].distance;
-  }
-  for(var i = 0; i < pointArray.length - 1; i++)
-  {
-    var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
-    diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
-  }
-  $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
-  $("#denivp").text("Dénivelé positif : " + denivelep + "m");
-  $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
-  var geojson = polyline.toGeoJSON();
-  for(var i = 0; i < geojson.geometry.coordinates.length; i++)
-  {
-    geojson.geometry.coordinates[i].push(pointArray[i].elevation);
-  }
-  if(mapgeojson !== undefined)
-  {
-    map.removeLayer(mapgeojson);
-  }
-  el.clear();
-  mapgeojson = L.geoJson(geojson,{
-      onEachFeature: el.addData.bind(el) //working on a better solution
-  });
-  if(isEditSegment)
-  {
-    updateSegment(JSON.stringify(pointArray));
-    
-  }
-  blockItineraireSave();
-  map.on("click",function (ev){
-    addPointOnMap(ev);
-  });
+{
+    blockItineraireSave();
+    denivelen = 0;
+    denivelep = 0;
+    //console.log("Taille de pointArray : " + pointArray.length);
+    //console.log(response);
+    var poly = [];
+    //var latlngs = polyArray[polyArray.length - 1]._latlngs;
+    for(var i = 0; i < polyArray[polyArray.length - 1]._latlngs.length; i++)
+    {
+        polyArray[polyArray.length - 1]._latlngs[i].elevation = response.elevationProfile[i].height;
+        polyArray[polyArray.length - 1]._latlngs[i].distance = response.elevationProfile[i].distance;
+    }
+    for(var i = 0; i < polyArray.length; i++)
+    {
+        for(var j = 0; j < polyArray[i]._latlngs.length - 1; j++)
+        {
+            var diff = polyArray[i]._latlngs[j].elevation - polyArray[i]._latlngs[j + 1].elevation;
+            diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+        }
+        poly.push.apply(poly,polyArray[i]._latlngs);
+    }
+    $("#longueur").val(polyArray[polyArray.length - 1]._latlngs[polyArray[polyArray.length - 1]._latlngs.length - 1].distance + "km");
+    $("#denivp").text("Dénivelé positif : " + denivelep + "m");
+    $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+    var polyline = polyline = L.polyline(poly, {color: 'blue'});
+    var geojson = polyline.toGeoJSON();
+    for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+    {
+        geojson.geometry.coordinates[i].push(poly[i].elevation);
+    }
+    if(mapgeojson !== undefined)
+    {
+        map.removeLayer(mapgeojson);
+    }
+    el.clear();
+    mapgeojson = L.geoJson(geojson,{
+        onEachFeature: el.addData.bind(el) //working on a better solution
+    });
+    if(isEditSegment)
+    {
+        updateSegment(JSON.stringify(pointArray));
+
+    }
+    blockItineraireSave();
+   /* map.on("click",function (ev){
+        addPointOnMap(ev);
+    });*/
 }
 
 function loadDifficultes() {
@@ -1396,8 +1893,7 @@ function displaySegment(trace) {
 
     polyline = L.polyline(latlngArr, {color: 'blue'});
     drawnItems.addLayer(polyline);
-    //console.log(drawnItems.getLayers());
-    surbrillance(polyline);
+    //surbrillance(polyline);
     polyline.markers = [];
     for (var i = 0; i < latlngArr.length; i++) {
         var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
@@ -1423,12 +1919,10 @@ function loadMap(json) {
 
 function surbrillance(object) {
     object.on("mouseover", function () {
-        object.setStyle({color: 'yellow'});
-        object.redraw();
+        glow(object);
     });
     object.on("mouseout", function () {
-        object.setStyle({color: 'blue'});
-        object.redraw();
+        unglow(object);
     });
 }
 
@@ -1492,14 +1986,98 @@ function loadSegments() {
             southeast: JSON.stringify(new Point(bounds._southWest.lat, bounds._northEast.lng))
         },
         function (data, status) {
-            var json = JSON.parse(data)
-            //console.log(json.searchResults);
+            var json = JSON.parse(data);
+            console.log(json.searchResults);
+
             jQuery.each(json.searchResults, function (k, v) {
                 displaySegment(v.trace);
-            })
+            });
             //$.notify("Segment mis à jour", "success");
         }
     ).fail(function () {
-            $.notify("Erreur", "error");
+            $.notify("Erreur lors du chargement du graphe des chemins", "error");
         });
+}
+
+function buildRoute(e)
+ {
+     var selectedPoly = e.target;
+     polyArray.push(selectedPoly);
+
+     var URL = elevationURL + '&latLngCollection=';
+     for (var i = 0; i <selectedPoly._latlngs.length; i++) {
+         var lat = selectedPoly._latlngs[i].lat;
+         var lng = selectedPoly._latlngs[i].lng;
+         URL += lat + "," + lng;
+         if (i !== selectedPoly._latlngs.length - 1) {
+             URL += ",";
+         }
+     }
+     URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+     elevationScript = document.createElement('script');
+     elevationScript.type = 'text/javascript';
+     elevationScript.src = URL;
+     $("body").append(elevationScript);
+
+     //glow(selectedPoly);
+     if(potentialPoly.length !== 0)
+     {
+         jQuery.each(potentialPoly,function(index,value){
+             unglow(value);
+         })
+     }
+     jQuery.each(polyArray,function(index,value){
+         glow(value);
+     })
+     potentialPoly = [];
+     drawnItems.eachLayer(function(layer){
+         if(layer !== selectedPoly)
+         {
+             var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
+             var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
+             var pog1Layer = layer._latlngs[0]; //POG1 layer
+             var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+
+             if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
+                 latlngEquality(pog2Layer,pog2SelectedPoly) ||
+                 latlngEquality(pog1Layer,pog1SelectedPoly) ||
+                 latlngEquality(pog2Layer,pog1SelectedPoly)
+             )
+             {
+                 if(polyArray.indexOf(layer) === -1)
+                 {
+                     attention(layer);
+                     potentialPoly.push(layer);
+                 }
+
+             }
+         }
+
+     })
+ }
+
+//Brillance de la polyline
+function glow(object)
+{
+    object.setStyle({color: 'yellow',dashArray : "1"});
+    object.redraw();
+}
+
+//Polyline normale
+function unglow(object)
+{
+    object.setStyle({color: 'blue',dashArray : "1"});
+    object.redraw();
+}
+
+//Mise en évidence d'une polyline (pour les segments du graphe)
+function attention(object)
+{
+    object.setStyle({color: 'red', dashArray : "5, 5" });
+    object.redraw();
+}
+
+function latlngEquality(latlngA, latlngB)
+{
+    return latlngA.lat === latlngB.lat && latlngA.lng === latlngB.lng;
 }

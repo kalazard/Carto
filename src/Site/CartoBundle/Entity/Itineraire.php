@@ -129,14 +129,18 @@ class Itineraire implements JsonSerializable
     private $public;
 
     /**
-     * @var \Segment
+     * @var linestring
      *
-     * @ORM\ManyToOne(targetEntity="Segment",cascade={"persist"})
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="segment", referencedColumnName="id")
-     * })
+     * @ORM\Column(name="segment", type="linestring", nullable=false)
      */
     private $segment;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="elevation", type="text", nullable=false)
+     */
+    private $elevation;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -372,7 +376,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get status
      *
-     * @return Site\CartoBundle\Entity\Status 
+     * @return \Site\CartoBundle\Entity\Status
      */
     public function getStatus()
     {
@@ -474,10 +478,10 @@ class Itineraire implements JsonSerializable
     /**
      * Set segment
      *
-     * @param \Site\CartoBundle\Entity\Segment $segment
+     * @param linestring $segment
      * @return Itineraire
      */
-    public function setSegment(\Site\CartoBundle\Entity\Segment $segment = null)
+    public function setSegment($segment)
     {
         $this->segment = $segment;
 
@@ -487,11 +491,34 @@ class Itineraire implements JsonSerializable
     /**
      * Get segment
      *
-     * @return \Site\CartoBundle\Entity\Segment 
+     * @return linestring
      */
     public function getSegment()
     {
         return $this->segment;
+    }
+
+    /**
+     * Set elevation
+     *
+     * @param string $elevation
+     * @return Itineraire
+     */
+    public function setElevation($elevation)
+    {
+        $this->elevation = $elevation;
+
+        return $this;
+    }
+
+    /**
+     * Get elevation
+     *
+     * @return string
+     */
+    public function getElevation()
+    {
+        return $this->elevation;
     }
 
     /**
@@ -543,7 +570,8 @@ class Itineraire implements JsonSerializable
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
             'public' => $this->getPublic(),
-            'segment' => $this->getSegment(),
+            'segment' => $this->getSegment()->__toString(),
+            'elevation' => $this->getElevation()
         );
     }
 
