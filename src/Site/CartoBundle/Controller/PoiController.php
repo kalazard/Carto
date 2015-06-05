@@ -8,6 +8,7 @@ use Site\CartoBundle\Entity\Poi;
 use Site\CartoBundle\Entity\Coordonnees;
 use Site\CartoBundle\Entity\Typelieu;
 use Site\CartoBundle\Entity\Image;
+use Site\CartoBundle\Entity\Icone;
 
 
 use Symfony\Component\HttpFoundation\Request;
@@ -88,7 +89,7 @@ class PoiController extends Controller
             $manager->persist($typelieu);
             $manager->persist($poi);
             $manager->flush();
-            return new JsonResponse(array('message' => 'Poi Crée',"path" => $typelieu->getIcone()->getPath()),200);
+            return new JsonResponse(array('message' => 'Poi Crée', "idPoi" => $poi->getId(), "path" => $typelieu->getIcone()->getPath()),200);
         //}
       
         //return new Response('This is not ajax!', 400);
@@ -148,6 +149,7 @@ class PoiController extends Controller
       $poi= $repository->findOneById($idPoi);
 
       $formulaire = $this->get("templating")->render("SiteCartoBundle:Poi:editPoi.html.twig", array(
+                                                                'idPoi' => $idPoi,
                                                                 'poi' => $poi
                                                             ));
 
@@ -156,9 +158,9 @@ class PoiController extends Controller
 
     public function editPoiAction(Request $request)
     {
-        $idPoi = $request->request->get('poiid', '');
-        $titrePoi = $request->request->get('titre', '');
-        $descriptionPoi = $request->request->get('description', '');
+        $idPoi = $request->request->get('idPoi', '');
+        $titrePoi = $request->request->get('titre', 'modiftest');
+        $descriptionPoi = $request->request->get('descriptionPoi', 'modiftest');
         $manager=$this->getDoctrine()->getManager();
 
         //On récupère l'objet typelieu
@@ -171,8 +173,16 @@ class PoiController extends Controller
         $manager->persist($poi);
         $manager->flush();
 
-        $request->getSession()->getFlashBag()->add('notice', 'Poi modifié');
-        return new Response();
+        if($poi->getImage() != null)
+        {
+            $pathImagePoi = $poi->getImage()->getPath();
+        }
+        else
+        {
+            $pathImagePoi = null;
+        }
+        
+        return new JsonResponse(array('message' => 'Poi modifié', "idPoi" => $poi->getId(), "titrePoi" => $poi->getTitre(), "descriptionPoi" => $poi->getDescription(), "path" => $poi->getTypelieu()->getIcone()->getPath(), "latPoi" => $poi->getCoordonnees()->getLatitude(), "lngPoi" => $poi->getCoordonnees()->getLongitude(), "pathImagePoi" => $pathImagePoi),200); 
     }
 
     public function savePoiWithPictureAction(Request $request){
