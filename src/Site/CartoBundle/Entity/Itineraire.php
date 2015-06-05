@@ -136,6 +136,13 @@ class Itineraire implements JsonSerializable
     private $segment;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="elevation", type="text", nullable=false)
+     */
+    private $elevation;
+
+    /**
      * @var \Doctrine\Common\Collections\Collection
      *
      * @ORM\ManyToMany(targetEntity="Utilisateur", inversedBy="itinerairenote")
@@ -492,6 +499,29 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Set elevation
+     *
+     * @param string $elevation
+     * @return Itineraire
+     */
+    public function setElevation($elevation)
+    {
+        $this->elevation = $elevation;
+
+        return $this;
+    }
+
+    /**
+     * Get elevation
+     *
+     * @return string
+     */
+    public function getElevation()
+    {
+        return $this->elevation;
+    }
+
+    /**
      * Add utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
@@ -540,7 +570,8 @@ class Itineraire implements JsonSerializable
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
             'public' => $this->getPublic(),
-            'segment' => $this->getSegment(),
+            'segment' => $this->getSegment()->__toString(),
+            'elevation' => $this->getElevation()
         );
     }
 
