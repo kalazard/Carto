@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -1162,7 +1162,6 @@ L.Polyline.addInitHook(function () {
 
     routeButton = L.easyButton('fa-pencil',
      function (){
-         console.log("test");
          createRoute();
      },
         "Tracer un itinéraire"
@@ -2001,8 +2000,19 @@ function loadSegments() {
 
 function buildRoute(e)
  {
+     var oldSize = polyArray.length;
      var selectedPoly = e.target;
      polyArray.push(selectedPoly);
+
+     if(oldSize === 0)
+     {
+         routeDeleteButton = L.easyButton('fa-eraser',
+             function (){
+                 deleteLastSegment();
+             },
+             "Retirer le dernier segment de l'itinéraire"
+         );
+     }
 
      var URL = elevationURL + '&latLngCollection=';
      for (var i = 0; i <selectedPoly._latlngs.length; i++) {
@@ -2019,41 +2029,8 @@ function buildRoute(e)
      elevationScript.src = URL;
      $("body").append(elevationScript);
 
-     //glow(selectedPoly);
-     if(potentialPoly.length !== 0)
-     {
-         jQuery.each(potentialPoly,function(index,value){
-             unglow(value);
-         })
-     }
-     jQuery.each(polyArray,function(index,value){
-         glow(value);
-     })
-     potentialPoly = [];
-     drawnItems.eachLayer(function(layer){
-         if(layer !== selectedPoly)
-         {
-             var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
-             var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
-             var pog1Layer = layer._latlngs[0]; //POG1 layer
-             var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+     bestChoices(selectedPoly);
 
-             if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
-                 latlngEquality(pog2Layer,pog2SelectedPoly) ||
-                 latlngEquality(pog1Layer,pog1SelectedPoly) ||
-                 latlngEquality(pog2Layer,pog1SelectedPoly)
-             )
-             {
-                 if(polyArray.indexOf(layer) === -1)
-                 {
-                     attention(layer);
-                     potentialPoly.push(layer);
-                 }
-
-             }
-         }
-
-     })
  }
 
 //Brillance de la polyline
@@ -2075,6 +2052,61 @@ function attention(object)
 {
     object.setStyle({color: 'red', dashArray : "5, 5" });
     object.redraw();
+}
+
+//Suppression du dernier segment de l'itinéraire
+function deleteLastSegment()
+{
+        unglow(polyArray[polyArray.length - 1]);
+        polyArray.pop();
+        bestChoices(polyArray[polyArray.length - 1]);
+        if(polyArray.length === 0)
+        {
+            routeDeleteButton.removeFrom(map);
+        }
+}
+
+//Proposition des segments contigus
+function bestChoices(selectedPoly)
+{
+    if(potentialPoly.length !== 0)
+    {
+        jQuery.each(potentialPoly,function(index,value){
+            unglow(value);
+        })
+    }
+    jQuery.each(polyArray,function(index,value){
+        glow(value);
+    });
+    potentialPoly = [];
+    if(selectedPoly !== undefined)
+    {
+        drawnItems.eachLayer(function(layer){
+            if(layer !== selectedPoly)
+            {
+                var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
+                var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
+                var pog1Layer = layer._latlngs[0]; //POG1 layer
+                var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+
+                if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog1Layer,pog1SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog1SelectedPoly)
+                )
+                {
+                    if(polyArray.indexOf(layer) === -1)
+                    {
+                        attention(layer);
+                        potentialPoly.push(layer);
+                    }
+
+                }
+            }
+
+        });
+    }
+
 }
 
 function latlngEquality(latlngA, latlngB)
