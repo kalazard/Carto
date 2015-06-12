@@ -158,11 +158,19 @@ class Itineraire implements JsonSerializable
     //private $utilisateurnote;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Utilisateur", mappedBy="itineraireid")
+     */
+    private $utilisateurid;
+
+    /**
      * Constructor
      */
     public function __construct()
     {
         $this->utilisateurnote = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->utilisateurid = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -338,121 +346,6 @@ class Itineraire implements JsonSerializable
     }
 
     /**
-     * Set typechemin
-     *
-     * @param \Site\CartoBundle\Entity\Typechemin $typechemin
-     * @return Itineraire
-     */
-    public function setTypechemin(\Site\CartoBundle\Entity\Typechemin $typechemin = null)
-    {
-        $this->typechemin = $typechemin;
-
-        return $this;
-    }
-
-    /**
-     * Get typechemin
-     *
-     * @return \Site\CartoBundle\Entity\Typechemin 
-     */
-    public function getTypechemin()
-    {
-        return $this->typechemin;
-    }
-
-    /**
-     * Set status
-     *
-     * @param \Site\CartoBundle\Entity\Status $status
-     * @return Itineraire
-     */
-    public function setStatus(\Site\CartoBundle\Entity\Status $status = null)
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * Get status
-     *
-     * @return \Site\CartoBundle\Entity\Status
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    /**
-     * Set auteur
-     *
-     * @param \Site\CartoBundle\Entity\Utilisateur $auteur
-     * @return Itineraire
-     */
-    public function setAuteur(\Site\CartoBundle\Entity\Utilisateur $auteur = null)
-    {
-        $this->auteur = $auteur;
-
-        return $this;
-    }
-
-    /**
-     * Get auteur
-     *
-     * @return \Site\CartoBundle\Entity\Utilisateur 
-     */
-    public function getAuteur()
-    {
-        return $this->auteur;
-    }
-
-    /**
-     * Set difficulte
-     *
-     * @param \Site\CartoBundle\Entity\Difficulteparcours $difficulte
-     * @return Itineraire
-     */
-    public function setDifficulte(\Site\CartoBundle\Entity\Difficulteparcours $difficulte = null)
-    {
-        $this->difficulte = $difficulte;
-
-        return $this;
-    }
-
-    /**
-     * Get difficulte
-     *
-     * @return \Site\CartoBundle\Entity\Difficulteparcours 
-     */
-    public function getDifficulte()
-    {
-        return $this->difficulte;
-    }
-
-    /**
-     * Set trace
-     *
-     * @param \Site\CartoBundle\Entity\Trace $trace
-     * @return Itineraire
-     */
-    public function setTrace(\Site\CartoBundle\Entity\Trace $trace = null)
-    {
-        $this->trace = $trace;
-
-        return $this;
-    }
-
-    /**
-     * Get trace
-     *
-     * @return \Site\CartoBundle\Entity\Trace 
-     */
-    public function getTrace()
-    {
-        return $this->trace;
-    }
-
-    /**
      * Set public
      *
      * @param integer $public
@@ -522,6 +415,121 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Set auteur
+     *
+     * @param \Site\CartoBundle\Entity\Utilisateur $auteur
+     * @return Itineraire
+     */
+    public function setAuteur(\Site\CartoBundle\Entity\Utilisateur $auteur = null)
+    {
+        $this->auteur = $auteur;
+
+        return $this;
+    }
+
+    /**
+     * Get auteur
+     *
+     * @return \Site\CartoBundle\Entity\Utilisateur 
+     */
+    public function getAuteur()
+    {
+        return $this->auteur;
+    }
+
+    /**
+     * Set difficulte
+     *
+     * @param \Site\CartoBundle\Entity\Difficulteparcours $difficulte
+     * @return Itineraire
+     */
+    public function setDifficulte(\Site\CartoBundle\Entity\Difficulteparcours $difficulte = null)
+    {
+        $this->difficulte = $difficulte;
+
+        return $this;
+    }
+
+    /**
+     * Get difficulte
+     *
+     * @return \Site\CartoBundle\Entity\Difficulteparcours 
+     */
+    public function getDifficulte()
+    {
+        return $this->difficulte;
+    }
+
+    /**
+     * Set status
+     *
+     * @param \Site\CartoBundle\Entity\Status $status
+     * @return Itineraire
+     */
+    public function setStatus(\Site\CartoBundle\Entity\Status $status = null)
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get status
+     *
+     * @return \Site\CartoBundle\Entity\Status
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * Set trace
+     *
+     * @param \Site\CartoBundle\Entity\Trace $trace
+     * @return Itineraire
+     */
+    public function setTrace(\Site\CartoBundle\Entity\Trace $trace = null)
+    {
+        $this->trace = $trace;
+
+        return $this;
+    }
+
+    /**
+     * Get trace
+     *
+     * @return \Site\CartoBundle\Entity\Trace 
+     */
+    public function getTrace()
+    {
+        return $this->trace;
+    }
+
+    /**
+     * Set typechemin
+     *
+     * @param \Site\CartoBundle\Entity\Typechemin $typechemin
+     * @return Itineraire
+     */
+    public function setTypechemin(\Site\CartoBundle\Entity\Typechemin $typechemin = null)
+    {
+        $this->typechemin = $typechemin;
+
+        return $this;
+    }
+
+    /**
+     * Get typechemin
+     *
+     * @return \Site\CartoBundle\Entity\Typechemin 
+     */
+    public function getTypechemin()
+    {
+        return $this->typechemin;
+    }
+
+    /**
      * Add utilisateurnote
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
@@ -554,7 +562,40 @@ class Itineraire implements JsonSerializable
         return $this->utilisateurnote;
     }*/
 
-    public function jsonSerialize() {
+    /**
+     * Add utilisateurid
+     *
+     * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurid
+     * @return Itineraire
+     */
+    public function addUtilisateurid(\Site\CartoBundle\Entity\Utilisateur $utilisateurid)
+    {
+        $this->utilisateurid[] = $utilisateurid;
+
+        return $this;
+    }
+
+    /**
+     * Remove utilisateurid
+     *
+     * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurid
+     */
+    public function removeUtilisateurid(\Site\CartoBundle\Entity\Utilisateur $utilisateurid)
+    {
+        $this->utilisateurid->removeElement($utilisateurid);
+    }
+
+    /**
+     * Get utilisateurid
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getUtilisateurid()
+    {
+        return $this->utilisateurid;
+    }
+
+public function jsonSerialize() {
         return array(
             'id' => $this->getId(),
             'nom'=> $this->getNom(),
@@ -574,5 +615,4 @@ class Itineraire implements JsonSerializable
             'elevation' => $this->getElevation()
         );
     }
-
 }

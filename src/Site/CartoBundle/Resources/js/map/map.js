@@ -1586,7 +1586,6 @@ function modifPoi()
         data: dataPoi,
         cache: false,
         success: function(data){
-            console.log(data);
             $("#modalEditPoi").modal('hide');
             markerSelectionne.closePopup();
             map.removeLayer(markerSelectionne);

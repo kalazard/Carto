@@ -18,7 +18,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * 
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -38,32 +38,32 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * })
      */
     private $role;
-    
+
     /**
      * @var string
      *
-     * @ORM\Column(name="nom", type="string", length=255, nullable=false)
+     * @ORM\Column(name="nom", type="string", length=255, nullable=true)
      */
     private $nom;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="prenom", type="string", length=255, nullable=false)
+     * @ORM\Column(name="prenom", type="string", length=255, nullable=true)
      */
     private $prenom;
 
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="datenaissance", type="date", nullable=false)
+     * @ORM\Column(name="datenaissance", type="date", nullable=true)
      */
     private $datenaissance;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="telephone", type="string", length=45, nullable=false)
+     * @ORM\Column(name="telephone", type="string", length=45, nullable=true)
      */
     private $telephone;
 
@@ -75,11 +75,27 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     private $itinerairenote;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Itineraire", inversedBy="utilisateurid")
+     * @ORM\JoinTable(name="utilisateurhasitineraire",
+     *   joinColumns={
+     *     @ORM\JoinColumn(name="utilisateurId", referencedColumnName="id")
+     *   },
+     *   inverseJoinColumns={
+     *     @ORM\JoinColumn(name="itineraireId", referencedColumnName="id")
+     *   }
+     * )
+     */
+    private $itineraireid;
+
+    /**
      * Constructor
      */
     public function __construct()
     {
         $this->itinerairenote = new \Doctrine\Common\Collections\ArrayCollection();
+	    $this->itineraireid = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -92,7 +108,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         return $this->id;
     }
-    
+
     public function setId($id)
     {
         $this->id = $id;
@@ -123,7 +139,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
         return $this->email;
     }
 
-    /**
+   /**
      * Set role
      *
      * @param \Site\CartoBundle\Entity\Role $role
@@ -178,12 +194,12 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         return $this->itinerairenote;
     }
-    
+
     /**
      * Set nom
      *
      * @param string $nom
-     * @return Membre
+     * @return Utilisateur
      */
     public function setNom($nom)
     {
@@ -206,7 +222,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * Set prenom
      *
      * @param string $prenom
-     * @return Membre
+     * @return Utilisateur
      */
     public function setPrenom($prenom)
     {
@@ -229,7 +245,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * Set datenaissance
      *
      * @param \DateTime $datenaissance
-     * @return Membre
+     * @return Utilisateur
      */
     public function setDatenaissance($datenaissance)
     {
@@ -260,7 +276,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * Set telephone
      *
      * @param string $telephone
-     * @return Membre
+     * @return Utilisateur
      */
     public function setTelephone($telephone)
     {
@@ -278,7 +294,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         return $this->telephone;
     }
-    
+
     public function eraseCredentials() {
         
     }
@@ -297,6 +313,39 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
 
     public function getUsername() {
         return $this->email;
+    }
+
+    /**
+     * Add itineraireid
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itineraireid
+     * @return Utilisateur
+     */
+    public function addItineraireid(\Site\CartoBundle\Entity\Itineraire $itineraireid)
+    {
+        $this->itineraireid[] = $itineraireid;
+
+        return $this;
+    }
+
+    /**
+     * Remove itineraireid
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itineraireid
+     */
+    public function removeItineraireid(\Site\CartoBundle\Entity\Itineraire $itineraireid)
+    {
+        $this->itineraireid->removeElement($itineraireid);
+    }
+
+    /**
+     * Get itineraireid
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getItineraireid()
+    {
+        return $this->itineraireid;
     }
 
     public function serialize() {
@@ -331,5 +380,4 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
             'role' => $this->getRole()
         );
     }
-
 }
