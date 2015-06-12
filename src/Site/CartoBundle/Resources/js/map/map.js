@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -9,8 +9,10 @@ var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7
 var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
+var markerSelectionne;
 var pass = 0;
 var radius = 0;
+
 
 var Point = function (lat, lng) {
     this.lat = lat;
@@ -115,19 +117,25 @@ function loadPois()
                     {
                         marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<div id='imgPoi' class='img-size' style='background-image: url(" + json[i].image.path + ");'></div> <p><b>" + json[i].titre + "</b></p><p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
                         markerGroup.addLayer(marker);
+                        marker.on("click", function (event) { markerSelectionne = event.target; });
                     }
                     else
                     {
                         marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
                         markerGroup.addLayer(marker);
+                        marker.on("click", function (event) { markerSelectionne = event.target; });
                     }
                 }
                 else
                 {
                     marker = L.marker([json[i].coordonnees.latitude,json[i].coordonnees.longitude], {icon: icone}).addTo(map).bindPopup("<p><b>" + json[i].titre + "</b></p> <p>" + json[i].description + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + json[i].id + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + json[i].id + ")'>Modifier le POI</button>");
                     markerGroup.addLayer(marker);
+                    marker.on("click", function (event) { markerSelectionne = event.target; });
                 }
             }
+
+            
+
         },
 
         error: function (resultat, statut, erreur) {
@@ -1154,7 +1162,6 @@ L.Polyline.addInitHook(function () {
 
     routeButton = L.easyButton('fa-pencil',
      function (){
-         console.log("test");
          createRoute();
      },
         "Tracer un itinéraire"
@@ -1524,28 +1531,30 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
 
 function savePoi()
 {
-    $.post(Routing.generate('site_carto_savePoi'),
-        {
-            lat: latPoi,
-            lng : lngPoi,
-            alt : altPoi,
-            idLieu : $("#typelieu option:selected").val(),
-            titre : $("#titre").val(),
-            description : $("#descriptionPoi").val()
-            //labellieu : labelLieu,
-            //idicone : idIcone,
-            //pathicone : pathIcone
-            //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
-        },
-        function(data, status){
-            //console.log(data);
-            var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
-            var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + $("#titre").val() + "</b></p><p>" + $("#descriptionPoi").val() + "</p>");
-            console.log(marker);
-            markerGroup.addLayer(marker);
-        });
+      $.post(Routing.generate('site_carto_savePoi'),
+                            {
+                                   lat: latPoi,
+                                   lng : lngPoi,
+                                   alt : altPoi,
+                                   idLieu : $("#typelieu option:selected").val(),
+                                   titre : $("#titre").val(),
+                                   description : $("#descriptionPoi").val()
+                                   //labellieu : labelLieu,
+                                   //idicone : idIcone,
+                                   //pathicone : pathIcone
+                                   //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
+                                },
+                            function(data, status){
+                                //console.log(data);
+                                var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
 
-    $("#addpoi").modal('hide');
+                                var marker = L.marker([latPoi,lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + $("#titre").val() + "</b></p><p>" + $("#descriptionPoi").val() + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + data.idPoi + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + data.idPoi + ")'>Modifier le POI</button>");
+                                
+                                markerGroup.addLayer(marker);
+                                marker.on("click", function (event) { markerSelectionne = event.target; });
+                            });
+      
+      $("#addpoi").modal('hide');
 }
 
 //Afficher le modal de modification d'un poi
@@ -1567,15 +1576,32 @@ function modifPoiForm(idPoi)
 }
 
 //Modification d'un poi
-function modifPoi(idPoi)
+function modifPoi()
 {
+    var dataPoi = $('#formModifPoi').serialize();
+
     $.ajax({
         type: "POST",
         url: Routing.generate('site_carto_editPoi'),
-        data: {"idPoi" : idPoi},
+        data: dataPoi,
         cache: false,
-        success: function(){
-            console.log('editer le marker');
+        success: function(data){
+            console.log(data);
+            $("#modalEditPoi").modal('hide');
+            markerSelectionne.closePopup();
+            map.removeLayer(markerSelectionne);
+            var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
+            
+            if(data.pathImagePoi != null)
+            {
+                var marker = L.marker([data.latPoi,data.lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<div id='imgPoi' class='img-size' style='background-image: url(" + data.pathImagePoi + ");'></div> <p> <b>" + data.titrePoi + "</b></p><p>" + data.descriptionPoi + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + data.idPoi + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + data.idPoi + ")'>Modifier le POI</button>");
+            }
+            else
+            {
+                var marker = L.marker([data.latPoi,data.lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + data.titrePoi + "</b></p><p>" + data.descriptionPoi + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + data.idPoi + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + data.idPoi + ")'>Modifier le POI</button>");
+            }
+            markerGroup.addLayer(marker);
+            marker.on("click", function (event) { markerSelectionne = event.target; });
         }
     });
 }
@@ -1607,7 +1633,8 @@ function suppressionPoi(idPoi)
         data: {"idPoi" : idPoi},
         cache: false,
         success: function(){
-            console.log('map.remove(marker);');
+            markerSelectionne.closePopup();
+            map.removeLayer(markerSelectionne); 
         }
     });
 }
@@ -1772,7 +1799,7 @@ function displayTrace(trace, elevation) {
 
     polyline = L.polyline(latlngArr, {color: 'blue'});
     drawnItems.addLayer(polyline);
-    console.log(drawnItems.getLayers());
+    //console.log(drawnItems.getLayers());
     surbrillance(polyline);
     polyline.markers = [];
     for (var i = 0; i < latlngArr.length; i++) {
@@ -1960,6 +1987,7 @@ function loadSegments() {
         function (data, status) {
             var json = JSON.parse(data);
             console.log(json.searchResults);
+
             jQuery.each(json.searchResults, function (k, v) {
                 displaySegment(v.trace);
             });
@@ -1972,8 +2000,19 @@ function loadSegments() {
 
 function buildRoute(e)
  {
+     var oldSize = polyArray.length;
      var selectedPoly = e.target;
      polyArray.push(selectedPoly);
+
+     if(oldSize === 0)
+     {
+         routeDeleteButton = L.easyButton('fa-eraser',
+             function (){
+                 deleteLastSegment();
+             },
+             "Retirer le dernier segment de l'itinéraire"
+         );
+     }
 
      var URL = elevationURL + '&latLngCollection=';
      for (var i = 0; i <selectedPoly._latlngs.length; i++) {
@@ -1990,41 +2029,8 @@ function buildRoute(e)
      elevationScript.src = URL;
      $("body").append(elevationScript);
 
-     //glow(selectedPoly);
-     if(potentialPoly.length !== 0)
-     {
-         jQuery.each(potentialPoly,function(index,value){
-             unglow(value);
-         })
-     }
-     jQuery.each(polyArray,function(index,value){
-         glow(value);
-     })
-     potentialPoly = [];
-     drawnItems.eachLayer(function(layer){
-         if(layer !== selectedPoly)
-         {
-             var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
-             var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
-             var pog1Layer = layer._latlngs[0]; //POG1 layer
-             var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+     bestChoices(selectedPoly);
 
-             if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
-                 latlngEquality(pog2Layer,pog2SelectedPoly) ||
-                 latlngEquality(pog1Layer,pog1SelectedPoly) ||
-                 latlngEquality(pog2Layer,pog1SelectedPoly)
-             )
-             {
-                 if(polyArray.indexOf(layer) === -1)
-                 {
-                     attention(layer);
-                     potentialPoly.push(layer);
-                 }
-
-             }
-         }
-
-     })
  }
 
 //Brillance de la polyline
@@ -2046,6 +2052,61 @@ function attention(object)
 {
     object.setStyle({color: 'red', dashArray : "5, 5" });
     object.redraw();
+}
+
+//Suppression du dernier segment de l'itinéraire
+function deleteLastSegment()
+{
+        unglow(polyArray[polyArray.length - 1]);
+        polyArray.pop();
+        bestChoices(polyArray[polyArray.length - 1]);
+        if(polyArray.length === 0)
+        {
+            routeDeleteButton.removeFrom(map);
+        }
+}
+
+//Proposition des segments contigus
+function bestChoices(selectedPoly)
+{
+    if(potentialPoly.length !== 0)
+    {
+        jQuery.each(potentialPoly,function(index,value){
+            unglow(value);
+        })
+    }
+    jQuery.each(polyArray,function(index,value){
+        glow(value);
+    });
+    potentialPoly = [];
+    if(selectedPoly !== undefined)
+    {
+        drawnItems.eachLayer(function(layer){
+            if(layer !== selectedPoly)
+            {
+                var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
+                var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
+                var pog1Layer = layer._latlngs[0]; //POG1 layer
+                var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+
+                if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog1Layer,pog1SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog1SelectedPoly)
+                )
+                {
+                    if(polyArray.indexOf(layer) === -1)
+                    {
+                        attention(layer);
+                        potentialPoly.push(layer);
+                    }
+
+                }
+            }
+
+        });
+    }
+
 }
 
 function latlngEquality(latlngA, latlngB)
