@@ -84,7 +84,10 @@ class MemberController extends Controller {
 			*/		
 			
 			//retour
-			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig",$result);
+			$data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+			$result['favoris'] = $data->getItineraireid();
+
+			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig", $result);
 			return new Response($content);
 		}
 		else
