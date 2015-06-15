@@ -16,6 +16,7 @@ var liste_poly_detect_point;
 var liste_marqueur_detect;
 var cursor_pos_lat;
 var cursor_pos_lng;
+var update_list_segment = {};
 
 var Point = function (lat, lng) {
     this.lat = lat;
@@ -915,6 +916,15 @@ L.Edit.Poly = L.Handler.extend({
 		var base_lat_first = e.target._latlng.lat;
 		var base_lng_first = e.target._latlng.lng;
 		
+		console.log(drawnItems);
+		
+		//structure : tab[id][0] = id;
+		//			  tab[id]["POINTS"]
+		
+		//update_list_segment = 
+		
+		//on stocke la et les poly a chaque dragstart
+		
 		
 		//on crée un objet qui va contenir tout les marqueurs et tout les points qui sont à modifier
 		liste_poly_detect = {};
@@ -964,9 +974,10 @@ L.Edit.Poly = L.Handler.extend({
 				{	
 					liste_poly_detect[key] = {};
 					
-				
 					liste_poly_detect[key]['key'] = key;
 					liste_poly_detect[key]['pos'] = pos;
+					
+					update_list_segment[key] = key;
 				}
 			});
 		});
@@ -1387,15 +1398,34 @@ L.Polyline.addInitHook(function () {
         isEditSegment = true;
     });
 	
-	map.on('draw:editstop', function (e) {
+	map.on('draw:edited', function (e) {
         isEditSegment = false;
-		
 		//dans cette fonction prévoir une requete pour envoyer tout les segments qui ont été édités
 		
-    });
-
-    map.on('draw:edited', function (e) {
-
+		console.log(update_list_segment);
+		
+		var liste_points_final = {};
+		
+		//on lit les polylines du tableau liste_points_final
+		$.each(update_list_segment, function(key, val) {
+			var current_layer_update = drawnItems.getLayer(val);
+			liste_points_final[key] = {};
+			liste_points_final[key]['id'] = current_layer_update.id;
+			
+			liste_points_final[key]['points'] = {};
+			
+			//on lit ensuite tout les points et on les stocke dans un tableau.
+			$.each(current_layer_update._latlngs, function(pos, point) {
+				var point_current_update = new Point(point.lat,point.lng);
+				
+				liste_points_final[key]['points'][pos] = point_current_update;
+			});	
+		});			
+		
+		//récupérer les popylines selon leurs ids, et générer le tableau des points associés.
+		
+		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
+		updateMultipleSegment(liste_points_final);
     });
 
     map.on("zoomend", function (e) {
@@ -2104,6 +2134,22 @@ function updateSegment(points) {
             $.notify("Erreur lors de la mise à jour", "error");
         });
     isEditSegment = false;
+}
+
+function updateMultipleSegment(points) {
+	var points_string = JSON.stringify(points);
+	console.log(points_string);
+    $.post(Routing.generate('site_carto_segment_multiple_update'),
+        {
+            points: points_string,
+        },
+        function (data, status) {
+			console.log(data);
+            $.notify("Segments mis à jour", "success");
+        }
+    ).fail(function () {
+            $.notify("Erreur lors de la mise à jour", "error");
+        });
 }
 
 function blockItineraireSave() {

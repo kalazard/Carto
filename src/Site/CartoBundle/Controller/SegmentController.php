@@ -90,6 +90,78 @@ class SegmentController extends Controller
         return new Response('This is not ajax!', 400);
     } 
 	
+	public function updateMultipleAction(Request $request)
+    {
+        if ($request->isXMLHttpRequest()) 
+        {	
+			
+            $manager = $this->getDoctrine()->getManager();
+            $repository=$manager->getRepository("SiteCartoBundle:Segment");
+            $repositorypt=$manager->getRepository("SiteCartoBundle:Point");
+            $repositorycoord=$manager->getRepository("SiteCartoBundle:Coordonnees");
+			
+            $pointsArray = json_decode($request->request->get("points",""),true);
+            $lsArray = [];
+            $elevationString = "";
+            $i = 0;
+			
+			//on lit toutes les points passé en paramètre  
+			
+			foreach($pointsArray as $poly)
+			{	
+				$segment = $repository->find($poly['id']);
+				
+				foreach($poly["points"] as $point)
+				{
+					$newPoint = new MySQLPoint(floatval($point["lng"]),floatval($point["lat"]));
+					array_push($lsArray,$newPoint);
+					
+					//pour l'instant pb d'élevation 
+					//$elevationString = $elevationString . $point["elevation"];
+					
+					$elevationString = $elevationString . "1";
+					if(++$i != count($pointsArray))
+					{
+						$elevationString = $elevationString . ";";
+					}
+				}
+				
+				$ls = new LineString($lsArray);
+
+				$pog1 = $segment->getPog1();
+				$coords1 = $pog1->getcoords();
+				$coords1->setLatitude($poly["points"][0]["lat"]);
+				$coords1->setLongitude($poly["points"][0]["lng"]);
+				//	pb elevation
+				//	$coords1->setAltitude($poly["points"][0]["elevation"]);4
+				$coords1->setAltitude("1");
+				$manager->persist($coords1);
+				$manager->persist($pog1);
+
+				$pog2 = $segment->getPog2();
+				$coords2 = $pog2->getcoords();
+				$coords2->setLatitude($poly["points"][count($poly["points"]) - 1]["lat"]);
+				$coords2->setLongitude($poly["points"][count($poly["points"]) - 1]["lng"]);
+				//
+				//$coords2->setAltitude($poly["points"][count($poly["points"]) - 1]["elevation"]);
+				$coords2->setAltitude("1");
+				$manager->persist($coords2);
+				$manager->persist($pog2);
+
+				$segment->setTrace($ls);
+				$segment->setElevation($elevationString);
+				$segment->setSens(0);
+				$manager->persist($segment);
+				$manager->flush();
+			}
+				
+            $response = new Response(json_encode(array("result" => "success","code" => 200,)));
+            $response->headers->set('Content-Type', 'application/json');
+            return $response;            
+        }
+        return new Response('This is not ajax!', 400);
+    } 
+	
 	public function testDeDroits($permission)
 	{
 		$manager = $this->getDoctrine()->getManager();

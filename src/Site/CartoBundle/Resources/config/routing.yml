@@ -214,3 +214,8 @@ site_carto_admin:
 site_carto_acl:
     path:    /admin/permissions
     defaults: { _controller: SiteCartoBundle:Admin:acl }
+site_carto_segment_multiple_update:
+    path:     /segment__multiple_update
+    defaults: { _controller: SiteCartoBundle:Segment:updateMultiple }
+    options:
+        expose: true
