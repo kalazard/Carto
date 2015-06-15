@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,pogGroup;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -173,6 +173,7 @@ function goToPosition(position) {
     }).addTo(map);
 
     markerGroup = new L.LayerGroup();
+    pogGroup = new L.LayerGroup();
     drawnItems = new L.FeatureGroup();
 	radiusGroup = new L.FeatureGroup();
     map.addLayer(drawnItems);
@@ -1445,7 +1446,7 @@ L.Polyline.addInitHook(function () {
             drawnItems.eachLayer(function (layer) {
                 layer.addTo(map);
             });
-            loadSegments();
+            //loadSegments();
         }		
         formerZoom = map.getZoom();
 		
@@ -1495,21 +1496,24 @@ L.Polyline.addInitHook(function () {
 
     map.on('dragend', function () {
         if (map.getZoom() == formerZoom ) {
-            markerGroup.eachLayer(function (layer) {
+            /*markerGroup.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });
             drawnItems.eachLayer(function (layer) {
                 map.removeLayer(layer);
+            });*/
+            pogGroup.eachLayer(function (layer) {
+                map.removeLayer(layer);
             });
             loadSegments();
         }
-    })
+    });
     $("#map").css("cursor", "move");
     loadPois();
     loadSegments();
     if (isLoadingMap) {
         segmentID = traceData.segment.id;
-        displayTrace(traceData.segment.trace, traceData.segment.elevation);
+        displayTrace(traceData.segment, traceData.elevation);
         $("#denivp").text("Dénivelé positif : " + traceData.deniveleplus + "m");
         $("#denivn").text("Dénivelé négatif : " + traceData.denivelemoins + "m");
         $("#long").text("Longueur : " + traceData.longueur + "km");
@@ -1596,12 +1600,19 @@ function geocode() {
 function createRoute() {
     if (!isCreateRoute) {
         isCreateRoute = true;
+        routeButton.removeFrom(map);
+        routeSaveButton = L.easyButton('fa-floppy-o',
+            function (){
+                saveRoute();
+            },
+            "Sauvegarder l'itinéraire"
+        );
         pointArray = [];
         latlngArray = [];
-        polyline.on("click",function (e){
-            console.log(e);
-            buildRoute(e);
-        })
+        polyArray = [];
+        potentialPoly = [];
+        beginRoute();
+
     }
 }
 
@@ -1621,6 +1632,15 @@ function saveRoute() {
     loadStatus();
     loadTypechemin();
     //console.log(JSON.stringify(pointArray));
+    jQuery.each(polyArray,function(i,v){
+        jQuery.each(v._latlngs,function(index,value)
+        {
+            var point = new Point(value.lat,value.lng);
+            point.elevation = value.elevation;
+            point.distance = value.distance;
+            pointArray.push(point);
+        })
+    })
     $("#save").modal('show');
     $("#saveiti").on("click", function () {
         $.post(Routing.generate('site_carto_saveItineraire'),
@@ -1790,24 +1810,32 @@ function getElevation(response)
     blockItineraireSave();
     denivelen = 0;
     denivelep = 0;
+    //console.log("Taille de pointArray : " + pointArray.length);
+    //console.log(response);
     var poly = [];
+    //var latlngs = polyArray[polyArray.length - 1]._latlngs;
     for(var i = 0; i < polyArray[polyArray.length - 1]._latlngs.length; i++)
     {
-        pointArray[i].elevation = response.elevationProfile[i].height;
-        pointArray[i].distance = response.elevationProfile[i].distance;
+        polyArray[polyArray.length - 1]._latlngs[i].elevation = response.elevationProfile[i].height;
+        polyArray[polyArray.length - 1]._latlngs[i].distance = response.elevationProfile[i].distance;
     }
-    for(var i = 0; i < pointArray.length - 1; i++)
+    for(var i = 0; i < polyArray.length; i++)
     {
-        var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
-        diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+        for(var j = 0; j < polyArray[i]._latlngs.length - 1; j++)
+        {
+            var diff = polyArray[i]._latlngs[j].elevation - polyArray[i]._latlngs[j + 1].elevation;
+            diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+        }
+        poly.push.apply(poly,polyArray[i]._latlngs);
     }
-    $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
+    $("#longueur").val(polyArray[polyArray.length - 1]._latlngs[polyArray[polyArray.length - 1]._latlngs.length - 1].distance + "km");
     $("#denivp").text("Dénivelé positif : " + denivelep + "m");
     $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+    var polyline = polyline = L.polyline(poly, {color: 'blue'});
     var geojson = polyline.toGeoJSON();
     for(var i = 0; i < geojson.geometry.coordinates.length; i++)
     {
-        geojson.geometry.coordinates[i].push(pointArray[i].elevation);
+        geojson.geometry.coordinates[i].push(poly[i].elevation);
     }
     if(mapgeojson !== undefined)
     {
@@ -1823,6 +1851,9 @@ function getElevation(response)
 
     }
     blockItineraireSave();
+    /* map.on("click",function (ev){
+     addPointOnMap(ev);
+     });*/
 
 }
 
@@ -1966,6 +1997,7 @@ function csvJSON(csv) {
 }
 
 function displayTrace(trace, elevation) {
+    console.log(trace);
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
     var latlngArr = [];
@@ -2075,7 +2107,29 @@ function displaySegment(trace,id) {
     if(!segmentLoaded(polyline)) {
         drawnItems.addLayer(polyline);
     }
-    //surbrillance(polyline);
+
+    var pog1 = new L.Marker([latlngArr[0].lat, latlngArr[0].lng], {
+        icon: new L.DivIcon({
+            iconSize: new L.Point(8, 8),
+            className: 'leaflet-div-icon leaflet-editing-icon'
+        })
+    });
+
+    var pog2 = new L.Marker([latlngArr[latlngArr.length - 1].lat, latlngArr[latlngArr.length - 1].lng], {
+        icon: new L.DivIcon({
+            iconSize: new L.Point(8, 8),
+            className: 'leaflet-div-icon leaflet-editing-icon'
+        })
+    });
+
+    pog1.segment = polyline;
+    pog2.segment = polyline;
+    pogGroup.addLayer(pog1);
+    pogGroup.addLayer(pog2);
+
+    pog1.addTo(map);
+    pog2.addTo(map);
+
     polyline.markers = [];
     for (var i = 0; i < latlngArr.length; i++) {
         var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
@@ -2086,7 +2140,6 @@ function displaySegment(trace,id) {
         });
         //surbrillance(marker);
         marker.overlaped = [];
-        marker.addTo(map);
         markerGroup.eachLayer(function(layer){
             if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
             {
@@ -2101,7 +2154,7 @@ function displaySegment(trace,id) {
 
 
 
-    polyline.addTo(map);
+    //polyline.addTo(map);
 }
 
 function loadMap(json) {
@@ -2200,6 +2253,10 @@ function loadSegments() {
             jQuery.each(json.searchResults, function (k, v) {
                 displaySegment(v.trace, v.id);
             });
+            drawnItems.eachLayer(function (layer) {
+                map.removeLayer(layer);
+            });
+
             //$.notify("Segment mis à jour", "success");
         }
     ).fail(function () {
@@ -2209,7 +2266,7 @@ function loadSegments() {
 
 function buildRoute(e)
  {
- var oldSize = polyArray.length;
+     var oldSize = polyArray.length;
      var selectedPoly = e.target;
      polyArray.push(selectedPoly);
 
@@ -2266,12 +2323,36 @@ function attention(object)
 //Suppression du dernier segment de l'itinéraire
 function deleteLastSegment()
 {
-        unglow(polyArray[polyArray.length - 1]);
+        if(polyArray.length === 1)
+        {
+            map.removeLayer(polyArray[polyArray.length - 1]);
+            drawnItems.eachLayer(function (layer){
+                layer.off("click");
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            beginRoute();
+        }
+        else
+        {
+            unglow(polyArray[polyArray.length - 1]);
+        }
+
         polyArray.pop();
+
         bestChoices(polyArray[polyArray.length - 1]);
         if(polyArray.length === 0)
         {
             routeDeleteButton.removeFrom(map);
+            routeSaveButton.removeFrom(map);
+            routeButton.addTo(map);
+            pogGroup.eachLayer(function (layer){
+                layer.off("click");
+                map.removeLayer(layer);
+                layer.addTo(map);
+            });
+            isCreateRoute = false;
         }
 }
 
@@ -2282,11 +2363,17 @@ function bestChoices(selectedPoly)
     {
         jQuery.each(potentialPoly,function(index,value){
             unglow(value);
+            map.removeLayer(value);
         })
     }
     jQuery.each(polyArray,function(index,value){
         glow(value);
+        map.addLayer(value);
     });
+    pogGroup.eachLayer(function (layer){
+        map.removeLayer(layer);
+    });
+
     potentialPoly = [];
     if(selectedPoly !== undefined)
     {
@@ -2306,8 +2393,14 @@ function bestChoices(selectedPoly)
                 {
                     if(polyArray.indexOf(layer) === -1)
                     {
+                        layer.addTo(map);
                         attention(layer);
                         potentialPoly.push(layer);
+                        layer.markers[0].addTo(map);
+                        layer.markers[layer.markers.length - 1].addTo(map);
+                        layer.on("click",function (e){
+                            buildRoute(e);
+                        })
                     }
 
                 }
@@ -2334,3 +2427,45 @@ function segmentLoaded(poly)
     });
     return res;
 }
+
+function beginRoute()
+{
+    pogGroup.eachLayer(function (layer) {
+        layer.on("click",function (e){
+            var pog = e.target;
+            console.log(e.target);
+            pogGroup.eachLayer(function (layer){
+                layer.off("click");
+                map.removeLayer(layer);
+            });
+            pog.addTo(map);
+            drawnItems.eachLayer(function(layer){
+                var pog1Layer = layer._latlngs[0]; //POG1 layer
+                var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+
+                if(latlngEquality(pog1Layer,pog._latlng))
+                {
+                    layer.markers[0].addTo(map);
+                    attention(layer);
+                    potentialPoly.push(layer);
+                    layer.addTo(map);
+                }
+                else if(latlngEquality(pog2Layer,pog._latlng))
+                {
+                    layer.markers[layer.markers.length - 1].addTo(map);
+                    attention(layer);
+                    potentialPoly.push(layer);
+                    layer.addTo(map);
+                }
+
+            });
+            //bestChoices(layer.segment);
+            jQuery.each(potentialPoly,function(index,value){
+                value.on("click",function (e){
+                    buildRoute(e);
+                })
+            })
+        })
+    });
+}
+
