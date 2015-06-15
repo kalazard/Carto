@@ -169,6 +169,26 @@ class ItineraireService
         return json_encode(array("list" => $repository->findBy(array('auteur' => $user))));
         
     }
+    
+    public function getNotesIti($listeIti, $idUser)
+    {
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Utilisateur');
+        $user = $repository->findBy(array('id' => $idUser));
+        
+        $notesUtilisateur = array();
+        $notesAll = array();
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Note');
+        $testIti = $repository->findBy(array('itineraire' => $iti, 'utilisateur' => $user));
+        
+        foreach($listeIti->list as $iti)
+        {
+            //$notesUtilisateur[] = $repository->findBy(array('itineraire' => $iti, 'utilisateur' => $user));
+            //$notesAll[] = $repository->findBy(array('itineraire' => $iti));
+        }
+        /*
+        return json_encode($notes);*/
+        return json_encode($testIti);
+    }
 
     public function difficultelist()
     {

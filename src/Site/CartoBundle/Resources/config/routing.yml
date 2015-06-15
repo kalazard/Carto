@@ -180,7 +180,7 @@ site_carto_loadSegment:
         expose: true
 site_carto_fiche_itineraire:
     path:     /itineraire_get/{id}
-    defaults: { _controller: SiteCartoBundle:Itineraire:getSegmentById }
+    defaults: { _controller: SiteCartoBundle:Itineraire:getById }
 site_carto_ficheitineraireformdata:
     path:     /itineraire_get_form_data/
     defaults: { _controller: SiteCartoBundle:Itineraire:getFormData }
@@ -208,3 +208,9 @@ site_carto_downlaodGPX:
 site_carto_savePoiPicture:
     path:     /poi/save_with_picture
     defaults: { _controller: SiteCartoBundle:Poi:savePoiWithPicture }
+site_carto_admin:
+    path:    /admin
+    defaults: { _controller: SiteCartoBundle:Admin:index }
+site_carto_acl:
+    path:    /admin/permissions
+    defaults: { _controller: SiteCartoBundle:Admin:acl }

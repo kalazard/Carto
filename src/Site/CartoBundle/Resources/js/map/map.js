@@ -1,5 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
-    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray, radiusGroup;
+    denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -1296,10 +1297,14 @@ L.Polyline.addInitHook(function () {
     L.drawLocal.draw.toolbar.buttons.polyline = 'Tracer un parcours';
     map.addControl(drawControl);
 
-    /*L.easyButton('fa-comment',
-     function (){createRoute()}
-     );*/
+    routeButton = L.easyButton('fa-pencil',
+     function (){
+         createRoute();
+     },
+        "Tracer un itinéraire"
+     );
 
+    L.control.scale().addTo(map);
 
     map.on('draw:created', function (e) {
         var type = e.layerType,
@@ -1697,8 +1702,22 @@ function modifPoi(idPoi)
         url: Routing.generate('site_carto_editPoi'),
         data: {"idPoi" : idPoi},
         cache: false,
-        success: function(){
-            console.log('editer le marker');
+        success: function(data){
+            $("#modalEditPoi").modal('hide');
+            markerSelectionne.closePopup();
+            map.removeLayer(markerSelectionne);
+            var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
+            
+            if(data.pathImagePoi != null)
+            {
+                var marker = L.marker([data.latPoi,data.lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<div id='imgPoi' class='img-size' style='background-image: url(" + data.pathImagePoi + ");'></div> <p> <b>" + data.titrePoi + "</b></p><p>" + data.descriptionPoi + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + data.idPoi + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + data.idPoi + ")'>Modifier le POI</button>");
+            }
+            else
+            {
+                var marker = L.marker([data.latPoi,data.lngPoi], {icon: iconePoi}).addTo(map).bindPopup("<p> <b>" + data.titrePoi + "</b></p><p>" + data.descriptionPoi + "</p> <button id='supprPoi' type='button' class='btn btn-primary' onclick='supprPoiConfirm(" + data.idPoi + ")'>Supprimer le POI</button> <button id='modifPoi' type='button' class='btn btn-default' onclick='modifPoiForm(" + data.idPoi + ")'>Modifier le POI</button>");
+            }
+            markerGroup.addLayer(marker);
+            marker.on("click", function (event) { markerSelectionne = event.target; });
         }
     });
 }
@@ -2088,17 +2107,120 @@ function loadSegments() {
         });
 }
 
-/*function buildRoute(e)
+function buildRoute(e)
  {
- polyArray.push(e.target);
- drawnItems.eachLayer(function(){
- if(layer.latlng == e.target.latlng)
- {
- layer.setStyle({color: 'yellow'});
- layer.redraw();
+ var oldSize = polyArray.length;
+     var selectedPoly = e.target;
+     polyArray.push(selectedPoly);
+
+     if(oldSize === 0)
+     {
+         routeDeleteButton = L.easyButton('fa-eraser',
+             function (){
+                 deleteLastSegment();
+             },
+             "Retirer le dernier segment de l'itinéraire"
+         );
+     }
+
+     var URL = elevationURL + '&latLngCollection=';
+     for (var i = 0; i <selectedPoly._latlngs.length; i++) {
+         var lat = selectedPoly._latlngs[i].lat;
+         var lng = selectedPoly._latlngs[i].lng;
+         URL += lat + "," + lng;
+         if (i !== selectedPoly._latlngs.length - 1) {
+             URL += ",";
+         }
+     }
+     URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+     elevationScript = document.createElement('script');
+     elevationScript.type = 'text/javascript';
+     elevationScript.src = URL;
+     $("body").append(elevationScript);
+
+     bestChoices(selectedPoly);
+
  }
  })
- }*/
+ }
 
- 
- 
+//Brillance de la polyline
+function glow(object)
+{
+    object.setStyle({color: 'yellow',dashArray : "1"});
+    object.redraw();
+}
+
+//Polyline normale
+function unglow(object)
+{
+    object.setStyle({color: 'blue',dashArray : "1"});
+    object.redraw();
+}
+
+//Mise en évidence d'une polyline (pour les segments du graphe)
+function attention(object)
+{
+    object.setStyle({color: 'red', dashArray : "5, 5" });
+    object.redraw();
+}
+
+//Suppression du dernier segment de l'itinéraire
+function deleteLastSegment()
+{
+        unglow(polyArray[polyArray.length - 1]);
+        polyArray.pop();
+        bestChoices(polyArray[polyArray.length - 1]);
+        if(polyArray.length === 0)
+        {
+            routeDeleteButton.removeFrom(map);
+        }
+}
+
+//Proposition des segments contigus
+function bestChoices(selectedPoly)
+{
+    if(potentialPoly.length !== 0)
+    {
+        jQuery.each(potentialPoly,function(index,value){
+            unglow(value);
+        })
+    }
+    jQuery.each(polyArray,function(index,value){
+        glow(value);
+    });
+    potentialPoly = [];
+    if(selectedPoly !== undefined)
+    {
+        drawnItems.eachLayer(function(layer){
+            if(layer !== selectedPoly)
+            {
+                var pog1SelectedPoly = selectedPoly._latlngs[0]; //POG1 selectedPoly
+                var pog2SelectedPoly = selectedPoly._latlngs[selectedPoly._latlngs.length - 1]; //POG2 selectedPoly
+                var pog1Layer = layer._latlngs[0]; //POG1 layer
+                var pog2Layer = layer._latlngs[layer._latlngs.length - 1]; //POG2 layer
+
+                if(latlngEquality(pog1Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog2SelectedPoly) ||
+                    latlngEquality(pog1Layer,pog1SelectedPoly) ||
+                    latlngEquality(pog2Layer,pog1SelectedPoly)
+                )
+                {
+                    if(polyArray.indexOf(layer) === -1)
+                    {
+                        attention(layer);
+                        potentialPoly.push(layer);
+                    }
+
+                }
+            }
+
+        });
+    }
+
+}
+
+function latlngEquality(latlngA, latlngB)
+{
+    return latlngA.lat === latlngB.lat && latlngA.lng === latlngB.lng;
+}
