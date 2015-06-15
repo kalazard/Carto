@@ -29,7 +29,28 @@ class Role implements RoleInterface,  JsonSerializable
      */
     private $label;
 
+	/**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Permission", inversedBy="role")
+     * @ORM\JoinTable(name="role_has_permission",
+     *   joinColumns={
+     *     @ORM\JoinColumn(name="role_id", referencedColumnName="id")
+     *   },
+     *   inverseJoinColumns={
+     *     @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
+     *   }
+     * )
+     */
+    private $permission;
 
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->permission = new \Doctrine\Common\Collections\ArrayCollection();
+    }
 
     /**
      * Get id
@@ -62,6 +83,39 @@ class Role implements RoleInterface,  JsonSerializable
     public function getLabel()
     {
         return $this->label;
+    }
+	
+	/**
+     * Add permission
+     *
+     * @param \Site\CartoBundle\Entity\Permission $permission
+     * @return Role
+     */
+    public function addPermission(\Site\CartoBundle\Entity\Permission $permission)
+    {
+        $this->permission[] = $permission;
+
+        return $this;
+    }
+
+    /**
+     * Remove permission
+     *
+     * @param \Site\CartoBundle\Entity\Permission $permission
+     */
+    public function removePermission(\Site\CartoBundle\Entity\Permission $permission)
+    {
+        $this->permission->removeElement($permission);
+    }
+
+    /**
+     * Get permission
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getPermission()
+    {
+        return $this->permission;
     }
 
     public function getRole() {
