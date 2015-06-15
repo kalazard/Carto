@@ -202,6 +202,16 @@ site_carto_itinerairedelete:
     defaults: { _controller: SiteCartoBundle:Itineraire:delete }
     options:
         expose: true
+site_carto_itinerairedeletefavori:
+    path:     /itineraire_deletefavori/
+    defaults: { _controller: SiteCartoBundle:Itineraire:deletefavori }
+    options:
+        expose: true
+site_carto_itineraireaddfavori:
+    path:     /itineraire_addfavori/
+    defaults: { _controller: SiteCartoBundle:Itineraire:addfavori }
+    options:
+        expose: true
 site_carto_downlaodGPX:
     path:     /download/gpx/{id}
     defaults: { _controller: SiteCartoBundle:Itineraire:downloadGPX }
