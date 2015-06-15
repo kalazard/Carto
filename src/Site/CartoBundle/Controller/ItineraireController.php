@@ -579,6 +579,12 @@ class ItineraireController extends Controller {
             'exceptions' => true
         ));
 
+        $manager = $this->getDoctrine()->getManager();
+
+        $user = $this->getUser();
+        //on récupère les infos de l'utilisateur courant (et seulement courant)
+        $id_courant = $user->getId();
+
         //Chargement de la liste des difficultés dans le select
         $responseDiff = $clientSOAP->__call('difficultelist', array());
 
@@ -591,6 +597,7 @@ class ItineraireController extends Controller {
         if ($request->request->get("valid") == "ok") {
             //Appel du service de recherche
             $search = array();
+            $search["id"] = $request->request->get("id");
             $search["nom"] = $request->request->get("nom");
             $search["typechemin"] = $request->request->get("typechemin");
             $search["longueur"] = $request->request->get("longueur");
@@ -600,20 +607,28 @@ class ItineraireController extends Controller {
 
             $response = $clientSOAP->__call('search', $search);
 
+            $data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+            $result = array();
+            $result = $data->getItineraireid();
+
             $res_search = json_decode($response);
             $resDiff = json_decode($responseDiff);
             $resStat = json_decode($responseStat);
             $resType = json_decode($responseType);
-            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => $res_search, "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => array()));
+            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => $res_search, "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => array(), "favoris" => $result));
         } else {
             // Recupère la liste complète
             $response = $clientSOAP->__call('itilist', array());
+
+            $data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+            $result = array();
+            $result = $data->getItineraireid();
 
             $res_list = json_decode($response);
             $resDiff = json_decode($responseDiff);
             $resStat = json_decode($responseStat);
             $resType = json_decode($responseType);
-            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => array(), "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => $res_list));
+            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => array(), "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => $res_list, "favoris" => $result));
         }
 
         return new Response($content);
@@ -635,7 +650,9 @@ class ItineraireController extends Controller {
 
         $res = json_decode($response);
 
-        $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
+        $idUser = $this->getUser()->getId();
+
+        $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response, "idUser" => $idUser));
         return new Response($content);
     }
 
@@ -659,4 +676,45 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
+    public function deletefavoriAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            //Appel du service de sauvegarde
+            $params = array();
+            $params["iditi"] = $request->request->get("iditi");
+            $params["iduser"] = $request->request->get("iduser");
+
+            $clientSOAP = new \SoapClient(null, array(
+                'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'trace' => true,
+                'exceptions' => true
+            ));
+
+            $response = $clientSOAP->__call('deletefavori', $params);
+            $res = json_decode($response);
+            return new Response(json_encode(array("result" => "success", "code" => 200)));
+        }
+        return new Response('This is not ajax!', 400);
+    }
+
+        public function addfavoriAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            //Appel du service de sauvegarde
+            $params = array();
+            $params["iditi"] = $request->request->get("iditi");
+            $params["iduser"] = $request->request->get("iduser");
+
+            $clientSOAP = new \SoapClient(null, array(
+                'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'trace' => true,
+                'exceptions' => true
+            ));
+
+            $response = $clientSOAP->__call('addfavori', $params);
+            $res = json_decode($response);
+            return new Response(json_encode(array("result" => "success", "code" => 200)));
+        }
+        return new Response('This is not ajax!', 400);
+    }
 }

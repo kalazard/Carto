@@ -84,6 +84,7 @@ class MemberController extends Controller {
 			*/		
 			
 			//retour
+			
 			$data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
 			$result['favoris'] = $data->getItineraireid();
 
