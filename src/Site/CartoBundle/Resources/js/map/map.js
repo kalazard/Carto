@@ -6,7 +6,7 @@ var isCreateSegment = false;
 var isEditSegment = false;
 var isLoadingMap = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
-var elevationUpdateURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
+var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
 var markerSelectionne;
@@ -1211,7 +1211,7 @@ L.Polyline.addInitHook(function () {
             pointArray[i] = new Point(polyline._latlngs[i].lat, polyline._latlngs[i].lng);
         }
         //console.log("pointArray length : " +  pointArray.length);
-        var URL = elevationURL + '&latLngCollection=';
+        var URL = elevationSegmentURL + '&latLngCollection=';
         for (var i = 0; i < pointArray.length; i++) {
             var lat = pointArray[i].lat;
             var lng = pointArray[i].lng;
@@ -1520,6 +1520,7 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
         },
         function (data, status) {
             $.notify("Segment sauvegardé", "success");
+            polyline.id = data.id;
         }
     ).fail(function () {
             $.notify("Erreur lors de la sauvegarde", "error");
@@ -1644,10 +1645,7 @@ function getElevation(response)
     blockItineraireSave();
     denivelen = 0;
     denivelep = 0;
-    //console.log("Taille de pointArray : " + pointArray.length);
-    //console.log(response);
     var poly = [];
-    //var latlngs = polyArray[polyArray.length - 1]._latlngs;
     for(var i = 0; i < polyArray[polyArray.length - 1]._latlngs.length; i++)
     {
         polyArray[polyArray.length - 1]._latlngs[i].elevation = response.elevationProfile[i].height;
@@ -1685,9 +1683,50 @@ function getElevation(response)
 
     }
     blockItineraireSave();
-   /* map.on("click",function (ev){
+}
+
+function getElevationSegment(response)
+{
+    blockItineraireSave();
+    denivelen = 0;
+    denivelep = 0;
+    //console.log("Taille de pointArray : " + pointArray.length);
+    //console.log(response);
+    for(var i = 0; i < pointArray.length; i++)
+    {
+        pointArray[i].elevation = response.elevationProfile[i].height;
+        pointArray[i].distance = response.elevationProfile[i].distance;
+    }
+    for(var i = 0; i < pointArray.length - 1; i++)
+    {
+        var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
+        diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+    }
+    $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
+    $("#denivp").text("Dénivelé positif : " + denivelep + "m");
+    $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+    var geojson = polyline.toGeoJSON();
+    for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+    {
+        geojson.geometry.coordinates[i].push(pointArray[i].elevation);
+    }
+    if(mapgeojson !== undefined)
+    {
+        map.removeLayer(mapgeojson);
+    }
+    el.clear();
+    mapgeojson = L.geoJson(geojson,{
+        onEachFeature: el.addData.bind(el) //working on a better solution
+    });
+    if(isEditSegment)
+    {
+        updateSegment(JSON.stringify(pointArray));
+
+    }
+    blockItineraireSave();
+    map.on("click",function (ev){
         addPointOnMap(ev);
-    });*/
+    });
 }
 
 function loadDifficultes() {
@@ -1878,7 +1917,7 @@ function displayTrace(trace, elevation) {
     map.fitBounds(polyline.getBounds());//On centre la map sur la polyline
 }
 
-function displaySegment(trace) {
+function displaySegment(trace,id) {
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
     var latlngArr = [];
@@ -1891,7 +1930,10 @@ function displaySegment(trace) {
     //On crée la polyline et on ajoute les points
 
     polyline = L.polyline(latlngArr, {color: 'blue'});
-    drawnItems.addLayer(polyline);
+    polyline.id = id;
+    if(!segmentLoaded(polyline)) {
+        drawnItems.addLayer(polyline);
+    }
     //surbrillance(polyline);
     polyline.markers = [];
     for (var i = 0; i < latlngArr.length; i++) {
@@ -1902,13 +1944,23 @@ function displaySegment(trace) {
             })
         });
         //surbrillance(marker);
+        marker.overlaped = [];
         marker.addTo(map);
+        markerGroup.eachLayer(function(layer){
+            if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
+            {
+                marker.overlaped.push(layer);
+                layer.overlaped.push(marker);
+            }
+        });
         markerGroup.addLayer(marker);
+
         polyline.markers.push(marker);
     }
 
+
+
     polyline.addTo(map);
-    //map.fitBounds(polyline.getBounds());//On centre la map sur la polyline
 }
 
 function loadMap(json) {
@@ -1957,7 +2009,7 @@ function addPointOnMap(ev) {
     latlngArray.push(ev.latlng);
     if (pointArray.length > 1) {
         polyline = L.polyline(latlngArray);
-        var URL = elevationURL + '&latLngCollection=';
+        var URL = elevationSegmentURL + '&latLngCollection=';
         for (var i = 0; i < latlngArray.length; i++) {
             var lat = latlngArray[i].lat;
             var lng = latlngArray[i].lng;
@@ -1986,10 +2038,9 @@ function loadSegments() {
         },
         function (data, status) {
             var json = JSON.parse(data);
-            console.log(json.searchResults);
 
             jQuery.each(json.searchResults, function (k, v) {
-                displaySegment(v.trace);
+                displaySegment(v.trace, v.id);
             });
             //$.notify("Segment mis à jour", "success");
         }
@@ -2112,4 +2163,16 @@ function bestChoices(selectedPoly)
 function latlngEquality(latlngA, latlngB)
 {
     return latlngA.lat === latlngB.lat && latlngA.lng === latlngB.lng;
+}
+
+function segmentLoaded(poly)
+{
+    var res = false;
+    drawnItems.eachLayer(function (layer) {
+        if(layer.id === poly.id)
+        {
+            res = true;
+        }
+    });
+    return res;
 }
