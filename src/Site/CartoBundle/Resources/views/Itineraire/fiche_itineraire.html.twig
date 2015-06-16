@@ -20,6 +20,7 @@
             <th>Visibilité</th>
             <th>Ma note</th>
             <th>Note moyenne</th>
+            <th>Favori</th>
                 {% if app.user.id == resultats.searchResults.auteur.id %}
                 <th>Modifier</th>			
                 {% endif %}    
@@ -67,6 +68,28 @@
                 {% else %}
                     <td>/</td>
                 {% endif %}
+                <td>
+                    {% set rempli = false %}
+                    {% set continue = true %}
+                        {% for favori in result.favoris  %}
+                            {% if continue == true %}
+                                {% if favori.id == resultats.searchResults.id %}
+                                    <p data-placement='top' data-toggle='tooltip' title='DeleteFavori'>
+                                        <button class='btn btn-xs btn_edit' id="deleteFavori{{resultats.searchResults.id}}" type='button' onclick="DeleteFavori({{favori.id}}, {{app.user.getId()}})"><span class='glyphicon glyphicon-heart'></span>
+                                        </button>
+                                    </p>
+                                    {% set continue = false %}
+                                    {% set rempli = true %}
+                                {% endif %} 
+                            {% endif %}
+                        {% endfor %}
+                    {% if rempli == false %}
+                        <p data-placement='top' data-toggle='tooltip' title='AddFavori'>
+                            <button class='btn btn-xs btn_edit' id="addFavori{{resultats.searchResults.id}}" type='button' onclick="AddFavori({{resultats.searchResults.id}}, {{app.user.getId()}})"><span class='glyphicon glyphicon-heart-empty'></span>
+                            </button>
+                        </p>
+                    {% endif %}
+                </td>
                 {% if app.user.id == resultats.searchResults.auteur.id %}
                     <td>
                         <p data-placement='top' data-toggle='tooltip' title='Edit'>
@@ -215,6 +238,45 @@ $(window).load(function(){
         });
       $("#update").modal('hide');
     });
+
+
+    function DeleteFavori(itiid,userid)
+    {
+        $.post(Routing.generate('site_carto_itinerairedeletefavori'),
+                {
+                    iditi: itiid,
+                    iduser: userid
+                })
+                .done(function (data, status) {
+                    $.notify("Itinéraire favori supprimé", "success");
+                    $("#deleteFavori" + itiid).attr('onclick', 'AddFavori(' + itiid + ', {{app.user.getId()}})');
+                    $("#deleteFavori" + itiid + ">span").attr('class', 'glyphicon glyphicon-heart-empty');
+                    $("#deleteFavori" + itiid).parent().attr('title', 'AddFavori');
+                    $("#deleteFavori" + itiid).attr('id', 'addFavori' + itiid + '');
+                })
+                .fail(function (data, status) {
+                    $.notify("Erreur lors de la suppression du favori", "error");
+                });
+    }
+
+    function AddFavori(itiid,userid)
+    {
+        $.post(Routing.generate('site_carto_itineraireaddfavori'),
+                {
+                    iditi: itiid,
+                    iduser: userid
+                })
+                .done(function (data, status) {
+                    $.notify("Itinéraire favori ajouté", "success");
+                    $("#addFavori" + itiid).attr('onclick', 'DeleteFavori(' + itiid + ', {{app.user.getId()}})');
+                    $("#addFavori" + itiid + ">span").attr('class', 'glyphicon glyphicon-heart');
+                    $("#addFavori" + itiid).parent().attr('title', 'DeleteFavori');
+                    $("#addFavori" + itiid).attr('id', 'deleteFavori' + itiid + '');
+                })
+                .fail(function (data, status) {
+                    $.notify("Erreur lors de l'ajout du favori", "error");
+                });
+    }
     </script>
 {% else %}
     <p>Vous n'avez pas accès à cette page</p>

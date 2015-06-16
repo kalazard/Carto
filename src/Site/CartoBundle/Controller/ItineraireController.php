@@ -599,11 +599,17 @@ class ItineraireController extends Controller {
             }
         }
 
+        $manager=$this->getDoctrine()->getManager();
+
+        $data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+        $result['favoris'] = $data->getItineraireid();
+
         $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res,
                                                                                                                     "jsonObject" => $response,
                                                                                                                     "userNotes" => $userNotes,
                                                                                                                     "idUser" => $id_courant,
-                                                                                                                    "itiMoyenne" => $itiMoyenne));
+                                                                                                                    "itiMoyenne" => $itiMoyenne,
+                                                                                                                    "result" => $result));
         return new Response($content);
     }
 
