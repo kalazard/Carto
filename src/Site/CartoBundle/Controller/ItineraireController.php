@@ -76,97 +76,6 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
-    /* public function saveAction(Request $request) {
-      if ($request->isXMLHttpRequest()) {
-      $manager = $this->getDoctrine()->getManager();
-      $repositoryDiff = $manager->getRepository("SiteCartoBundle:Difficulteparcours");
-      $repositoryUser = $manager->getRepository("SiteCartoBundle:Utilisateur");
-      $repositoryStatus = $manager->getRepository("SiteCartoBundle:Status");
-      $repositoryTypechemin = $manager->getRepository("SiteCartoBundle:Typechemin");
-
-      $trace = new Trace();
-      $filename = uniqid('trace_', true) . '.gpx';
-      $trace->setPath($filename);
-      $diff = $repositoryDiff->find($request->request->get("difficulte", ""));
-      $user = $repositoryUser->find($request->request->get("auteur", ""));
-      $status = $repositoryStatus->find($request->request->get("status", ""));
-      $typechemin = $repositoryTypechemin->find($request->request->get("typechemin", ""));
-
-      $segment = new Segment();
-      $pointArray = json_decode($request->request->get("points", ""), true);
-      $lsArray = [];
-      $elevationString = "";
-      $i = 0;
-      foreach ($pointArray as $pt) {
-      $newPoint = new MySQLPoint(floatval($pt["lng"]), floatval($pt["lat"]));
-      array_push($lsArray, $newPoint);
-      $elevationString = $elevationString . $pt["elevation"];
-      if (++$i != count($pointArray)) {
-      $elevationString = $elevationString . ";";
-      }
-      }
-      $ls = new LineString($lsArray);
-
-      $pog1 = new Point();
-      $coords1 = new Coordonnees();
-      $coords1->setLatitude($pointArray[0]["lat"]);
-      $coords1->setLongitude($pointArray[0]["lng"]);
-      $coords1->setAltitude($pointArray[0]["elevation"]);
-      $pog1->setCoords($coords1);
-      $pog1->setOrdre(1);
-      $manager->persist($coords1);
-      $manager->persist($pog1);
-
-      $pog2 = new Point();
-      $coords2 = new Coordonnees();
-      $coords2->setLatitude($pointArray[count($pointArray) - 1]["lat"]);
-      $coords2->setLongitude($pointArray[count($pointArray) - 1]["lng"]);
-      $coords2->setAltitude($pointArray[count($pointArray) - 1]["elevation"]);
-      $pog2->setCoords($coords2);
-      $pog2->setOrdre(2);
-      $manager->persist($coords2);
-      $manager->persist($pog2);
-
-      $segment->setTrace($ls);
-      $segment->setElevation($elevationString);
-      $segment->setSens(0);
-      $segment->setPog1($pog1);
-      $segment->setPog2($pog2);
-
-      $route = new Itineraire();
-      $route->setDatecreation(new \DateTime('now'));
-      $route->setLongueur($request->request->get("longueur", ""));
-      $route->setDeniveleplus($request->request->get("denivelep", ""));
-      $route->setDenivelemoins($request->request->get("denivelen", ""));
-      $route->setTrace($trace);
-      $route->setNom($request->request->get("nom", ""));
-      $route->setNumero($request->request->get("numero", ""));
-      $route->setTypechemin($typechemin);
-      $route->setDescription($request->request->get("description", ""));
-      $route->setDifficulte($diff);
-      $route->setAuteur($user);
-      $route->setStatus($status);
-      $route->setPublic($request->request->get("public", ""));
-      $route->setSegment($segment);
-
-      $json_obj = json_decode($request->request->get("points", ""), true);
-
-
-      $manager->persist($route);
-      $manager->persist($trace);
-      $manager->persist($segment);
-
-      $manager->flush();
-
-      $this->saveGpx($route->getId(), $filename);
-
-      $response = new Response(json_encode(array("result" => "success", "code" => 200, "jsonObject" => json_encode($route))));
-      $response->headers->set('Content-Type', 'application/json');
-      return $response;
-      }
-      return new Response('This is not ajax!', 400);
-      } */
-
     public function saveAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $manager = $this->getDoctrine()->getManager();
@@ -383,7 +292,7 @@ class ItineraireController extends Controller {
             $manager->persist($trace);
             $manager->persist($segment);
             $manager->flush();
-            $response = new Response(json_encode(array("result" => "success", "code" => 200)));
+            $response = new Response(json_encode(array("result" => "success", "code" => 200,"id" => $segment->getId())));
             $response->headers->set('Content-Type', 'application/json');
             return $response;
         }
@@ -583,6 +492,12 @@ class ItineraireController extends Controller {
         $user = $this->getUser();
         $id_courant = $user->getId();
 
+        $manager = $this->getDoctrine()->getManager();
+
+        $user = $this->getUser();
+        //on récupère les infos de l'utilisateur courant (et seulement courant)
+        $id_courant = $user->getId();
+
         //Chargement de la liste des difficultés dans le select
         $responseDiff = $clientSOAP->__call('difficultelist', array());
 
@@ -595,6 +510,7 @@ class ItineraireController extends Controller {
         if ($request->request->get("valid") == "ok") {
             //Appel du service de recherche
             $search = array();
+            $search["id"] = $request->request->get("id");
             $search["nom"] = $request->request->get("nom");
             $search["typechemin"] = $request->request->get("typechemin");
             $search["longueur"] = $request->request->get("longueur");
@@ -604,20 +520,27 @@ class ItineraireController extends Controller {
 
             $response = $clientSOAP->__call('search', $search);
 
+            $data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+            $result = array();
+            $result = $data->getItineraireid();
+
             $res_search = json_decode($response);
             $resDiff = json_decode($responseDiff);
             $resStat = json_decode($responseStat);
             $resType = json_decode($responseType);
-            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => $res_search, "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => array()));
+            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => $res_search, "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => array(), "favoris" => $result));
         } else {
             // Recupère la liste complète
             $response = $clientSOAP->__call('itilist', array());
 
+            $data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+            $result = array();
+            $result = $data->getItineraireid();
+
             $res_list = json_decode($response);
             $resDiff = json_decode($responseDiff);
             $resStat = json_decode($responseStat);
-            $resType = json_decode($responseType);
-            
+            $resType = json_decode($responseType);            
             $itineraireService = $this->container->get('itineraire_service');
             $itiService = $itineraireService->getNotes($res_list, $id_courant);
             $notes = json_decode($itiService, true);
@@ -634,7 +557,7 @@ class ItineraireController extends Controller {
                 }
 
             }
-            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => array(),"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType,"list" => $res_list, "itiMoyenne" => $itiMoyenne));
+            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => array(),"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType,"list" => $res_list, "itiMoyenne" => $itiMoyenne, "favoris" => $result));
         }
 
         return new Response($content);
@@ -679,6 +602,7 @@ class ItineraireController extends Controller {
         $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res,
                                                                                                                     "jsonObject" => $response,
                                                                                                                     "userNotes" => $userNotes,
+                                                                                                                    "idUser" => $id_courant,
                                                                                                                     "itiMoyenne" => $itiMoyenne));
         return new Response($content);
     }
@@ -747,4 +671,69 @@ class ItineraireController extends Controller {
         return $this->redirect($this->generateUrl('site_carto_getByIditineraire', array("id" => $idItineraire)));
     } 
 
+    public function deletefavoriAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            //Appel du service de sauvegarde
+            $params = array();
+            $params["iditi"] = $request->request->get("iditi");
+            $params["iduser"] = $request->request->get("iduser");
+
+            $clientSOAP = new \SoapClient(null, array(
+                'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'trace' => true,
+                'exceptions' => true
+            ));
+
+            $response = $clientSOAP->__call('deletefavori', $params);
+            $res = json_decode($response);
+            return new Response(json_encode(array("result" => "success", "code" => 200)));
+        }
+        return new Response('This is not ajax!', 400);
+    }
+
+        public function addfavoriAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            //Appel du service de sauvegarde
+            $params = array();
+            $params["iditi"] = $request->request->get("iditi");
+            $params["iduser"] = $request->request->get("iduser");
+
+            $clientSOAP = new \SoapClient(null, array(
+                'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+                'trace' => true,
+                'exceptions' => true
+            ));
+
+            $response = $clientSOAP->__call('addfavori', $params);
+            $res = json_decode($response);
+            return new Response(json_encode(array("result" => "success", "code" => 200)));
+        }
+        return new Response('This is not ajax!', 400);
+    }
+	
+	public function testDeDroits($permission)
+	{
+		$manager = $this->getDoctrine()->getManager();
+		
+		$repository_permissions = $manager->getRepository("SiteCartoBundle:Permission");
+		
+		$permissions = $repository_permissions->findOneBy(array('label' => $permission));
+
+		if(Count($permissions->getRole()) != 0)
+		{
+			$list_role = array();
+			foreach($permissions->getRole() as $role)
+			{
+				array_push($list_role, 'ROLE_'.$role->getLabel());
+			}
+			
+			// Test l'accès de l'utilisateur
+			if(!$this->isGranted($list_role))
+			{
+				throw $this->createNotFoundException("Vous n'avez pas acces a cette page");
+			}
+		}
+	}
 }

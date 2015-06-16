@@ -123,7 +123,11 @@ class MemberController extends Controller {
 			*/		
 			
 			//retour
-			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig",$result);
+			
+			$data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
+			$result['favoris'] = $data->getItineraireid();
+
+			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig", $result);
 			return new Response($content);
 		}
 		else
@@ -166,4 +170,27 @@ class MemberController extends Controller {
 		return $this->redirect($this->generateUrl('site_carto_fiche'));
 	}
 
+	public function testDeDroits($permission)
+	{
+		$manager = $this->getDoctrine()->getManager();
+		
+		$repository_permissions = $manager->getRepository("SiteCartoBundle:Permission");
+		
+		$permissions = $repository_permissions->findOneBy(array('label' => $permission));
+
+		if(Count($permissions->getRole()) != 0)
+		{
+			$list_role = array();
+			foreach($permissions->getRole() as $role)
+			{
+				array_push($list_role, 'ROLE_'.$role->getLabel());
+			}
+			
+			// Test l'accès de l'utilisateur
+			if(!$this->isGranted($list_role))
+			{
+				throw $this->createNotFoundException("Vous n'avez pas acces a cette page");
+			}
+		}
+	}
 }

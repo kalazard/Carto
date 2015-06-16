@@ -1,0 +1,14 @@
+{% extends "SiteCartoBundle::layout.html.twig" %}
+
+{% block title %}{{ parent() }} - Administration{% endblock %}
+
+{% block body %}
+<div class="container">
+	<h1>Administration</h1>
+	<div class="content">
+		<ul>
+			<li><a href="{{path('site_carto_acl')}}"> Gestion des Permissions</a></li><br />
+		</ul>
+	</div>
+</div>
+{% endblock %}

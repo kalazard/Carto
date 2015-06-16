@@ -8,7 +8,7 @@ use JsonSerializable;
 /**
  * Itineraire
  *
- * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"}), @ORM\Index(name="fk_itineraire_status_idx", columns={"status"}), @ORM\Index(name="fk_itineraire_typechemin_idx", columns={"typechemin"}), @ORM\Index(name="fk_itineraire_segment_idx", columns={"segment"})})
+ * @ORM\Table(name="itineraire", indexes={@ORM\Index(name="fk_itineraire_auteur_idx", columns={"auteur"}), @ORM\Index(name="fk_itineraire_diff_idx", columns={"difficulte"}), @ORM\Index(name="fk_itineraire_status_idx", columns={"status"}),@ORM\Index(name="fk_itineraire_typechemin_idx", columns={"typechemin"}),@ORM\Index(name="fk_itineraire_segment_idx", columns={"segment"}), @ORM\Index(name="fk_itineraire_trace_idx", columns={"trace"})})
  * @ORM\Entity
  */
 class Itineraire implements JsonSerializable
@@ -72,25 +72,24 @@ class Itineraire implements JsonSerializable
     private $numero;
 
     /**
-     * @var integer
+     * @var \Typechemin
      *
-     * @ORM\Column(name="public", type="integer", nullable=false)
+     * @ORM\ManyToOne(targetEntity="Typechemin")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="typechemin", referencedColumnName="id")
+     * })
      */
-    private $public;
+    private $typechemin;
 
     /**
-     * @var linestring
+     * @var \Status
      *
-     * @ORM\Column(name="segment", type="linestring", nullable=false)
+     * @ORM\ManyToOne(targetEntity="Status")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="status", referencedColumnName="id")
+     * })
      */
-    private $segment;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="elevation", type="text", nullable=false)
-     */
-    private $elevation;
+    private $status;
 
     /**
      * @var \Utilisateur
@@ -113,16 +112,6 @@ class Itineraire implements JsonSerializable
     private $difficulte;
 
     /**
-     * @var \Status
-     *
-     * @ORM\ManyToOne(targetEntity="Status")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="status", referencedColumnName="id")
-     * })
-     */
-    private $status;
-
-    /**
      * @var \Trace
      *
      * @ORM\ManyToOne(targetEntity="Trace")
@@ -133,14 +122,40 @@ class Itineraire implements JsonSerializable
     private $trace;
 
     /**
-     * @var \Typechemin
+     * @var integer
      *
-     * @ORM\ManyToOne(targetEntity="Typechemin")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="typechemin", referencedColumnName="id")
-     * })
+     * @ORM\Column(name="public", type="integer", nullable=false)
      */
-    private $typechemin;
+    private $public;
+
+    /**
+     * @var linestring
+     *
+     * @ORM\Column(name="segment", type="linestring", nullable=false)
+     */
+    private $segment;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="elevation", type="text", nullable=false)
+     */
+    private $elevation;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Utilisateur", inversedBy="itinerairenote")
+     * @ORM\JoinTable(name="note",
+     *   joinColumns={
+     *     @ORM\JoinColumn(name="itinerairenote", referencedColumnName="id")
+     *   },
+     *   inverseJoinColumns={
+     *     @ORM\JoinColumn(name="utilisateurnote", referencedColumnName="id")
+     *   }
+     * )
+     */
+    //private $utilisateurnote;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -154,6 +169,7 @@ class Itineraire implements JsonSerializable
      */
     public function __construct()
     {
+        $this->utilisateurnote = new \Doctrine\Common\Collections\ArrayCollection();
         $this->utilisateurid = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
@@ -368,7 +384,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get segment
      *
-     * @return linestring 
+     * @return linestring
      */
     public function getSegment()
     {
@@ -391,7 +407,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get elevation
      *
-     * @return string 
+     * @return string
      */
     public function getElevation()
     {
@@ -460,7 +476,7 @@ class Itineraire implements JsonSerializable
     /**
      * Get status
      *
-     * @return \Site\CartoBundle\Entity\Status 
+     * @return \Site\CartoBundle\Entity\Status
      */
     public function getStatus()
     {
@@ -514,6 +530,39 @@ class Itineraire implements JsonSerializable
     }
 
     /**
+     * Add utilisateurnote
+     *
+     * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
+     * @return Itineraire
+     */
+    /*public function addUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
+    {
+        $this->utilisateurnote[] = $utilisateurnote;
+
+        return $this;
+    }*/
+
+    /**
+     * Remove utilisateurnote
+     *
+     * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurnote
+     */
+    /*public function removeUtilisateurnote(\Site\CartoBundle\Entity\Utilisateur $utilisateurnote)
+    {
+        $this->utilisateurnote->removeElement($utilisateurnote);
+    }*/
+
+    /**
+     * Get utilisateurnote
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    /*public function getUtilisateurnote()
+    {
+        return $this->utilisateurnote;
+    }*/
+
+    /**
      * Add utilisateurid
      *
      * @param \Site\CartoBundle\Entity\Utilisateur $utilisateurid
@@ -545,8 +594,8 @@ class Itineraire implements JsonSerializable
     {
         return $this->utilisateurid;
     }
-    
-    public function jsonSerialize() {
+
+public function jsonSerialize() {
         return array(
             'id' => $this->getId(),
             'nom'=> $this->getNom(),
@@ -562,7 +611,7 @@ class Itineraire implements JsonSerializable
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
             'public' => $this->getPublic(),
-            //'segment' => $this->getSegment()->__toString(),
+            'segment' => $this->getSegment()->__toString(),
             'elevation' => $this->getElevation()
         );
     }

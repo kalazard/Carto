@@ -81,6 +81,13 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * )
      */
     private $itineraireid;
+    
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Itineraire", mappedBy="utilisateurnote")
+     */
+    private $itinerairenote;
 
     /**
      * Constructor
@@ -88,6 +95,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function __construct()
     {
         $this->itineraireid = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->itinerairenote = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -99,6 +107,13 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function getId()
     {
         return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     /**
@@ -236,7 +251,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
         return $this->telephone;
     }
 
-    /**
+   /**
      * Set role
      *
      * @param \Site\CartoBundle\Entity\Role $role
@@ -281,6 +296,39 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         $this->itineraireid->removeElement($itineraireid);
     }
+    
+    /**
+     * Add itinerairenote
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     * @return Utilisateur
+     */
+    public function addItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    {
+        $this->itinerairenote[] = $itinerairenote;
+
+        return $this;
+    }
+
+    /**
+     * Remove itinerairenote
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     */
+    public function removeItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    {
+        $this->itinerairenote->removeElement($itinerairenote);
+    }
+
+    /**
+     * Get itinerairenote
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getItinerairenote()
+    {
+        return $this->itinerairenote;
+    }
 
     /**
      * Get itineraireid
@@ -291,7 +339,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         return $this->itineraireid;
     }
-    
+
     public function serialize() {
         return serialize(array(
             $this->id,

@@ -158,6 +158,38 @@ class ItineraireService
         return json_encode(array("result" => "success","code" => 200));
     }
 
+    public function deletefavori($iditi, $iduser)
+    {
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+        $iti = $repositoryIti->findOneBy(array('id' => $iditi));
+
+        $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
+        $user = $repositoryUser->findOneBy(array('id' => $iduser));
+
+        $iti->removeUtilisateurid($user);
+        $user->removeItineraireid($iti);
+
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }
+
+    public function addfavori($iditi, $iduser)
+    {
+        $repositoryIti=$this->entityManager->getRepository("SiteCartoBundle:Itineraire");
+        $iti = $repositoryIti->findOneBy(array('id' => $iditi));
+
+        $repositoryUser=$this->entityManager->getRepository("SiteCartoBundle:Utilisateur");
+        $user = $repositoryUser->findOneBy(array('id' => $iduser));
+
+        $iti->addUtilisateurid($user);
+        $user->addItineraireid($iti);
+
+        $this->entityManager->flush();
+
+        return json_encode(array("result" => "success","code" => 200));
+    }
+
     public function getById($id)
     {
         $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');

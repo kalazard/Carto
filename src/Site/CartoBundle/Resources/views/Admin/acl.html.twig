@@ -1,0 +1,52 @@
+{% extends "SiteCartoBundle::layout.html.twig" %}
+
+{% block title %}{{ parent() }} - Administration - Permissions{% endblock %}
+
+{% block body %}
+<div class="container">
+  <h1>Permissions</h1>
+  <p>Si aucun élément de la ligne n'est coché, tous les rôles ainsi que les annonymes pourront accéder à la catégorie.</p>
+	<div class="content">
+		<form action="{{path('site_carto_acl')}}" method="post" class="form-horizontal">
+			<table class="table table-striped sieve">
+				<thead>
+					<tr>
+						<th></th>
+						{% for role in roles %}
+							<th>{{role.label}}</th>
+						{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for permission in permissions %}
+						<tr>
+							<td>{{permission.label}}</td>
+							{% for role in roles %}
+								<td>
+									{% set ok = false %}
+									{% if permission.role|length == 0 %}
+										<input type="checkbox" name="acl-{{permission.id}}-{{role.id}}">
+										{% set ok = true %}
+									{% else %}
+										{% for permission_role in permission.role %}
+											{% if role.id == permission_role.id %}
+												<input type="checkbox" checked="checked" name="acl-{{permission.id}}-{{role.id}}">
+												{% set ok = true %}
+											{% endif %}
+										{% endfor %}
+									{% endif %}
+									{% if ok == false %}
+										<input type="checkbox" name="acl-{{permission.id}}-{{role.id}}">
+									{% endif %}
+								</td>
+							{% endfor %}
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			
+			<button class="btn btn-primary pull-right">Valider les modifications</button>
+		</form>
+	</div>
+</div>
+{% endblock %}

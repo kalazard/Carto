@@ -47,29 +47,21 @@
                         <li>
                             <a href="{{path('site_carto_homepage')}}">Accueil</a>
                         </li>
-                        {% if not is_granted('IS_AUTHENTICATED_FULLY') %}
-                            {# <li>
-                                 <a href="{{path('site_carto_news')}}">Nouveautés</a>
-                             </li> 
-                             <li>
-                                 <a href="{{path('site_carto_club')}}">Le site</a>
-                             </li>
-                             <li>
-                                 <a href="{{path('site_carto_contact')}}">Contact</a>
-                             </li>  #}
-                        {% endif %}
                         {% if is_granted('IS_AUTHENTICATED_FULLY') %}
                             <li>
                                 <a href="{{path('site_carto_mapPage')}}">Carte</a>
                             </li>
-                            {%if is_granted('ROLE_Administrateur')%}
-                                <li>
-                                <a href="{{path('site_carto_annuaire')}}">Gérer les utilisateurs</a>
-                            </li>
-                            {%endif%}
 							<li>
                                    <a href="{{path('site_carto_searchitineraire')}}">Itinéraires</a>
                             </li> 
+                            {%if is_granted('ROLE_Administrateur')%}
+                            <li>
+                                <a href="{{path('site_carto_annuaire')}}">Gérer les utilisateurs</a>
+                            </li>
+							<li>
+                                <a href="{{path('site_carto_admin')}}">Administration</a>
+                            </li>
+                            {%endif%}
                         {% endif %}
                     </ul>
 

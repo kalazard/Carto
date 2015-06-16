@@ -202,6 +202,16 @@ site_carto_itinerairedelete:
     defaults: { _controller: SiteCartoBundle:Itineraire:delete }
     options:
         expose: true
+site_carto_itinerairedeletefavori:
+    path:     /itineraire_deletefavori/
+    defaults: { _controller: SiteCartoBundle:Itineraire:deletefavori }
+    options:
+        expose: true
+site_carto_itineraireaddfavori:
+    path:     /itineraire_addfavori/
+    defaults: { _controller: SiteCartoBundle:Itineraire:addfavori }
+    options:
+        expose: true
 site_carto_downlaodGPX:
     path:     /download/gpx/{id}
     defaults: { _controller: SiteCartoBundle:Itineraire:downloadGPX }
@@ -216,5 +226,16 @@ site_carto_noteItineraireForm:
 site_carto_noteItineraire:
     path:     /itineraire_note
     defaults: { _controller: SiteCartoBundle:Itineraire:noteItineraire }
+    options:
+        expose: true
+site_carto_admin:
+    path:    /admin
+    defaults: { _controller: SiteCartoBundle:Admin:index }
+site_carto_acl:
+    path:    /admin/permissions
+    defaults: { _controller: SiteCartoBundle:Admin:acl }
+site_carto_segment_multiple_update:
+    path:     /segment__multiple_update
+    defaults: { _controller: SiteCartoBundle:Segment:updateMultiple }
     options:
         expose: true
