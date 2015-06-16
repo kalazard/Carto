@@ -126,6 +126,32 @@ class MemberController extends Controller {
 			
 			$data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
 			$result['favoris'] = $data->getItineraireid();
+                        $itiFavList = $result['favoris']->getValues();
+                        
+                        $modif1 = json_encode($itiFavList);
+                        $modif2 = json_decode($modif1);
+                        
+                        foreach($modif2 as $iF)
+                        {
+                            $resItiFav->list[] = $iF;
+                        }
+                        
+                        $itineraireService = $this->container->get('itineraire_service');
+                        $itiService = $itineraireService->getNotes($resItiFav, $id_courant);
+                        $notes = json_decode($itiService, true);
+                        $result['un'] = $notes['userNotes'];
+                        
+                        foreach($notes['allNotes'] as $calcMoy)
+                        {
+                            if(sizeof($calcMoy) > 0)
+                            {
+                                $result['an'][] = array_sum($calcMoy) / count($calcMoy);
+                            }
+                            else
+                            {
+                                $result['an'][] = -1;
+                            }
+                        }                    
 
 			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig", $result);
 			return new Response($content);
