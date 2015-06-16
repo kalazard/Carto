@@ -208,3 +208,13 @@ site_carto_downlaodGPX:
 site_carto_savePoiPicture:
     path:     /poi/save_with_picture
     defaults: { _controller: SiteCartoBundle:Poi:savePoiWithPicture }
+site_carto_noteItineraireForm:
+    path:     /itineraire_noteForm
+    defaults: { _controller: SiteCartoBundle:Itineraire:noteItineraireForm }
+    options:
+        expose: true
+site_carto_noteItineraire:
+    path:     /itineraire_note
+    defaults: { _controller: SiteCartoBundle:Itineraire:noteItineraire }
+    options:
+        expose: true

@@ -4,6 +4,8 @@
 namespace Site\CartoBundle\Services;
 
 use Site\CartoBundle\Entity\Itineraire;
+use Site\CartoBundle\Entity\Itinerairenote;
+use Site\CartoBundle\Entity\Note;
 use \CrEOF\Spatial\PHP\Types\Geography\Point as MySQLPoint;
 
 class ItineraireService
@@ -170,24 +172,49 @@ class ItineraireService
         
     }
     
-    public function getNotesIti($listeIti, $idUser)
-    {
+    public function getNotes($listeIti, $idUser)
+    {         
         $repository = $this->entityManager->getRepository('SiteCartoBundle:Utilisateur');
-        $user = $repository->findBy(array('id' => $idUser));
+        $user = $repository->findOneBy(array('id' => $idUser));
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
+        $listeItiObj = array();
         
-        $notesUtilisateur = array();
-        $notesAll = array();
-        $repository = $this->entityManager->getRepository('SiteCartoBundle:Note');
-        $testIti = $repository->findBy(array('itineraire' => $iti, 'utilisateur' => $user));
-        
-        foreach($listeIti->list as $iti)
+        foreach($listeIti->list as $itiTmp)
         {
-            //$notesUtilisateur[] = $repository->findBy(array('itineraire' => $iti, 'utilisateur' => $user));
-            //$notesAll[] = $repository->findBy(array('itineraire' => $iti));
+            $listeItiObj[] = $iti = $repository->findOneBy(array('id' => $itiTmp->id));          
         }
-        /*
-        return json_encode($notes);*/
-        return json_encode($testIti);
+        
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Note');
+        $notes = $repository->findAll();
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Itinerairenote');
+        $em = $this->entityManager;
+        
+        foreach($listeItiObj as $itiTmp)
+        {
+            $req = "SELECT (no.valeur) ";
+            $req .= "FROM SiteCartoBundle:Itinerairenote ino, SiteCartoBundle:Note no ";
+            $req.= "WHERE ino.itineraireidnote = ".$itiTmp->getId();
+            $req.= " AND ino.noteid = no.id";
+            $query = $em->createQuery($req);
+            $result = $query->getScalarResult();
+            $allItiNotes[] = array_map('current', $result);
+            
+            $req = "SELECT (no.valeur) ";
+            $req .= "FROM SiteCartoBundle:Itinerairenote ino, SiteCartoBundle:Note no ";
+            $req.= "WHERE ino.itineraireidnote = ".$itiTmp->getId();
+            $req.= " AND ino.utilisateuridnote = ".$idUser;
+            $req.= " AND ino.noteid = no.id";
+            $query = $em->createQuery($req);
+            $userNote[] = $query->getOneOrNullResult()[1];
+        }
+        
+        return json_encode(array("userNotes" => $userNote, "allNotes" =>$allItiNotes));
+    }
+    
+    public function getAllNotes()
+    {  
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Note');
+        return json_encode($repository->findAll());
     }
 
     public function difficultelist()
@@ -206,6 +233,32 @@ class ItineraireService
     {
         $stat = $this->entityManager->getRepository("SiteCartoBundle:Typechemin")->findAll();
         return json_encode(array("typechemin" => $stat));
+    }
+    
+    public function noterItineraire($idUser, $idItineraire, $note)
+    {
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Note');
+        $objNote = $repository->findOneBy(array('valeur' => $note));
+        
+        $repository = $this->entityManager->getRepository('SiteCartoBundle:Itinerairenote');
+        $res = $repository->findOneBy(array('utilisateuridnote' => $idUser, 'itineraireidnote' => $idItineraire));
+        
+        if(isset($res) && $res != null)
+        {
+            $res->setNoteid($objNote);
+        }
+        else
+        {
+            $maNote = new Itinerairenote();
+            $repository = $this->entityManager->getRepository('SiteCartoBundle:Utilisateur');
+            $maNote->setUtilisateuridnote($repository->findOneBy(array('id' => $idUser)));
+            $repository = $this->entityManager->getRepository('SiteCartoBundle:Itineraire');
+            $maNote->setItineraireidnote($repository->findOneBy(array('id' => $idItineraire)));
+            $maNote->setNoteid($objNote);
+            $this->entityManager->persist($maNote); 
+        }
+        
+        $this->entityManager->flush();
     }
 }
  

@@ -1,0 +1,35 @@
+<div id="modalAddNoteForm" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h4 class="modal-title">Ma note</h4>
+            </div>
+            <div class="modal-body">   
+                <form method="post" action="{{path('site_carto_noteItineraire')}}">
+                    <input type="hidden" name="idIti" value="{{idIti}}">
+                    <!-- Champ Note -->
+                    <div class="form-group">
+                        <div class="row">
+                            <label class='col-sm-3 control-label'>Ma note :</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" name="note">
+                                    {% for note in listeNote %}
+                                        {% if(note.valeur == maNote) %}
+                                            <option value="{{note.valeur}}" selected="selected">{{note.valeur}}</option>
+                                        {% else %}
+                                            <option value="{{note.valeur}}">{{note.valeur}}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" class="btn btn-primary" value="Ajouter" />
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

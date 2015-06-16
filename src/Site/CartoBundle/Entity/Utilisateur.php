@@ -18,7 +18,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * 
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -30,6 +30,34 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     private $email;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="nom", type="string", length=255, nullable=true)
+     */
+    private $nom;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="prenom", type="string", length=255, nullable=true)
+     */
+    private $prenom;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="datenaissance", type="date", nullable=true)
+     */
+    private $datenaissance;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="telephone", type="string", length=45, nullable=true)
+     */
+    private $telephone;
+
+    /**
      * @var \Role
      *
      * @ORM\ManyToOne(targetEntity="Role")
@@ -38,48 +66,28 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * })
      */
     private $role;
-    
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="nom", type="string", length=255, nullable=false)
-     */
-    private $nom;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="prenom", type="string", length=255, nullable=false)
-     */
-    private $prenom;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="datenaissance", type="date", nullable=false)
-     */
-    private $datenaissance;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="telephone", type="string", length=45, nullable=false)
-     */
-    private $telephone;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      *
-     * @ORM\ManyToMany(targetEntity="Itineraire", mappedBy="utilisateurnote")
+     * @ORM\ManyToMany(targetEntity="Itineraire", inversedBy="utilisateurid")
+     * @ORM\JoinTable(name="utilisateurhasitineraire",
+     *   joinColumns={
+     *     @ORM\JoinColumn(name="utilisateurId", referencedColumnName="id")
+     *   },
+     *   inverseJoinColumns={
+     *     @ORM\JoinColumn(name="itineraireId", referencedColumnName="id")
+     *   }
+     * )
      */
-    private $itinerairenote;
+    private $itineraireid;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->itinerairenote = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->itineraireid = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -91,13 +99,6 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function getId()
     {
         return $this->id;
-    }
-    
-    public function setId($id)
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     /**
@@ -124,6 +125,118 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     }
 
     /**
+     * Set nom
+     *
+     * @param string $nom
+     * @return Utilisateur
+     */
+    public function setNom($nom)
+    {
+        $this->nom = $nom;
+
+        return $this;
+    }
+
+    /**
+     * Get nom
+     *
+     * @return string 
+     */
+    public function getNom()
+    {
+        return $this->nom;
+    }
+
+    /**
+     * Set prenom
+     *
+     * @param string $prenom
+     * @return Utilisateur
+     */
+    public function setPrenom($prenom)
+    {
+        $this->prenom = $prenom;
+
+        return $this;
+    }
+
+    /**
+     * Get prenom
+     *
+     * @return string 
+     */
+    public function getPrenom()
+    {
+        return $this->prenom;
+    }
+    
+    public function getPassword() {
+        
+    }
+    
+    public function getSalt() {
+        
+    }
+    
+    public function eraseCredentials() {
+        
+    }
+    
+    public function getUsername() {
+        return $this->email;
+    }
+    
+    public function getRoles() {
+        return $this->role->getRole();
+    }
+
+    /**
+     * Set datenaissance
+     *
+     * @param \DateTime $datenaissance
+     * @return Utilisateur
+     */
+    public function setDatenaissance($datenaissance)
+    {
+        $this->datenaissance = $datenaissance;
+
+        return $this;
+    }
+
+    /**
+     * Get datenaissance
+     *
+     * @return \DateTime 
+     */
+    public function getDatenaissance()
+    {
+        return $this->datenaissance;
+    }
+
+    /**
+     * Set telephone
+     *
+     * @param string $telephone
+     * @return Utilisateur
+     */
+    public function setTelephone($telephone)
+    {
+        $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    /**
+     * Get telephone
+     *
+     * @return string 
+     */
+    public function getTelephone()
+    {
+        return $this->telephone;
+    }
+
+    /**
      * Set role
      *
      * @param \Site\CartoBundle\Entity\Role $role
@@ -147,158 +260,38 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     }
 
     /**
-     * Add itinerairenote
+     * Add itineraireid
      *
-     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     * @param \Site\CartoBundle\Entity\Itineraire $itineraireid
      * @return Utilisateur
      */
-    public function addItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    public function addItineraireid(\Site\CartoBundle\Entity\Itineraire $itineraireid)
     {
-        $this->itinerairenote[] = $itinerairenote;
+        $this->itineraireid[] = $itineraireid;
 
         return $this;
     }
 
     /**
-     * Remove itinerairenote
+     * Remove itineraireid
      *
-     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     * @param \Site\CartoBundle\Entity\Itineraire $itineraireid
      */
-    public function removeItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    public function removeItineraireid(\Site\CartoBundle\Entity\Itineraire $itineraireid)
     {
-        $this->itinerairenote->removeElement($itinerairenote);
+        $this->itineraireid->removeElement($itineraireid);
     }
 
     /**
-     * Get itinerairenote
+     * Get itineraireid
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getItinerairenote()
+    public function getItineraireid()
     {
-        return $this->itinerairenote;
+        return $this->itineraireid;
     }
     
-    /**
-     * Set nom
-     *
-     * @param string $nom
-     * @return Membre
-     */
-    public function setNom($nom)
-    {
-        $this->nom = $nom;
-
-        return $this;
-    }
-
-    /**
-     * Get nom
-     *
-     * @return string 
-     */
-    public function getNom()
-    {
-        return $this->nom;
-    }
-
-    /**
-     * Set prenom
-     *
-     * @param string $prenom
-     * @return Membre
-     */
-    public function setPrenom($prenom)
-    {
-        $this->prenom = $prenom;
-
-        return $this;
-    }
-
-    /**
-     * Get prenom
-     *
-     * @return string 
-     */
-    public function getPrenom()
-    {
-        return $this->prenom;
-    }
-
-    /**
-     * Set datenaissance
-     *
-     * @param \DateTime $datenaissance
-     * @return Membre
-     */
-    public function setDatenaissance($datenaissance)
-    {
-        $this->datenaissance = $datenaissance;
-
-        return $this;
-    }
-
-    /**
-     * Get datenaissance
-     *
-     * @return \DateTime 
-     */
-    public function getDatenaissance()
-    {
-        if($this->datenaissance == null)
-        {
-            return null;
-        }
-        else
-        {
-            return $this->datenaissance->format("d/m/Y");
-        }
-        
-    }
-
-    /**
-     * Set telephone
-     *
-     * @param string $telephone
-     * @return Membre
-     */
-    public function setTelephone($telephone)
-    {
-        $this->telephone = $telephone;
-
-        return $this;
-    }
-
-    /**
-     * Get telephone
-     *
-     * @return string 
-     */
-    public function getTelephone()
-    {
-        return $this->telephone;
-    }
-    
-    public function eraseCredentials() {
-        
-    }
-
-    public function getPassword() {
-        
-    }
-
-    public function getRoles() {
-        return $this->role->getRole();
-    }
-
-    public function getSalt() {
-        
-    }
-
-    public function getUsername() {
-        return $this->email;
-    }
-
     public function serialize() {
         return serialize(array(
             $this->id,
@@ -331,5 +324,4 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
             'role' => $this->getRole()
         );
     }
-
 }

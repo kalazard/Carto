@@ -1,0 +1,50 @@
+Point:
+    type: entity
+    table: point
+    indexes:
+        fk_point_coords_idx:
+            columns:
+                - coords
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
+            id: true
+            generator:
+                strategy: IDENTITY
+    fields:
+        ordre:
+            type: integer
+            nullable: true
+            unsigned: false
+            comment: ''
+    manyToOne:
+        coords:
+            targetEntity: Coordonnees
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                coords:
+                    referencedColumnName: id
+            orphanRemoval: false
+    manyToMany:
+        idsegment:
+            targetEntity: Segment
+            cascade: {  }
+            mappedBy: null
+            inversedBy: idpop
+            joinTable:
+                name: listepop
+                joinColumns:
+                    -
+                        name: idpop
+                        referencedColumnName: id
+                inverseJoinColumns:
+                    -
+                        name: idsegment
+                        referencedColumnName: id
+            orderBy: null
+    lifecycleCallbacks: {  }

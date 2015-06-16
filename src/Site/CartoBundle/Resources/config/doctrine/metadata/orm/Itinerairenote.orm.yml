@@ -1,0 +1,43 @@
+Itinerairenote:
+    type: entity
+    table: itinerairenote
+    indexes:
+        fk_utilisateur_has_itineraire_itineraire2_idx:
+            columns:
+                - itineraireidnote
+        fk_utilisateur_has_itineraire_utilisateur2_idx:
+            columns:
+                - utilisateuridnote
+        fk_utilisateur_has_itineraire_note1_idx:
+            columns:
+                - noteid
+    id: {  }
+    oneToOne:
+        utilisateuridnote:
+            targetEntity: Utilisateur
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                utilisateuridnote:
+                    referencedColumnName: id
+            orphanRemoval: false
+        itineraireidnote:
+            targetEntity: Itineraire
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                itineraireidnote:
+                    referencedColumnName: id
+            orphanRemoval: false
+        noteid:
+            targetEntity: Note
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                noteid:
+                    referencedColumnName: id
+            orphanRemoval: false
+    lifecycleCallbacks: {  }

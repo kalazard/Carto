@@ -19,6 +19,7 @@ use CrEOF\Spatial\PHP\Types\Geography\Polygon;
 use CrEOF\Spatial\PHP\Types\Geography\LineString;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ItineraireController extends Controller {
 
@@ -578,6 +579,9 @@ class ItineraireController extends Controller {
             'trace' => true,
             'exceptions' => true
         ));
+        
+        $user = $this->getUser();
+        $id_courant = $user->getId();
 
         //Chargement de la liste des difficultés dans le select
         $responseDiff = $clientSOAP->__call('difficultelist', array());
@@ -613,7 +617,24 @@ class ItineraireController extends Controller {
             $resDiff = json_decode($responseDiff);
             $resStat = json_decode($responseStat);
             $resType = json_decode($responseType);
-            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig", array("resultats" => array(), "diffs" => $resDiff, "stats" => $resStat, "typechemin" => $resType, "list" => $res_list));
+            
+            $itineraireService = $this->container->get('itineraire_service');
+            $itiService = $itineraireService->getNotes($res_list, $id_courant);
+            $notes = json_decode($itiService, true);
+            $itiMoyenne = array();
+            foreach($notes['allNotes'] as $calcMoy)
+            {
+                if(sizeof($calcMoy) > 0)
+                {
+                    $itiMoyenne[] = array_sum($calcMoy) / count($calcMoy);
+                }
+                else
+                {
+                    $itiMoyenne[] = -1;
+                }
+
+            }
+            $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:SearchItineraire.html.twig",array("resultats" => array(),"diffs" => $resDiff,"stats" => $resStat,"typechemin" => $resType,"list" => $res_list, "itiMoyenne" => $itiMoyenne));
         }
 
         return new Response($content);
@@ -621,6 +642,8 @@ class ItineraireController extends Controller {
 
     public function getByIdAction($id) {
         //Appel du service de recherche
+        $user = $this->getUser();
+        $id_courant = $user->getId();
         $search = array();
         $search["id"] = $id;
 
@@ -634,8 +657,29 @@ class ItineraireController extends Controller {
         $response = $clientSOAP->__call('getById', $search);
 
         $res = json_decode($response);
+        
+        $res->list[] = $res->searchResults;
+        $itineraireService = $this->container->get('itineraire_service');
+        $itiService = $itineraireService->getNotes($res, $id_courant);
+        $notes = json_decode($itiService, true);
+        $userNotes = $notes['userNotes'];
+        $itiMoyenne = array();
+        foreach($notes['allNotes'] as $calcMoy)
+        {
+            if(sizeof($calcMoy) > 0)
+            {
+                $itiMoyenne[] = array_sum($calcMoy) / count($calcMoy);
+            }
+            else
+            {
+                $itiMoyenne[] = -1;
+            }
+        }
 
-        $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res, "jsonObject" => $response));
+        $content = $this->get("templating")->render("SiteCartoBundle:Itineraire:fiche_itineraire.html.twig", array("resultats" => $res,
+                                                                                                                    "jsonObject" => $response,
+                                                                                                                    "userNotes" => $userNotes,
+                                                                                                                    "itiMoyenne" => $itiMoyenne));
         return new Response($content);
     }
 
@@ -658,5 +702,49 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
+    
+    public function noteItineraireFormAction(Request $request)
+    {        
+        if($request->isXmlHttpRequest())
+        {
+            $itineraireService = $this->container->get('itineraire_service');
+            $listeNote = json_decode($itineraireService->getAllNotes());
+            $idUser = $this->getUser()->getId();
+            $idItineraire = $request->request->get('idIti', '1');
+            
+            //$search = array();		
+            //$search["id"] = $idItineraire;   
+            
+            $itiService = $itineraireService->getById($idItineraire);
+            $listeIti = json_decode($itiService); 
+            
+            $listeIti->list[] = $listeIti->searchResults;            
+            $n = json_decode($itineraireService->getNotes($listeIti, $idUser));
+            $maNote = $n->userNotes[0];
+            
+            $formulaire = $this->get("templating")->render("SiteCartoBundle:Itineraire:NoteItineraire.html.twig", array(    "maNote" => $maNote,
+                                                                                                                            "listeNote" => $listeNote,
+                                                                                                                            "idIti" => $idItineraire
+                                                          ));
+
+            return new Response($formulaire);
+        }
+        else
+        {
+            throw new NotFoundHttpException('Impossible de trouver la page demandée');
+        }
+    }
+    
+    public function noteItineraireAction(Request $request)
+    {
+        $idUser = $this->getUser()->getId();
+        $idItineraire = $request->request->get('idIti', '');
+        $note = $request->request->get('note', '');
+
+        $itineraireService = $this->container->get('itineraire_service');
+        $noterIti = $itineraireService->noterItineraire($idUser, $idItineraire, $note);
+        $reponse = json_decode($noterIti); 
+        return $this->redirect($this->generateUrl('site_carto_getByIditineraire', array("id" => $idItineraire)));
+    } 
 
 }

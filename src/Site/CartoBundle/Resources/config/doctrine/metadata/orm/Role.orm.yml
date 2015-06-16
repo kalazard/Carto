@@ -17,4 +17,21 @@ Role:
             length: 50
             fixed: false
             comment: ''
+    manyToMany:
+        permission:
+            targetEntity: Permission
+            cascade: {  }
+            mappedBy: null
+            inversedBy: role
+            joinTable:
+                name: role_has_permission
+                joinColumns:
+                    -
+                        name: role_id
+                        referencedColumnName: id
+                inverseJoinColumns:
+                    -
+                        name: permission_id
+                        referencedColumnName: id
+            orderBy: null
     lifecycleCallbacks: {  }

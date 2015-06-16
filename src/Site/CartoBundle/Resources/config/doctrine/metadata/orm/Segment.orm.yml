@@ -4,13 +4,10 @@ Segment:
     indexes:
         fk_segment_trace1_idx:
             columns:
-                - trace
+                - pog1
         fk_segment_coordonnees1_idx:
             columns:
-                - coordonnees_debut
-        fk_segment_coordonnees2_idx:
-            columns:
-                - coordonnees_fin
+                - pog2
     id:
         id:
             type: integer
@@ -20,32 +17,48 @@ Segment:
             id: true
             generator:
                 strategy: IDENTITY
-    manyToOne:
+    fields:
+        sens:
+            type: integer
+            nullable: false
+            unsigned: false
+            comment: ''
         trace:
-            targetEntity: Trace
+            type: linestring
+            nullable: false
+            comment: ''
+            requireSQLConversion: true
+        elevation:
+            type: text
+            nullable: false
+            length: null
+            fixed: false
+            comment: ''
+    manyToOne:
+        pog1:
+            targetEntity: Point
             cascade: {  }
             mappedBy: null
             inversedBy: null
             joinColumns:
-                trace:
+                pog1:
                     referencedColumnName: id
             orphanRemoval: false
-        coordonneesDebut:
-            targetEntity: Coordonnees
+        pog2:
+            targetEntity: Point
             cascade: {  }
             mappedBy: null
             inversedBy: null
             joinColumns:
-                coordonnees_debut:
+                pog2:
                     referencedColumnName: id
             orphanRemoval: false
-        coordonneesFin:
-            targetEntity: Coordonnees
+    manyToMany:
+        idpop:
+            targetEntity: Point
             cascade: {  }
-            mappedBy: null
+            mappedBy: idsegment
             inversedBy: null
-            joinColumns:
-                coordonnees_fin:
-                    referencedColumnName: id
-            orphanRemoval: false
+            joinTable: null
+            orderBy: null
     lifecycleCallbacks: {  }

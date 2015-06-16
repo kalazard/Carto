@@ -18,6 +18,8 @@
             <th>Date de création</th>
             <th>Description</th>
             <th>Visibilité</th>
+            <th>Ma note</th>
+            <th>Note moyenne</th>
                 {% if app.user.id == resultats.searchResults.auteur.id %}
                 <th>Modifier</th>			
                 {% endif %}    
@@ -55,6 +57,16 @@
                         {% endif %}
                     </span>
                 </td>
+                {% if userNotes[0] is defined and userNotes[0] is not empty %}
+                    <td><a style="cursor:pointer" onclick="noterIti({{resultats.searchResults.id}})">{{userNotes[0]}}</a></td>
+                {% else %}
+                    <td><a style="cursor:pointer" onclick="noterIti({{resultats.searchResults.id}})">/</a></td>
+                {% endif %}
+                {% if itiMoyenne[0] is defined and itiMoyenne[0] > -1 %}
+                    <td>{{itiMoyenne[0]}}</td>
+                {% else %}
+                    <td>/</td>
+                {% endif %}
                 {% if app.user.id == resultats.searchResults.auteur.id %}
                     <td>
                         <p data-placement='top' data-toggle='tooltip' title='Edit'>
@@ -126,7 +138,11 @@
     <iframe class="map-iframe" 
             frameborder="0" 
             src="http://130.79.214.167/Carto/web/app_dev.php/itineraire_load/{{resultats.searchResults.id}}" 
-            id="mapframe"></iframe>		
+            id="mapframe"></iframe>
+    
+    {% javascripts '@SiteCartoBundle/Resources/js/itineraire/*' %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
     <script>
 $(window).load(function(){
 	  $.ajax({
