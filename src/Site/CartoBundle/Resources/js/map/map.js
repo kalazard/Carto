@@ -2154,7 +2154,7 @@ function displaySegment(trace,id) {
 
 
 
-    //polyline.addTo(map);
+    polyline.addTo(map);
 }
 
 function loadMap(json) {
@@ -2468,4 +2468,3 @@ function beginRoute()
         })
     });
 }
-
