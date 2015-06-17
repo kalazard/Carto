@@ -239,3 +239,8 @@ site_carto_segment_multiple_update:
     defaults: { _controller: SiteCartoBundle:Segment:updateMultiple }
     options:
         expose: true
+site_carto_getRoleMap:
+    path:     /getRoleMap
+    defaults: { _controller: SiteCartoBundle:User:getRoleMap }
+    options:
+        expose: true

@@ -33,6 +33,15 @@ class UserController extends Controller {
         return new Response($content);
     }
 
+    public function getRoleMapAction(Request $request)
+    {
+        $user= $this->getUser();
+    
+        $role = $user->getRole()->getId();
+
+        return new Response(json_encode(array("role" => $role, "code" => 200)));
+    }
+
     //Création d'un utilisateur
     public function createAction() {
         //On récupère la requete courrante
