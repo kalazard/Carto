@@ -115,7 +115,6 @@ class PoiController extends Controller
             //On récupère l'objet poi
             $repository=$manager->getRepository("SiteCartoBundle:Poi");        
             $poi = $repository->findOneById($idPoi);
-            var_dump($poi);
 
             $image = $poi->getImage();
 
@@ -158,7 +157,9 @@ class PoiController extends Controller
 
     public function editPoiAction(Request $request)
     {
+
         $idPoi = $request->request->get('idPoi', '');
+        
         $titrePoi = $request->request->get('titre', 'modiftest');
         $descriptionPoi = $request->request->get('descriptionPoi', 'modiftest');
         $manager=$this->getDoctrine()->getManager();
@@ -182,7 +183,9 @@ class PoiController extends Controller
             $pathImagePoi = null;
         }
         
-        return new JsonResponse(array('message' => 'Poi modifié', "idPoi" => $poi->getId(), "titrePoi" => $poi->getTitre(), "descriptionPoi" => $poi->getDescription(), "path" => $poi->getTypelieu()->getIcone()->getPath(), "latPoi" => $poi->getCoordonnees()->getLatitude(), "lngPoi" => $poi->getCoordonnees()->getLongitude(), "pathImagePoi" => $pathImagePoi),200); 
+        $response = new JsonResponse(array('message' => 'Poi modifié', "idPoi" => $poi->getId(), "titrePoi" => $poi->getTitre(), "descriptionPoi" => $poi->getDescription(), "path" => $poi->getTypelieu()->getIcone()->getPath(), "latPoi" => $poi->getCoordonnees()->getLatitude(), "lngPoi" => $poi->getCoordonnees()->getLongitude(), "pathImagePoi" => $pathImagePoi),200); 
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
     }
 
     public function savePoiWithPictureAction(Request $request){
