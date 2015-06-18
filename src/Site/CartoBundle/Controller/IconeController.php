@@ -14,7 +14,47 @@ use Symfony\Component\Validator\Constraints\DateTime;
 
 class IconeController extends Controller
 {
-	//Récupération de la liste des icones
+    /**
+     * Fonction de récupération de la liste des icones
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     *
+     * @return string 
+     *
+     * JSON contenant la liste des icones
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "icones": Liste de toutes les icones sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getAllIconesAction(Request $request) {
       if ($request->isXMLHttpRequest()) 
       {

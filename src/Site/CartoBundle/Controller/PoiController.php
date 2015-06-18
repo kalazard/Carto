@@ -48,7 +48,47 @@ class PoiController extends Controller
           return new Response('This is not ajax!', 400);
     }
 
-    //Récupération de la liste des pois
+    /**
+     * Fonction de récupération de la liste des pois
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     *
+     * @return string 
+     *
+     * JSON contenant la liste des pois
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "pois": Liste de tous les pois sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getAllPoisAction(Request $request) {
       /*if ($request->isXMLHttpRequest()) 
       {*/
@@ -64,6 +104,55 @@ class PoiController extends Controller
       return new Response('This is not ajax!', 400);*/
     }
 
+    /**
+     * Fonction de création d'un poi
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * latitude : Label du poi à créer 
+     * longitude : L'image à upload 
+     * titre : titre du poi
+     * description : Description du poi
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le poi a été créé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *      "idPoi" : Id du poi à créer 
+     *      "path" : Le chemin de l'image du poi 
+     *
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function savePoiAction(Request $request)
     {
         //if ($request->isXMLHttpRequest()) 
@@ -95,6 +184,51 @@ class PoiController extends Controller
         //return new Response('This is not ajax!', 400);
     }
 
+    /**
+     * Fonction d'affichage de la modal pour supprimer un poi
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * idPoi : Id du poi à supprimer
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le poi a été supprimé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "poi": Le poi à supprimer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function afficheDeletePoiAction(Request $request)
     {
         $idPoi = $request->request->get('idPoi', '');
@@ -105,6 +239,18 @@ class PoiController extends Controller
         return new Response($formulaire);
     }
 
+    /**
+     * Fonction de suppression d'un poi
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     *     "idPoi": Le poi à supprimer sérialisé
+     * </code>
+     * 
+     * @return Response 
+     * 
+     */
     public function deletePoiAction(Request $request)
     {
         /*if($request->isXmlHttpRequest() && $this->getUser()->getRole()->getId() == 1)
@@ -138,6 +284,52 @@ class PoiController extends Controller
         }*/
     }
 
+    /**
+     * Fonction d'affichage de la modal pour éditer un poi
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * idPoi : Id du poi à modifier
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le poi a été modifier ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "idPoi" : Id du poi à éditer sérialisé
+     *     "poi": Le poi à éditer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function afficheEditPoiAction(Request $request)
     {
       $idPoi = $request->request->get('idPoi', '');
@@ -155,6 +347,51 @@ class PoiController extends Controller
       return new Response($formulaire);
     }
 
+    /**
+     * Fonction d'affichage de la modal pour éditer un poi
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * idPoi : Id du poi à modifier
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le poi a été modifié ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "poi": Le poi à éditer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function editPoiAction(Request $request)
     {
 
