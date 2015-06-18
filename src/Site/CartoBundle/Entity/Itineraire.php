@@ -611,7 +611,7 @@ public function jsonSerialize() {
             'trace' => $this->getTrace(),
             'datecreation' => $this->getDatecreation()->format('d-m-Y'),
             'public' => $this->getPublic(),
-            //'segment' => $this->getSegment()->__toString(),
+            'segment' => $this->getSegment()->__toString(),
             'elevation' => $this->getElevation()
         );
     }
