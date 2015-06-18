@@ -27,7 +27,47 @@ class TypelieuController extends Controller
         return new Response($content);
     }
 
-        //Récupération de la liste des types de lieu
+    /**
+     * Fonction de récupération de la liste des types de lieu
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     *
+     * @return string 
+     *
+     * JSON contenant la liste des types de lieu
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "lieux": Liste de tous les types de lieu sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getAllTypelieuAction(Request $request) {
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
@@ -38,6 +78,51 @@ class TypelieuController extends Controller
         return $response;
     }
 
+    /**
+     * Fonction de récupération d'un type de lieu dans la base de données
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * id_user : id du type de lieu
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON contenant les informations du type de lieu
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "typelieu": Objet type de lieu sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getTypelieuByIdAction()
     {
         $manager = $this->getDoctrine()->getManager();
@@ -50,18 +135,105 @@ class TypelieuController extends Controller
         return $response;
     }
 
+    /**
+     * Fonction de récupération de la liste des types de lieu
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     *
+     * @return Response
+     *
+     * JSON contenant la liste des types de lieu
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "listeTypelieu": Liste de tous les types de lieu sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
   public function enregistreTypelieuAction()
   {   
         $manager=$this->getDoctrine()->getManager();
         $repository = $manager->getRepository("SiteCartoBundle:Typelieu");
-        $listeTypelieu = $repository->findAll();     
+        $listeTypelieu = $repository->findAll();
 
         $content = $this->get("templating")->render("SiteCartoBundle:Typelieu:saveTypelieu.html.twig", 
                                                 array("listeTypelieu" => $listeTypelieu)
                                               );
         return new Response($content);
   }
-  
+
+    /**
+     * Fonction de création d'un type de lieu
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * labelTypelieu : Label du type de lieu à créer 
+     * $_FILES['icone'] : L'image à upload 
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le type de lieu a été créé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "listeTypelieu": Liste de tous les types de lieu sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
   public function submituploadIconeAction()
   { 
       $return_message = "";
@@ -143,6 +315,51 @@ class TypelieuController extends Controller
     return $response;
   }
 
+    /**
+     * Fonction d'affichage de la modal pour éditer un type de lieu
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * idTypelieu : Id du type de lieu à modifier
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le type de lieu a été créé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "typelieu": Le type de lieu à éditer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function afficheEditTypelieuAction(Request $request)
   {
       $idTypelieu = $request->request->get('idTypelieu', '');
@@ -159,6 +376,52 @@ class TypelieuController extends Controller
       return new Response($formulaire);
   }
 
+    /**
+     * Fonction de modification d'un type de lieu
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * labelTypelieu : Label du type de lieu à modifier
+     * $_FILES['icone'] : L'image à upload 
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le type de lieu a été modifié ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "listeTypelieu": Liste de tous les types de lieu sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la modification :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
   public function editTypelieuAction(Request $request)
     {
       $return_message = "";
@@ -266,6 +529,51 @@ class TypelieuController extends Controller
     return $response;
     }
 
+    /**
+     * Fonction d'affichage de la modal pour supprimer un type de lieu
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * idTypelieu : Id du type de lieu à supprimer
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le type de lieu a été supprimé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "typelieu": Le type de lieu à supprimer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
   public function afficheDeleteTypelieuAction(Request $request)
   {
       $idTypelieu = $request->request->get('idTypelieu', '');
@@ -276,6 +584,18 @@ class TypelieuController extends Controller
       return new Response($formulaire);
   }
 
+    /**
+     * Fonction de suppression d'un type de lieu
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     *     "idTypelieu": Le type de lieu à supprimer sérialisé
+     * </code>
+     * 
+     * @return Response 
+     * 
+     */
   public function deleteTypelieuAction(Request $request)
     {
         /*if($request->isXmlHttpRequest() && $this->getUser()->getRole()->getId() == 1)
