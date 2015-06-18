@@ -11,6 +11,15 @@ Itineraire:
         fk_itineraire_trace_idx:
             columns:
                 - trace
+        fk_itineraire_status_idx:
+            columns:
+                - status
+        fk_itineraire_typechemin_idx:
+            columns:
+                - typechemin
+        fk_itineraire_segment_idx:
+            columns:
+                - segment
     id:
         id:
             type: integer
@@ -60,16 +69,20 @@ Itineraire:
             nullable: false
             unsigned: false
             comment: ''
-        typechemin:
-            type: string
+        public:
+            type: integer
             nullable: false
-            length: 255
-            fixed: false
+            unsigned: false
             comment: ''
-        status:
-            type: string
+        segment:
+            type: linestring
             nullable: false
-            length: 255
+            comment: ''
+            requireSQLConversion: true
+        elevation:
+            type: text
+            nullable: false
+            length: null
             fixed: false
             comment: ''
     manyToOne:
@@ -91,6 +104,15 @@ Itineraire:
                 difficulte:
                     referencedColumnName: id
             orphanRemoval: false
+        status:
+            targetEntity: Status
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                status:
+                    referencedColumnName: id
+            orphanRemoval: false
         trace:
             targetEntity: Trace
             cascade: {  }
@@ -100,21 +122,21 @@ Itineraire:
                 trace:
                     referencedColumnName: id
             orphanRemoval: false
-    manyToMany:
-        utilisateurnote:
-            targetEntity: Utilisateur
+        typechemin:
+            targetEntity: Typechemin
             cascade: {  }
             mappedBy: null
-            inversedBy: itinerairenote
-            joinTable:
-                name: note
-                joinColumns:
-                    -
-                        name: itinerairenote
-                        referencedColumnName: id
-                inverseJoinColumns:
-                    -
-                        name: utilisateurnote
-                        referencedColumnName: id
+            inversedBy: null
+            joinColumns:
+                typechemin:
+                    referencedColumnName: id
+            orphanRemoval: false
+    manyToMany:
+        utilisateurid:
+            targetEntity: Utilisateur
+            cascade: {  }
+            mappedBy: itineraireid
+            inversedBy: null
+            joinTable: null
             orderBy: null
     lifecycleCallbacks: {  }

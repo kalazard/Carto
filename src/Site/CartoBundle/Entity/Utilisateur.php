@@ -30,16 +30,6 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     private $email;
 
     /**
-     * @var \Role
-     *
-     * @ORM\ManyToOne(targetEntity="Role")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="role", referencedColumnName="id")
-     * })
-     */
-    private $role;
-
-    /**
      * @var string
      *
      * @ORM\Column(name="nom", type="string", length=255, nullable=true)
@@ -68,11 +58,14 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     private $telephone;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var \Role
      *
-     * @ORM\ManyToMany(targetEntity="Itineraire", mappedBy="utilisateurnote")
+     * @ORM\ManyToOne(targetEntity="Role")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="role", referencedColumnName="id")
+     * })
      */
-    private $itinerairenote;
+    private $role;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -88,14 +81,21 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      * )
      */
     private $itineraireid;
+    
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Itineraire", mappedBy="utilisateurnote")
+     */
+    private $itinerairenote;
 
     /**
      * Constructor
      */
     public function __construct()
     {
+        $this->itineraireid = new \Doctrine\Common\Collections\ArrayCollection();
         $this->itinerairenote = new \Doctrine\Common\Collections\ArrayCollection();
-	    $this->itineraireid = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -137,62 +137,6 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function getEmail()
     {
         return $this->email;
-    }
-
-   /**
-     * Set role
-     *
-     * @param \Site\CartoBundle\Entity\Role $role
-     * @return Utilisateur
-     */
-    public function setRole(\Site\CartoBundle\Entity\Role $role = null)
-    {
-        $this->role = $role;
-
-        return $this;
-    }
-
-    /**
-     * Get role
-     *
-     * @return \Site\CartoBundle\Entity\Role 
-     */
-    public function getRole()
-    {
-        return $this->role;
-    }
-
-    /**
-     * Add itinerairenote
-     *
-     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
-     * @return Utilisateur
-     */
-    public function addItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
-    {
-        $this->itinerairenote[] = $itinerairenote;
-
-        return $this;
-    }
-
-    /**
-     * Remove itinerairenote
-     *
-     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
-     */
-    public function removeItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
-    {
-        $this->itinerairenote->removeElement($itinerairenote);
-    }
-
-    /**
-     * Get itinerairenote
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getItinerairenote()
-    {
-        return $this->itinerairenote;
     }
 
     /**
@@ -240,6 +184,26 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     {
         return $this->prenom;
     }
+    
+    public function getPassword() {
+        
+    }
+    
+    public function getSalt() {
+        
+    }
+    
+    public function eraseCredentials() {
+        
+    }
+    
+    public function getUsername() {
+        return $this->email;
+    }
+    
+    public function getRoles() {
+        return $this->role->getRole();
+    }
 
     /**
      * Set datenaissance
@@ -261,15 +225,7 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      */
     public function getDatenaissance()
     {
-        if($this->datenaissance == null)
-        {
-            return null;
-        }
-        else
-        {
-            return $this->datenaissance->format("d/m/Y");
-        }
-        
+        return $this->datenaissance;
     }
 
     /**
@@ -295,24 +251,27 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
         return $this->telephone;
     }
 
-    public function eraseCredentials() {
-        
+   /**
+     * Set role
+     *
+     * @param \Site\CartoBundle\Entity\Role $role
+     * @return Utilisateur
+     */
+    public function setRole(\Site\CartoBundle\Entity\Role $role = null)
+    {
+        $this->role = $role;
+
+        return $this;
     }
 
-    public function getPassword() {
-        
-    }
-
-    public function getRoles() {
-        return $this->role->getRole();
-    }
-
-    public function getSalt() {
-        
-    }
-
-    public function getUsername() {
-        return $this->email;
+    /**
+     * Get role
+     *
+     * @return \Site\CartoBundle\Entity\Role 
+     */
+    public function getRole()
+    {
+        return $this->role;
     }
 
     /**
@@ -336,6 +295,39 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
     public function removeItineraireid(\Site\CartoBundle\Entity\Itineraire $itineraireid)
     {
         $this->itineraireid->removeElement($itineraireid);
+    }
+    
+    /**
+     * Add itinerairenote
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     * @return Utilisateur
+     */
+    public function addItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    {
+        $this->itinerairenote[] = $itinerairenote;
+
+        return $this;
+    }
+
+    /**
+     * Remove itinerairenote
+     *
+     * @param \Site\CartoBundle\Entity\Itineraire $itinerairenote
+     */
+    public function removeItinerairenote(\Site\CartoBundle\Entity\Itineraire $itinerairenote)
+    {
+        $this->itinerairenote->removeElement($itinerairenote);
+    }
+
+    /**
+     * Get itinerairenote
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getItinerairenote()
+    {
+        return $this->itinerairenote;
     }
 
     /**

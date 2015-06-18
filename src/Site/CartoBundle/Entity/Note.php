@@ -14,105 +14,60 @@ use JsonSerializable;
 class Note implements JsonSerializable
 {
     /**
-     * @var \Itineraire
+     * @var integer
      *
-     * @ORM\ManyToOne(targetEntity="Itineraire")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="itineraire", referencedColumnName="id")
+     * @ORM\Column(name="id", type="integer", nullable=false)
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
-    private $itineraire;
+    private $id;
 
     /**
-     * @var \Utilisateur
+     * @var string
      *
-     * @ORM\ManyToOne(targetEntity="Utilisateur")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="utilisateur", referencedColumnName="id")
+     * @ORM\Column(name="valeur", type="decimal", precision=2, scale=1, nullable=false)
      */
-    private $utilisateur;
-    
-    /**
-     * @var decimal
-     *
-     * @ORM\Column(name="note", type="decimal", nullable=false)
-     */
-    private $note;
+    private $valeur;
+
+
 
     /**
-     * Set itineraire
+     * Get id
      *
-     * @param \Itineraire $itineraire
-     * @return \Itineraire
+     * @return integer 
      */
-    public function setItineraire($itineraire)
+    public function getId()
     {
-        $this->itineraire = $itineraire;
+        return $this->id;
+    }
+
+    /**
+     * Set valeur
+     *
+     * @param string $valeur
+     * @return Note
+     */
+    public function setValeur($valeur)
+    {
+        $this->valeur = $valeur;
 
         return $this;
     }
 
     /**
-     * Get itineraire
+     * Get valeur
      *
-     * @return \Itineraire 
+     * @return string 
      */
-    public function getItineraire()
+    public function getValeur()
     {
-        return $this->itineraire;
+        return $this->valeur;
     }
     
-    /**
-     * Set utilisateur
-     *
-     * @param \Utilisateur $utilisateur
-     * @return \Utilisateur
-     */
-    public function setUtilisateur($utilisateur)
-    {
-        $this->utilisateur = $utilisateur;
-
-        return $this;
-    }
-
-    /**
-     * Get utilisateur
-     *
-     * @return \Utilisateur 
-     */
-    public function getUtilisateur()
-    {
-        return $this->utilisateur;
-    }
-    
-    /**
-     * Set note
-     *
-     * @param decimal $note
-     * @return decimal
-     */
-    public function setNote($note)
-    {
-        $this->note = $note;
-
-        return $this;
-    }
-
-    /**
-     * Get note
-     *
-     * @return decimal 
-     */
-    public function getNote()
-    {
-        return $this->note;
-    }
-
     public function jsonSerialize() {
         return array(
-            'itineraire' => $this->getItineraire(),
-            'utilisateur'=> $this->getUtilisateur(),
-            'note'=> $this->getLabel()
+            'id' => $this->getId(),
+            'valeur' => $this->getValeur()
         );
     }
-
 }

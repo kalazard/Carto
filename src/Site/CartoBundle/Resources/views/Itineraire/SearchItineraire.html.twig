@@ -79,6 +79,7 @@
 						<th>Date de création</th>
 						<th>Longueur du parcours</th>
 						<th>Statut</th>
+                                                <th>Note moyenne</th>
 						<th>Favori</th>
 						<th>Supprimer</th>						
 					</tr>
@@ -95,6 +96,11 @@
 							<td>{{itineraire.datecreation}}</td>
 							<td>{{itineraire.longueur}}km</td>
 							<td>{{itineraire.status.label}}</td>
+                                                        {% if itiMoyenne[loop.index-1] is defined and itiMoyenne[loop.index-1] > -1 %}
+                                                            <td>{{itiMoyenne[loop.index-1]}}</td>
+                                                        {% else %}
+                                                            <td>/</td>
+                                                        {% endif %}
 							<td>
 							{% set rempli = false %}
 							{% set continue = true %}

@@ -218,6 +218,16 @@ site_carto_downlaodGPX:
 site_carto_savePoiPicture:
     path:     /poi/save_with_picture
     defaults: { _controller: SiteCartoBundle:Poi:savePoiWithPicture }
+site_carto_noteItineraireForm:
+    path:     /itineraire_noteForm
+    defaults: { _controller: SiteCartoBundle:Itineraire:noteItineraireForm }
+    options:
+        expose: true
+site_carto_noteItineraire:
+    path:     /itineraire_note
+    defaults: { _controller: SiteCartoBundle:Itineraire:noteItineraire }
+    options:
+        expose: true
 site_carto_admin:
     path:    /admin
     defaults: { _controller: SiteCartoBundle:Admin:index }
@@ -227,5 +237,10 @@ site_carto_acl:
 site_carto_segment_multiple_update:
     path:     /segment__multiple_update
     defaults: { _controller: SiteCartoBundle:Segment:updateMultiple }
+    options:
+        expose: true
+site_carto_getRoleMap:
+    path:     /getRoleMap
+    defaults: { _controller: SiteCartoBundle:User:getRoleMap }
     options:
         expose: true

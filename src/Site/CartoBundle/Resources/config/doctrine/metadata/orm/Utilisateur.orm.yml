@@ -21,6 +21,28 @@ Utilisateur:
             length: 100
             fixed: false
             comment: ''
+        nom:
+            type: string
+            nullable: true
+            length: 255
+            fixed: false
+            comment: ''
+        prenom:
+            type: string
+            nullable: true
+            length: 255
+            fixed: false
+            comment: ''
+        datenaissance:
+            type: date
+            nullable: true
+            comment: ''
+        telephone:
+            type: string
+            nullable: true
+            length: 45
+            fixed: false
+            comment: ''
     manyToOne:
         role:
             targetEntity: Role
@@ -32,11 +54,20 @@ Utilisateur:
                     referencedColumnName: id
             orphanRemoval: false
     manyToMany:
-        itinerairenote:
+        itineraireid:
             targetEntity: Itineraire
             cascade: {  }
-            mappedBy: utilisateurnote
-            inversedBy: null
-            joinTable: null
+            mappedBy: null
+            inversedBy: utilisateurid
+            joinTable:
+                name: utilisateurhasitineraire
+                joinColumns:
+                    -
+                        name: utilisateurId
+                        referencedColumnName: id
+                inverseJoinColumns:
+                    -
+                        name: itineraireId
+                        referencedColumnName: id
             orderBy: null
     lifecycleCallbacks: {  }

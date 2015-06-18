@@ -10,6 +10,8 @@ namespace Site\CartoBundle\Controller;
 
 use Site\CartoBundle\Entity\Utilisateur;
 use Site\CartoBundle\Entity\Itineraire;
+use Site\CartoBundle\Entity\Itinerairenote;
+use Site\CartoBundle\Entity\Note;
 use Site\CartoBundle\Entity\Role;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,6 +49,43 @@ class MemberController extends Controller {
 			
 			//on recherche tout les utilisateurs 
 			$data = $manager->getRepository('SiteCartoBundle:Itineraire')->findBy(array('auteur'=>$id_courant));
+                        
+                        foreach($data as $itiTmp)
+                        {
+                            $req = "SELECT (no.valeur) ";
+                            $req .= "FROM SiteCartoBundle:Itinerairenote ino, SiteCartoBundle:Note no ";
+                            $req.= "WHERE ino.itineraireidnote = ".$itiTmp->getId();
+                            $req.= " AND ino.noteid = no.id";
+                            $query = $manager->createQuery($req);
+                            $res = $query->getScalarResult();
+                            $allItiNotes[] = array_map('current', $res);
+
+                            $req = "SELECT (no.valeur) ";
+                            $req .= "FROM SiteCartoBundle:Itinerairenote ino, SiteCartoBundle:Note no ";
+                            $req.= "WHERE ino.itineraireidnote = ".$itiTmp->getId();
+                            $req.= " AND ino.utilisateuridnote = ".$id_courant;
+                            $req.= " AND ino.noteid = no.id";
+                            $query = $manager->createQuery($req);
+                            $userNote[] = $query->getOneOrNullResult()[1];
+                        }
+                        
+                        $result['userNotes'] =  $userNote;
+                
+                        foreach($allItiNotes as $calcMoy)
+                        {
+                            if(sizeof($calcMoy) > 0)
+                            {
+                                $result['itiMoyenne'][] = array_sum($calcMoy) / count($calcMoy);
+                            }
+                            else
+                            {
+                                $result['itiMoyenne'][] = -1;
+                            }
+
+                        }
+                        
+                       
+                        
 			//$result['itineraires '] = $data;
 			//récupération des résultats 
 			
@@ -87,6 +126,32 @@ class MemberController extends Controller {
 			
 			$data = $manager->getRepository('SiteCartoBundle:Utilisateur')->findOneBy(array('id'=>$id_courant));
 			$result['favoris'] = $data->getItineraireid();
+                        $itiFavList = $result['favoris']->getValues();
+                        
+                        $modif1 = json_encode($itiFavList);
+                        $modif2 = json_decode($modif1);
+                        
+                        foreach($modif2 as $iF)
+                        {
+                            $resItiFav->list[] = $iF;
+                        }
+                        
+                        $itineraireService = $this->container->get('itineraire_service');
+                        $itiService = $itineraireService->getNotes($resItiFav, $id_courant);
+                        $notes = json_decode($itiService, true);
+                        $result['un'] = $notes['userNotes'];
+                        
+                        foreach($notes['allNotes'] as $calcMoy)
+                        {
+                            if(sizeof($calcMoy) > 0)
+                            {
+                                $result['an'][] = array_sum($calcMoy) / count($calcMoy);
+                            }
+                            else
+                            {
+                                $result['an'][] = -1;
+                            }
+                        }                    
 
 			$content = $this->get("templating")->render("SiteCartoBundle:User:index.html.twig", $result);
 			return new Response($content);

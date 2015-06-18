@@ -8,6 +8,9 @@ Poi:
         fk_poi_coordonnees1_idx:
             columns:
                 - coordonnees
+        fk_poi_image1_idx:
+            columns:
+                - image
     id:
         id:
             type: integer
@@ -31,13 +34,13 @@ Poi:
             fixed: false
             comment: ''
     manyToOne:
-        typelieu:
-            targetEntity: Typelieu
+        image:
+            targetEntity: Image
             cascade: {  }
             mappedBy: null
             inversedBy: null
             joinColumns:
-                typelieu:
+                image:
                     referencedColumnName: id
             orphanRemoval: false
         coordonnees:
@@ -47,6 +50,15 @@ Poi:
             inversedBy: null
             joinColumns:
                 coordonnees:
+                    referencedColumnName: id
+            orphanRemoval: false
+        typelieu:
+            targetEntity: Typelieu
+            cascade: {  }
+            mappedBy: null
+            inversedBy: null
+            joinColumns:
+                typelieu:
                     referencedColumnName: id
             orphanRemoval: false
     lifecycleCallbacks: {  }

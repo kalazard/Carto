@@ -10,7 +10,7 @@
         {
           height: 100%;
         }
-    </style>
+    </style>   
     <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -29,8 +29,10 @@
     <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
      <script src="http://jnuno.com/tree-model-js/vendor/jnuno/TreeModel.js"></script>
 
+
     <script src="{{ asset('bundles/fosjsrouting/js/router.js') }}"></script>
     <script src="{{ path('fos_js_routing_js', {"callback": "fos.Router.setData"}) }}"></script>
+    <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
     <title>{% block title %}Map{% endblock %}</title>
     <meta charset="utf-8">
 </head>
@@ -135,10 +137,11 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
 </div>
-
-{% javascripts '@SiteCartoBundle/Resources/js/map/*' '@SiteCartoBundle/Resources/js/*' %}
+              
+{% javascripts '@SiteCartoBundle/Resources/js/map/*' '@SiteCartoBundle/Resources/js/itineraire/itineraire.js' %}
         <script type="text/javascript" src="{{ asset_url }}"></script>
 {% endjavascripts %}
+
 {% block body %}
 {% endblock %}
 </body>

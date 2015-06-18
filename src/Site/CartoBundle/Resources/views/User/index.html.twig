@@ -29,7 +29,9 @@
                             <th>Date de création</th>
                             <th>Longueur du parcours</th>
                             <th>Statut</th>
-                            <th>Visibilité</th> 
+                            <th>Visibilité</th>
+                            <th>Ma note</th>
+                            <th>Note moyenne</th>
                             <th>Télécharger le fichier GPX</th>
                             <th>Supprimer</th>
                         </tr>
@@ -46,6 +48,16 @@
                                     <td>{{itineraire['longueur']}}km</td>
                                     <td>{{itineraire['status']}}</td>
                                     <td>{{itineraire['public']}}</td>
+                                    {% if userNotes[loop.index-1] is defined and userNotes[loop.index-1] is not empty %}
+                                        <td>{{userNotes[loop.index-1]}}</td>
+                                    {% else %}
+                                        <td>/</td>
+                                    {% endif %}
+                                    {% if itiMoyenne[loop.index-1] is defined and itiMoyenne[loop.index-1] > -1 %}
+                                        <td>{{itiMoyenne[loop.index-1]}}</td>
+                                    {% else %}
+                                        <td>/</td>
+                                    {% endif %}
                                     <td>
                                         <p data-placement='top' data-toggle='tooltip' title='GPX'>
                                             <a href="http://130.79.214.167/Carto/web/app_dev.php/download/gpx/{{itineraire.id}}" class='btn btn-success btn-xs btn_edit'><span class='glyphicon glyphicon-download'></span></a>
@@ -75,6 +87,8 @@
                             <th>Longueur du parcours</th>
                             <th>Statut</th>
                             <th>Visibilité</th> 
+                            <th>Ma note</th>
+                            <th>Note moyenne</th>
                             <th>Télécharger le fichier GPX</th>
                             <th>Supprimer des favoris</th>
                         </tr>
@@ -98,6 +112,16 @@
                                                 Ouvert 
                                             {% endif %}
                                         </td>
+                                        {% if un[loop.index-1] is defined and un[loop.index-1] is not empty %}
+                                            <td>{{un[loop.index-1]}}</td>
+                                        {% else %}
+                                            <td>/</td>
+                                        {% endif %}
+                                        {% if an[loop.index-1] is defined and an[loop.index-1] > -1 %}
+                                            <td>{{an[loop.index-1]}}</td>
+                                        {% else %}
+                                            <td>/</td>
+                                    {% endif %}
                                         <td>
                                             <p data-placement='top' data-toggle='tooltip' title='GPX'>
                                                 <a href="http://130.79.214.167/Carto/web/app_dev.php/download/gpx/{{favori.id}}" class='btn btn-success btn-xs btn_edit'><span class='glyphicon glyphicon-download'></span></a>
