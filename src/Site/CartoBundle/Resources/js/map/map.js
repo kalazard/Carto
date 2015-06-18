@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,pogGroup;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,pogGroup,computePogs;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -1316,6 +1316,13 @@ L.Polyline.addInitHook(function () {
         "Tracer un itinéraire"
      );
 
+    autoButton = L.easyButton('fa-magic',
+        function (){
+            autoRoute();
+        },
+        "Auto calcul d'un itinéraire"
+    );
+
     L.control.scale().addTo(map);
 
     map.on('draw:created', function (e) {
@@ -1640,7 +1647,7 @@ function saveRoute() {
             point.distance = value.distance;
             pointArray.push(point);
         })
-    })
+    });
     $("#save").modal('show');
     $("#saveiti").on("click", function () {
         $.post(Routing.generate('site_carto_saveItineraire'),
@@ -1668,7 +1675,7 @@ function saveRoute() {
         $("#save").modal('hide');
 
     });
-
+    polyArray = [];
     isCreateRoute = false;
 
 }
@@ -2090,20 +2097,22 @@ function displayTrace(trace, elevation) {
     map.fitBounds(polyline.getBounds());//On centre la map sur la polyline
 }
 
-function displaySegment(trace,id) {
+function displaySegment(trace,id,elevation) {
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
+    var eleArray = elevation.split(";");
     var latlngArr = [];
     for (var i = 0; i < LSCoords.length; i++) {
         var coords = LSCoords[i].split(" ");
         var res = new L.LatLng(coords[1], coords[0]);
+        res.elevation = parseInt(eleArray[i]);
         latlngArr.push(res);
     }
 
     //On crée la polyline et on ajoute les points
-
     polyline = L.polyline(latlngArr, {color: 'blue'});
     polyline.id = id;
+
     if(!segmentLoaded(polyline)) {
         drawnItems.addLayer(polyline);
     }
@@ -2131,6 +2140,7 @@ function displaySegment(trace,id) {
     pog2.addTo(map);
 
     polyline.markers = [];
+    polyline.pogs = [pog1,pog2];
     for (var i = 0; i < latlngArr.length; i++) {
         var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
             icon: new L.DivIcon({
@@ -2138,7 +2148,7 @@ function displaySegment(trace,id) {
                 className: 'leaflet-div-icon leaflet-editing-icon'
             })
         });
-        //surbrillance(marker);
+
         marker.overlaped = [];
         markerGroup.eachLayer(function(layer){
             if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
@@ -2151,10 +2161,6 @@ function displaySegment(trace,id) {
 
         polyline.markers.push(marker);
     }
-
-
-
-    //polyline.addTo(map);
 }
 
 function loadMap(json) {
@@ -2194,7 +2200,7 @@ function updateMultipleSegment(points) {
 	console.log(points_string);
     $.post(Routing.generate('site_carto_segment_multiple_update'),
         {
-            points: points_string,
+            points: points_string
         },
         function (data, status) {
 			console.log(data);
@@ -2251,7 +2257,7 @@ function loadSegments() {
         function (data, status) {
             var json = JSON.parse(data);
             jQuery.each(json.searchResults, function (k, v) {
-                displaySegment(v.trace, v.id);
+                displaySegment(v.trace, v.id, v.elevation);
             });
             drawnItems.eachLayer(function (layer) {
                 map.removeLayer(layer);
@@ -2467,5 +2473,153 @@ function beginRoute()
             })
         })
     });
+}
+
+function autoRoute()
+{
+    computePogs = [];
+    pogGroup.eachLayer(function (layer) {
+        layer.on("click",function (e){
+            computePogs.push(e.target);
+            if(computePogs.length === 2)
+            {
+                jQuery.each(computePogs,function(k,v)
+                {
+                    v.off("click");
+                });
+                pogGroup.eachLayer(function (layer){
+                    layer.off("click");
+                });
+                computeRoute(computePogs);
+            }
+
+        })
+    });
+}
+
+function computeRoute(pogs)
+{
+    var finalPog = pogs[1];//Point d'arrivée
+
+    var currentPogs = [];//Pogs traités actuellement
+    currentPogs.push(pogs[0]);//On place le point de départ dans la liste des pogs actuels
+
+    var poly = currentPogs[0].segment;
+
+    var end = null;//Variable d'arret du while
+
+    var tree = new TreeModel();
+    var root = tree.parse({pog: currentPogs[0]});//Racine de l'arbre
+    var node = root;//
+    var possiblePogs = [];
+    var latlngs = [];
+    while(end === null)
+    {
+        jQuery.each(currentPogs,function(key,value){
+            var continu = true;
+            var skip = false;
+            //On cherche tous les pogs enfants du pog courant
+            pogGroup.eachLayer(function(layer)
+            {
+                if(!skip)
+                {
+                    var add;
+                    if(latlngEquality(layer.segment.pogs[1]._latlng,value._latlng))
+                    {
+                        possiblePogs.push(layer.segment.pogs[0]);
+                        add = layer.segment.pogs[0];
+                    }
+                    else if(latlngEquality(layer.segment.pogs[0]._latlng, value._latlng))
+                    {
+                        possiblePogs.push(layer.segment.pogs[1]);
+                        add = layer.segment.pogs[1];
+                    }
+                    if(add !== undefined && add === finalPog)
+                    {
+                        skip = true;
+                    }
+                }
+
+            });
+
+            //On récupère le node pour le pog courant
+            var currentNode = root.first(function (node) {
+                return node.model.pog === value;
+            });
+
+            //On ajoute les nodes des enfants
+            jQuery.each(possiblePogs,function(k,v){
+                var newNode = tree.parse({pog : v});
+                currentNode.addChild(newNode);
+                if(v._leaflet_id === finalPog._leaflet_id)//Si on arrive au point final
+                {
+                    end = 0;
+                    continu = false;
+                    return false;
+                }
+            });
+            return continu;
+        });
+        if(possiblePogs.length === 0)
+        {
+            end = 0;
+        }
+        currentPogs = possiblePogs;
+        possiblePogs = [];
+
+    }
+    var endNode = root.all(function (node) {
+        if (node.model.pog._leaflet_id === finalPog._leaflet_id)
+        {
+            return node;
+        }
+    });
+    if(endNode.length > 0)
+    {
+        var path = endNode[0].getPath();
+        var polys = [];
+        for(var i = 1; i < path.length; i++)
+        {
+            polys.push(path[i].model.pog.segment);
+
+            if(latlngEquality(path[i].model.pog._latlng,finalPog._latlng))
+            {
+                break;
+            }
+        }
+        for(var i = 0; i < polys.length; i++)
+        {
+            if(latlngEquality(path[i].model.pog._latlng,polys[i]._latlngs[polys[i]._latlngs.length - 1]))
+            {
+                Array.prototype.push.apply(latlngs,polys[i]._latlngs.reverse());
+            }
+            else{
+                Array.prototype.push.apply(latlngs,polys[i]._latlngs);
+            }
+
+        }
+        var polyline = new L.Polyline(latlngs, {color: 'yellow'}).addTo(map);
+        polyArray = [];
+        pointArray = [];
+        polyArray.push(polyline);
+        saveRoute();
+    }
+    else
+    {
+        $.notify("Aucun chemin trouvé","warning");
+    }
+}
+
+function findPogById(id)
+{
+    var res = "";
+    pogGroup.eachLayer(function(layer)
+    {
+        if(layer._leaflet_id === id)
+        {
+            res = layer;
+        }
+    });
+    return res;
 }
 
