@@ -225,7 +225,14 @@ class Utilisateur implements \Symfony\Component\Security\Core\User\UserInterface
      */
     public function getDatenaissance()
     {
-        return $this->datenaissance;
+        if($this->datenaissance == null)
+        {
+            return null;
+        }
+        else
+        {
+            return $this->datenaissance->format("d/m/Y");
+        }
     }
 
     /**

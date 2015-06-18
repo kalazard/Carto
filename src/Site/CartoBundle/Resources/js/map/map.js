@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,pogGroup,computePogs;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,autoCancelButton,pogGroup,computePogs;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -1826,7 +1826,6 @@ function savePoi()
 function modifPoi()
 {
     var dataPoi = $('#formModifPoi').serialize();
-console.log("OHHHHHHHHHHHHH");
     $.ajax({
         type: "POST",
         url: Routing.generate('site_carto_editPoi'),
@@ -1851,7 +1850,6 @@ console.log("OHHHHHHHHHHHHH");
             marker.on("click", function (event) { markerSelectionne = event.target; });
             }
      });
-console.log("LA");
 }
 
 //Afficher le modal de modification d'un poi
@@ -2571,6 +2569,7 @@ function beginRoute()
 function autoRoute()
 {
     computePogs = [];
+    autoButton.removeFrom(map);
     pogGroup.eachLayer(function (layer) {
         layer.on("click",function (e){
             computePogs.push(e.target);
@@ -2587,6 +2586,24 @@ function autoRoute()
             }
         })
     });
+
+    autoCancelButton = L.easyButton('fa-times',
+        function (){
+            cancelAutoRoute();
+        },
+        "Annuler auto calcul d'un itinéraire"
+    );
+}
+
+function cancelAutoRoute()
+{
+    computePogs = [];
+    pogGroup.eachLayer(function (layer) {
+        layer.off("click");
+    });
+
+    autoCancelButton.removeFrom(map);
+    autoButton.addTo(map);
 }
 
 function computeRoute(pogs)

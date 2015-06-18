@@ -23,6 +23,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ItineraireController extends Controller {
 
+    /**
+     * Fonction de création du serveur SOAP
+     *
+     *
+     * @return Response
+     *
+     */
     public function indexAction() {
         $server = new \SoapServer(null, array('uri' => 'http://localhost/carto/web/app_dev.php/itineraire'));
         $server->setObject($this->get('itineraire_service'));
@@ -37,6 +44,16 @@ class ItineraireController extends Controller {
         return $response;
     }
 
+    /**
+     * Fonction de récupération des difficultés
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON de la liste des difficultés
+     *
+     */
     public function getDifficultesAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $manager = $this->getDoctrine()->getManager();
@@ -50,6 +67,16 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
+    /**
+     * Fonction de récupération des status
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON de la liste des status
+     *
+     */
     public function getStatusAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $manager = $this->getDoctrine()->getManager();
@@ -63,6 +90,16 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
+    /**
+     * Fonction de récupération des types de chemin
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON de la liste des types de chemin
+     *
+     */
     public function getTypecheminAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $manager = $this->getDoctrine()->getManager();
@@ -76,6 +113,16 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
+    /**
+     * Fonction de sauvegarde des itinéraires
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON contenant l'itinéraire sauvegardé
+     *
+     */
     public function saveAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $manager = $this->getDoctrine()->getManager();
@@ -198,12 +245,22 @@ class ItineraireController extends Controller {
         return $itineraire;
     }
 
+    /**
+     * Fonction de chargement d'un itinéraire
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return View
+     *
+     *
+     */
     public function loadAction($id) {
         $repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
         $iti = $repository->find($id);
         $content = $this->get("templating")->render("SiteCartoBundle:Map:load.html.twig", array("itineraire" => $iti, "jsonObject" => json_encode($iti)));
         return new Response($content);
     }
+
 
     public function rechercheAction(Request $request) {
         //soit on affiche la page en chargeant toutes les données, soit on charge les données selon les paramètres 
@@ -221,8 +278,15 @@ class ItineraireController extends Controller {
         return $this->render('SiteCartoBundle:Itineraire:index.html.twig');
     }
 
-    /*
+    /**
      * Fonction de sauvegarde d'un segment
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON contenant l'id du segment crée
+     *
      */
 
     public function saveSegmentAction(Request $request) {
@@ -298,7 +362,17 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
-	
+
+    /**
+     * Fonction de chargement des segments dans la bounding box de la carte
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON de la liste des segments
+     *
+     */
 	public function loadSegmentAction(Request $request)
 	{
 		if($request->isXMLHttpRequest()) 
@@ -337,15 +411,13 @@ class ItineraireController extends Controller {
                 }
 
             }
+
 			//on renvoit le reste sous la forme d'une liste json -> traitement sur le map.js
-			
             return new Response(json_encode(array("searchResults" => $res)));
-			
-			/*$response = new Response(json_encode(array("result" => "success","code" => 200)));
-			return $response;*/
 		}
 		return new Response('This is not ajax!', 400);		
 	}
+
 
     public function getSegmentByIdAction(Request $request) {
         //on récupère l'id de l'itinéraire à charger 

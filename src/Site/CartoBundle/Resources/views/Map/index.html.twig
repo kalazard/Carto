@@ -52,6 +52,105 @@
           font-size: 16px;
       }
   </style>
+  <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container-fluid">
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                  <li>
+                      <a href="{{path('site_carto_homepage')}}">Accueil</a>
+                  </li>
+                  {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                      <li>
+                          <a href="{{path('site_carto_mapPage')}}">Carte</a>
+                      </li>
+                      <li>
+                          <a href="{{path('site_carto_searchitineraire')}}">Itinéraires</a>
+                      </li>
+                      {%if is_granted('ROLE_Administrateur')%}
+                          <li>
+                              <a href="{{path('site_carto_annuaire')}}">Gérer les utilisateurs</a>
+                          </li>
+                          <li>
+                              <a href="{{path('site_carto_admin')}}">Administration</a>
+                          </li>
+                      {%endif%}
+                  {% endif %}
+              </ul>
+
+              <ul class="nav navbar-nav navbar-right">
+                  <li class="dropdown">
+                      {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{app.user.email}} <span class="caret"></span></a>
+                      {% else %}
+                          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Connexion<span class="caret"></span></a>
+                      {% endif %}
+                      <ul class="dropdown-menu" role="menu">
+                          <li>
+                              <div class="navbar-login">
+                                  <div class="row">
+                                      <div class="col-lg-4">
+                                          <p class="text-center">
+
+                                              {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                          <div class="img-size" style="background-image: url('http://www.riga.fr/NUTRI/Nutrition/Library/Riga/Images/GenerTexts/CaviaSQ.jpg');"></div>
+                                          {% else %}
+                                              <span class="glyphicon glyphicon-user icon-size"></span>
+                                          {% endif %}
+                                          </p>
+                                      </div>
+                                      <div class="col-lg-8">
+                                          {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                              <p class="text-left"><strong>{{app.user.email}}</strong></p>
+                                              <p class="text-left small">Vous êtes connecté</p>
+                                              <p class="text-left">
+                                                  <a href="{{path('site_carto_fiche')}}" class="btn btn-primary btn-block btn-sm">Mon profil</a>
+                                              </p>
+
+                                          {% else %}
+                                              <p class="text-left"><strong>Anonyme</strong></p>
+                                              <p class="text-left small">Vous n'êtes pas connecté</p>
+
+                                              <p class="text-left">
+                                                  <a href="#loginModal" class="btn btn-block btn-sm btn-primary" data-toggle="modal" data-target="#myModal">Me connecter</a>
+                                              </p>
+
+                                          {% endif %}
+                                      </div>
+                                  </div>
+                              </div>
+                          </li>
+                          <li class="divider"></li>
+                          <li>
+                              <div class="navbar-login navbar-login-session">
+                                  <div class="row">
+                                      <div class="col-lg-12">
+                                          {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                              {%if is_granted('ROLE_Administrateur')%}
+                                                  <p><a href="#" class="btn btn-primary btn-block" data-toggle="modal" data-target="#createUserModal">Créer un utilisateur</a></p>
+                                              {%endif%}
+                                              <p><a href="#" class="btn btn-primary btn-block" data-toggle="modal" data-target="#changePasswordModal">Changer mot de passe</a></p>
+                                              <p>
+                                                  <a href="{{path('logout')}}" class="btn btn-danger btn-block">Me deconnecter</a>
+                                              </p>
+
+                                          {% else %}
+                                              <p>
+                                                  <a href="#" class="btn btn-block btn-sm btn-primary" data-toggle="modal" data-target="#SignInUserModal">M'incrire</a>
+                                              </p>
+                                          {% endif %}
+
+                                      </div>
+                                  </div>
+                              </div>
+                          </li>
+                      </ul>
+                  </li>
+              </ul>
+              </li>
+              </ul>
+          </div>
+      </div>
+  </nav>
   <div class=" container-map">
       <div id="map" class="map context-menu-one box menu-1"></div>
     </div>
