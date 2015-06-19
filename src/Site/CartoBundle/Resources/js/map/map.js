@@ -9,6 +9,7 @@ var isAddPOG = false;
 var supprSeg = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
+var elevationMultipleSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationMultipleSegment&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
 var latPoi, lngPoi, altPoi, idLieuPoi, iconePoi;
 var roleMap;
@@ -22,6 +23,12 @@ var cursor_pos_lng;
 var update_list_segment = {};
 var points_tab_index = {};
 var compteur_glob = 0 ;
+var create_poly_segmentation_count = 0;
+var table_pos_poly_courante = {};
+var multiple_point_object_elevation = {};
+var points_current_get_elevation;
+var point_other_poly;
+var save_points_elevation;
 
 var Point = function (lat, lng) {
     this.lat = lat;
@@ -638,27 +645,34 @@ function goToPosition(position) {
 						//récupération du zoom 
 						
 						if((dif_lat < number_temp && dif_lat > -1*number_temp ) && (dif_lng < number_temp*2 && dif_lng > -1*number_temp*2))
-
 						{
 							latlng.lat = points.lat;
 							latlng.lng = points.lng;
 							
+							//on initialise le tableau points_tab_index
 							if(points_tab_index[key_poly] === undefined)
 							{				
 								points_tab_index[key_poly] = {};
 								points_tab_index["poly_courante"] = {};
 							}
 							
-							if(key != 0 && key != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+							//on sauvegarde le tableau 
+							if(key != 0 && key != drawnItems._layers[key_poly]._latlngs.length-1)
 							{
 								points_tab_index[key_poly][key] = key;
 								points_tab_index["poly_courante"][compteur_glob] = latlng;
 							}
 							
+							//on garde l'intersection de la polyline qu'on est en train de tracer
+							
+							//on sauvegarde le compteur dans le tableau machin : create_poly_segmentation_count
+							
+							table_pos_poly_courante[create_poly_segmentation_count] = create_poly_segmentation_count;
+							
 							compteur_glob++;
 						}						
 					});
-				});		
+			});	
 		
             var marker = new L.Marker(latlng, {
                 icon: this.options.icon,
@@ -667,6 +681,8 @@ function goToPosition(position) {
 
             this._markerGroup.addLayer(marker);
 
+			create_poly_segmentation_count++;
+			
             return marker;
         },
 
@@ -989,8 +1005,6 @@ L.Edit.Poly = L.Handler.extend({
 	
 		var base_lat_first = e.target._latlng.lat;
 		var base_lng_first = e.target._latlng.lng;
-		
-		console.log(drawnItems);
 		
 		//structure : tab[id][0] = id;
 		//			  tab[id]["POINTS"]
@@ -1349,7 +1363,7 @@ L.Polyline.addInitHook(function () {
                             })
                         }
                     ),
-                    title: 'Tracer segment'
+                    title: 'Tracer un segment'
                 }
             ];
         }
@@ -1457,18 +1471,30 @@ L.Polyline.addInitHook(function () {
         ]}
     );
 */	 
-	Segsuppr = L.easyButton(
-        {
-            states : [{
+	Segsuppr = L.easyButton({
+            states : [
+			{
+				stateName: 'del_seg',
                 icon : 'fa-times',
-                onClick : function (){
+                onClick : function (control){
+				control.state('editor_mode');
                     supprSegment_call();
+					supprSeg = true;
                 },
                 title : "Supprimer un segment d'un tronçon"
+            },
+			{
+                stateName: 'editor_mode',
+                icon: 'fa fa-check',
+                onClick: function(control){
+                    control.state('del_seg');
+					supprSeg = false;
+                },
+                title : "Revenir à l'édition"
             }
-
             ]}
      );
+
 
     pogBar = L.easyBar([ Segsuppr ]);
     pogBar.addTo(map);
@@ -1539,9 +1565,61 @@ L.Polyline.addInitHook(function () {
         elevationScript.type = 'text/javascript';
         elevationScript.src = URL;
         $("body").append(elevationScript);
-        setTimeout(saveSegment, 5000);
+		
+		//séparation des segments lors de la sauvegarde
+		
+		//si la  variable globale compteur est initialisée, on n'appelle pas la fonction saveSegment, mais la fonction multiple save segment	
+		if(count_object_property(table_pos_poly_courante) != 0)
+		{
+			//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
+			
+			//on récupère une polyline et on la découpe en fonction du tab_pos donné en paramètre.
+			var slice_result = {};
+			var slice_count = 0; 
+			
+			//séparation du tableau en plusieurs sous sections
+			$.each(table_pos_poly_courante, function(key, val) {				
+				if(val != 0 && val != pointArray.length-1)
+				{
+					slice_result[val] = pointArray.slice(slice_count,val+1);
+					slice_count = val;
+				}
+			});
+			
+			slice_result[slice_count+pointArray.length] = pointArray.slice(slice_count,pointArray.length);
+			
+			//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
+			//chais pas comment on delete :3
+			//map.removeLayer(drawnItems._layers[poly_key]);
+			
+			//pas de suppresion en bdd puisque le segment n'existe pas encore.		
+			
+			//création des nouvelles polylines
+			//slice_result contient le nuage de points, on le set dans les polylines
+			$.each(slice_result, function(key, val) 
+			{
+				polyline = L.polyline(val, {color: 'blue'});	
+				//ajout dans le drawnItems.
+				drawnItems.addLayer(polyline);
+				//ajout a la map
+				polyline.addTo(map);		
+			}); 
+			
+			//on envois les modifications en base de données : 
+			saveMultiplePolyServer(slice_result);
+			
+			//remise à zéro du tableau et du compteur
+			table_pos_poly_courante = {};
+			create_poly_segmentation_count = 0;
+		}
+		else
+		{
+			 setTimeout(saveSegment, 5000);
+		}
+		
         $("#denivp").text("");
         $("#denivn").text("");
+		create_poly_segmentation_count = 0;
     });
 
     map.on('draw:drawstart', function (e) {
@@ -1559,7 +1637,6 @@ L.Polyline.addInitHook(function () {
     map.on('draw:segmentstop', function (e) {
         map.off("click");
         isCreateSegment = false;
-		console.log("save");
     });
 
     map.on('draw:editstart', function (e) {
@@ -1890,7 +1967,7 @@ function drawSegment(event) {
     }
 }
 
-function saveSegment() {  //console.log(JSON.stringify(pointArray));
+function saveSegment() {  //console.log(JSON.stringify(pointArray));	
     $.post(Routing.generate('site_carto_saveSegment'),
         {
             points: JSON.stringify(pointArray)
@@ -2215,7 +2292,6 @@ function csvJSON(csv) {
 }
 
 function displayTrace(trace, elevation) {
-    console.log(trace);
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
     var latlngArr = [];
@@ -2768,8 +2844,6 @@ function computeRoute(pogs)
     var latlngs = [];
     while(end === null)
     {
-        console.log("boucle");
-
         var limit = 0;
         jQuery.each(currentPogs,function(key,value){
             if(limit === 1000)
@@ -2894,12 +2968,21 @@ function addPOGEvent()
         })
 
     }
+	else
+	{
+		isAddPOG = false;
+		polyline.off("click",function (e){
+           addPOG(e);
+        })
+	}
 }
 
 //fonction d'ajout d'un POG sur une polyline, sépare une polyline en deux parties.
 function addPOG(e)
 {	
 	var points_click = e.latlng;
+	
+	console.log("test");
 	
 	//on récupère les coordonnées du point passé en paramètre
 	
@@ -2923,7 +3006,7 @@ function addPOG(e)
 		{
 			pt2 = e.target._latlngs[compteur+1];
 			
-			//calcul pour trouver a quel segment de polyline le point appartient.
+			//calcul pour trouver a quel segment de polyline le point appartient. (fait avec les distances)
 			
 			d1 = pt1.distanceTo(points_click);
 			d2 = pt2.distanceTo(points_click);
@@ -2936,23 +3019,9 @@ function addPOG(e)
 			add = d1+d2;
 			add = di - add;
 			
-			//console.log("point : " + compteur + "  (d1+d2)-di " + add);
-			
 			if(add >= -2 && add <= 2)
-			{
-				//traitement
-				/*var marker = new L.Marker([points_click.lat, points_click.lng], {
-						icon: new L.DivIcon({
-							iconSize: new L.Point(8, 8),
-							className: 'leaflet-div-icon leaflet-editing-icon'
-						})
-				});*/
-				
+			{				
 				pos_detect = compteur;
-
-
-				//marker.addTo(map);
-				//markerGroup.addLayer(marker);
 			}
 		}
 		
@@ -2992,7 +3061,7 @@ function addPOG(e)
 	polyline.addTo(map);
 
 	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2, newPOG);
+	saveDeleteSegFromTR(e.target.id, points, points2);
 	
 }
 
@@ -3001,8 +3070,6 @@ function addPOG(e)
 function supprSegment_call()
 {	
 	if (!supprSeg) {
-
-        supprSeg = true;
         pointArray = [];
         latlngArray = [];
         polyline.on("click",function (e){
@@ -3069,9 +3136,6 @@ function supprSegment(e)
 	var points;
 	var points2;
 	
-	//on crrer le nouveau POG a la position de la souris
-	//var newPOG = L.latLng(e.latlng.lat, e.latlng.lng);
-	
 	//on récupère les points correspondant
 	points = e.target._latlngs.slice(0,pos_detect+1);
 	points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
@@ -3105,8 +3169,11 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	//séparation du tableau en plusieurs sous sections
 	
+	//création d'une nouvelle variable
+	var res_tab = [];
+	
 	$.each(tab_pos, function(key, val) {	
-		if(val != 0 && val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+		if(val != 0 && val != drawnItems._layers[poly_key]._latlngs.length-1)
 		{
 			slice_result[val] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,val+1);
 			slice_count = val;
@@ -3121,11 +3188,54 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	map.removeLayer(drawnItems._layers[poly_key]);
 	
-	//drawnItems._layers[poly_key].remove();
+	//points_current_get_elevation
 	
-	if(full_poly_tab._layers[poly_key].id !== undefined)
+	var get_elevation_array = [];
+	var count = 0;
+	$.each(slice_result, function(key, val) {
+		points_current_get_elevation = val;
+		
+		//structure du tableau : tab[0].lat et tab[0].lng
+		get_elevation_array[count] = {};
+		$.each(val, function(pos, point) {
+			get_elevation_array[count]["lat"] = point.lat;
+			get_elevation_array[count]["lng"] = point.lng;
+		});
+		
+		count++;
+		
+		//pour chaque groupe de points, on set l'elevation avec la fonction get_elevation_polys
+		//get_elevation_polys(get_elevation_array);
+		
+		var URL = elevationMultipleSegmentURL + '&latLngCollection=';
+		var result = {};
+
+		for (var i = 0; i < get_elevation_array.length; i++) 
+		{
+			var lat = get_elevation_array[i].lat;
+			var lng = get_elevation_array[i].lng;
+			URL += lat + "," + lng;
+			if (i !== get_elevation_array.length - 1) {
+				URL += ",";
+			}
+		}
+	
+		URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		elevationScript = document.createElement('script');
+		elevationScript.type = 'text/javascript';
+		elevationScript.src = URL;
+		$("body").append(elevationScript);
+		
+		//save_points_elevation
+		
+		console.log(save_points_elevation);
+	});
+	//on recherche les elevations des points
+	
+	
+	if(drawnItems._layers[poly_key].id !== undefined)
 	{
-		var poly_id = full_poly_tab._layers[poly_key].id;
+		var poly_id = drawnItems._layers[poly_key].id;
  	
 		var tid = {};
 		tid[poly_id] = poly_id;
@@ -3161,10 +3271,15 @@ function DeleteTrons(Tronids)
         data: {"idTron" : Tronids},
         cache: false,
         success: function(){
-			//suppression des marqueurs ou rechargement de la map
-        }
-
-
+			//rechargement de la map
+			drawnItems.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            loadSegments();
+        }		
     });
 }
 
@@ -3174,6 +3289,8 @@ function DeleteTrons(Tronids)
 
 function saveDeleteSegFromTR(Tid, pts1, pts2)
 {
+	pts1 = JSON.stringify(pts1);
+	pts2 = JSON.stringify(pts2);
 	$.ajax({
         type: "POST",
         url: Routing.generate('site_carto_delete_seg_from_tron'),
@@ -3181,8 +3298,16 @@ function saveDeleteSegFromTR(Tid, pts1, pts2)
         cache: false,
         success: function(){
 			//success
+			//pas besoin de rafraichissement, comme tout est fait sur le js, mais par contre, pas de renvoi d'id possible.
+			/*drawnItems.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            loadSegments();*/
 			
-			//penser à set l'id de la poly
+			$.notify("Segment supprimé", "success");
         }
     });
 }
@@ -3191,24 +3316,8 @@ function saveDeleteSegFromTR(Tid, pts1, pts2)
 
 /* en paramètre, l'id du premier segment, la liste des points du premier, la liste des points du deuxième */
 
+//ne sert à rien 
 function saveaddPOG(Tid, pts1, pts2, POG)
-{
-	$.ajax({
-        type: "POST",
-        url: Routing.generate('site_carto_add_pog_tron'),
-        data: {"tid" : Tid, 'pts1' : pts1, "pts2" : pts2, "pog" : POG},
-        cache: false,
-        success: function(){
-			//success
-			
-			//penser à set l'id de la poly
-        }
-    });
-}
-
-/* save une séparation de tronçon en deux */
-
-function saveCollisDetect(Tid, pts1, pts2, POG)
 {
 	$.ajax({
         type: "POST",
@@ -3235,8 +3344,6 @@ function saveMultiplePolyServer(tab)
         cache: false,
         success: function(data){
 			//success
-			
-			//penser à set l'id de la poly
             drawnItems.eachLayer(function (layer){
                 map.removeLayer(layer);
             });
@@ -3244,6 +3351,8 @@ function saveMultiplePolyServer(tab)
                 map.removeLayer(layer);
             });
             loadSegments();
+			
+			$.notify("Segments sauvegardé", "success");
         }
     });
 
@@ -3261,3 +3370,86 @@ function pogAlreadyComputed(pogArray,pog)
     });
     return res;
 };
+
+function count_object_property(val)
+{
+	var count = 0;
+	for (var k in val) {
+		if (val.hasOwnProperty(k)) 
+		{
+		   ++count;
+		}
+	}
+	return count;
+}
+
+function get_elevation_polys(polys_point)
+{
+	var URL = elevationMultipleSegmentURL + '&latLngCollection=';
+	var result = {};
+
+	for (var i = 0; i < polys_point.length; i++) 
+	{
+		var lat = polys_point[i].lat;
+		var lng = polys_point[i].lng;
+		URL += lat + "," + lng;
+		if (i !== polys_point.length - 1) {
+			URL += ",";
+		}
+	}
+	
+	URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	elevationScript = document.createElement('script');
+	elevationScript.type = 'text/javascript';
+	elevationScript.src = URL;
+	$("body").append(elevationScript);
+}
+
+function getElevationMultipleSegment(response)
+{
+    blockItineraireSave();
+    denivelen = 0;
+    denivelep = 0;
+	
+    for(var i = 0; i < points_current_get_elevation.length; i++)
+    {
+        points_current_get_elevation[i].elevation = response.elevationProfile[i].height;
+        points_current_get_elevation[i].distance = response.elevationProfile[i].distance;
+    }
+    for(var i = 0; i < points_current_get_elevation.length - 1; i++)
+    {
+        var diff = points_current_get_elevation[i].elevation - points_current_get_elevation[i + 1].elevation;
+        diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
+    }
+    $("#long").val(points_current_get_elevation[points_current_get_elevation.length - 1].distance + "km");
+    $("#denivp").text("Dénivelé positif : " + denivelep + "m");
+    $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
+	
+	/*
+    var geojson = polyline.toGeoJSON();
+    for(var i = 0; i < geojson.geometry.coordinates.length; i++)
+    {
+        geojson.geometry.coordinates[i].push(points_current_get_elevation[i].elevation);
+    }
+    if(mapgeojson !== undefined)
+    {
+        map.removeLayer(mapgeojson);
+    }
+    el.clear();
+    mapgeojson = L.geoJson(geojson,{
+        onEachFeature: el.addData.bind(el) //working on a better solution
+    });
+    if(isEditSegment)
+    {
+        updateSegment(JSON.stringify(points_current_get_elevation));
+
+    }
+    blockItineraireSave();
+    map.on("click",function (ev){
+        addPointOnMap(ev);
+    });
+	*/
+	
+	//clone de l'objet pour pouvoir le reutiliser par la suite.	
+	save_points_elevation = $.extend(true, {}, points_current_get_elevation);
+}
