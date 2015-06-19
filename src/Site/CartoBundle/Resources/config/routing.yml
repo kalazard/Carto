@@ -271,4 +271,7 @@ site_carto_save_multiple_segment:
     path:     /save_multiple_segment
     defaults: { _controller: SiteCartoBundle:Segment:saveMultiple }
     options:
-        expose: true	
+        expose: true
+site_carto_resetPassword:
+    path:    /user/resetPassword
+    defaults:  { _controller:SiteCartoBundle:User:resetPassword }
