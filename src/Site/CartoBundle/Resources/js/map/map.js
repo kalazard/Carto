@@ -1532,6 +1532,7 @@ L.Polyline.addInitHook(function () {
 
     map.on('draw:segmentstop', function (e) {
         map.off("click");
+        isCreateSegment = false;
 		console.log("save");
     });
 
@@ -1565,6 +1566,10 @@ L.Polyline.addInitHook(function () {
 		
 		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
 		updateMultipleSegment(liste_points_final);
+    });
+
+    map.on("draw:editstop", function(e){
+        isEditSegment = false;
     });
 	map.on('draw:deleted', function (e) {
 		var tronId = {};
@@ -1647,22 +1652,19 @@ L.Polyline.addInitHook(function () {
 
     map.on('dragend', function () {
         if (map.getZoom() == formerZoom ) {
-            /*markerGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            drawnItems.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });*/
-            if(!isCreateRoute)
+            if(!isCreateRoute && !isCreateSegment && !isEditSegment)
             {
                 drawnItems.eachLayer(function (layer) {
                     map.removeLayer(layer);
                 });
+
+                pogGroup.eachLayer(function (layer) {
+                    map.removeLayer(layer);
+                 });
+                loadSegments();
             }
-            pogGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            loadSegments();
+
+
         }
     });
     $("#map").css("cursor", "move");
@@ -2237,6 +2239,8 @@ function displayTrace(trace, elevation) {
         }
     });
     map.on("draw:editstop", function () {
+
+
         for (var i = 0; i < polyline.markers.length; i++) {
             polyline.markers[i].addTo(map);
         }
