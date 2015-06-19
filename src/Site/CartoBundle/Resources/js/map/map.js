@@ -586,10 +586,11 @@ function goToPosition(position) {
 			//calcul de la zone de détection en fonction du radius
 			
 			var number_temp = 0;
+            var radius = 10;
 			
-			number_temp = 0.0001*((15/10)*(18-map.getZoom()+1));
+			number_temp = 0.0001*((radius/10)*(18-map.getZoom()+1));
 			
-			number_temp = number_temp + (0.0001*((15/10) * (18-map.getZoom())));
+			number_temp = number_temp + (0.0001*((radius/10) * (18-map.getZoom())));
 			
 			var full_poly_tab = drawnItems;
 			var base_lat = latlng.lat;
@@ -1310,8 +1311,6 @@ L.Polyline.addInitHook(function () {
 	});
 });
 
-/////////////////////////////
-
     L.DrawToolbar.include({
         getModeHandlers: function (map) {
             return [
@@ -1325,11 +1324,6 @@ L.Polyline.addInitHook(function () {
                         }
                     ),
                     title: 'Tracer segment'
-                },
-                {
-                    enabled: true,
-                    handler: new L.Draw.Polyline(map, this.options.polyline),
-                    title: 'Tracer itinéraire'
                 }
             ];
         }
@@ -1355,32 +1349,57 @@ L.Polyline.addInitHook(function () {
     L.drawLocal.draw.toolbar.buttons.polyline = 'Tracer un parcours';
     map.addControl(drawControl);
 
-    routeButton = L.easyButton('fa-pencil',
-     function (){
-         createRoute();
-     },
-        "Tracer un itinéraire"
+    routeButton = L.easyButton({
+        states:[
+            {
+                stateName: 'create-route',
+                icon: 'fa-pencil',
+                onClick: function(control){
+                    control.state('save-route');
+                    createRoute();
+                },
+                title : "Tracer un itinéraire"
+            },
+            {
+                stateName: 'save-route',
+                icon: 'fa-floppy-o',
+                onClick: function(control){
+                    control.state('create-route');
+                    saveRoute();
+                },
+                title : "Sauvegarder un itinéraire"
+            }
+        ]
+    }).addTo(map);
+
+	POGButton = L.easyButton(
+        {
+            states : [{
+                icon : 'fa-plus',
+                onClick : function (){
+                    addPOGEvent();
+                },
+                title : "Ajouter un POG"
+            }
+
+        ]}
+    );
+	 
+	Segsuppr = L.easyButton(
+        {
+            states : [{
+                icon : 'fa-times',
+                onClick : function (){
+                    supprSegment_call();
+                },
+                title : "Supprimer un segment d'un tronçon"
+            }
+
+            ]}
      );
 
-    autoButton = L.easyButton('fa-magic',
-        function (){
-            autoRoute();
-        },
-        "Auto calcul d'un itinéraire"
-    );
-	POGButton = L.easyButton('fa fa-plus',
-     function (){
-         addPOGEvent();
-     },
-        "Ajouter un POG"
-     );
-	 
-	Segsuppr = L.easyButton('fa fa-times',
-     function (){
-         supprSegment_call();
-     },
-        "Supprimer un segment d'un tronçon"
-     );
+    var pogBar = L.easyBar([ POGButton, Segsuppr ]);
+    pogBar.addTo(map);
 
     L.control.scale().addTo(map);
 
@@ -1588,6 +1607,12 @@ L.Polyline.addInitHook(function () {
             drawnItems.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });*/
+            if(!isCreateRoute)
+            {
+                drawnItems.eachLayer(function (layer) {
+                    map.removeLayer(layer);
+                });
+            }
             pogGroup.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });
@@ -1686,13 +1711,6 @@ function geocode() {
 function createRoute() {
     if (!isCreateRoute) {
         isCreateRoute = true;
-        routeButton.removeFrom(map);
-        routeSaveButton = L.easyButton('fa-floppy-o',
-            function (){
-                saveRoute();
-            },
-            "Sauvegarder l'itinéraire"
-        );
         pointArray = [];
         latlngArray = [];
         polyArray = [];
@@ -1717,7 +1735,6 @@ function saveRoute() {
     loadDifficultes();
     loadStatus();
     loadTypechemin();
-    //console.log(JSON.stringify(pointArray));
     jQuery.each(polyArray,function(i,v){
         jQuery.each(v._latlngs,function(index,value)
         {
@@ -1725,8 +1742,15 @@ function saveRoute() {
             point.elevation = value.elevation;
             point.distance = value.distance;
             pointArray.push(point);
-        })
+        });
     });
+    if(potentialPoly !== undefined && potentialPoly.length > 0)
+    {
+        jQuery.each(potentialPoly,function(i,v){
+            unglow(v);
+        });
+    }
+
     $("#save").modal('show');
     $("#saveiti").on("click", function () {
         $.post(Routing.generate('site_carto_saveItineraire'),
@@ -1751,10 +1775,32 @@ function saveRoute() {
         ).fail(function () {
                 $.notify("Erreur lors de la sauvegarde", "error");
             });
+        jQuery.each(polyArray,function(i,v){
+            unglow(v);
+            map.removeLayer(v);
+        });
+        polyArray = [];
         $("#save").modal('hide');
 
     });
-    polyArray = [];
+    $(".closeiti").on("click", function () {
+        jQuery.each(polyArray,function(i,v){
+            unglow(v);
+            map.removeLayer(v);
+        });
+        polyArray = [];
+    });
+    $("#denivp").text("Dénivelé positif : 0m");
+    $("#denivn").text("Dénivelé négatif : 0m");
+    $("#long").text("Longueur : 0km");
+    el.clear();
+
+    if(isCreateRoute)
+    {
+        drawnItems.eachLayer(function (layer) {
+           layer.addTo(map);
+        });
+    }
     isCreateRoute = false;
 
 }
@@ -1926,7 +1972,7 @@ function getElevation(response)
         }
         poly.push.apply(poly,polyArray[i]._latlngs);
     }
-    $("#longueur").val(polyArray[polyArray.length - 1]._latlngs[polyArray[polyArray.length - 1]._latlngs.length - 1].distance + "km");
+    $("#long").val(polyArray[polyArray.length - 1]._latlngs[polyArray[polyArray.length - 1]._latlngs.length - 1].distance + "km");
     $("#denivp").text("Dénivelé positif : " + denivelep + "m");
     $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
     var polyline = polyline = L.polyline(poly, {color: 'blue'});
@@ -1972,7 +2018,7 @@ function getElevationSegment(response)
         var diff = pointArray[i].elevation - pointArray[i + 1].elevation;
         diff < 0 ? denivelep += diff * -1 : denivelen += diff * -1;
     }
-    $("#longueur").val(pointArray[pointArray.length - 1].distance + "km");
+    $("#long").val(pointArray[pointArray.length - 1].distance + "km");
     $("#denivp").text("Dénivelé positif : " + denivelep + "m");
     $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
     var geojson = polyline.toGeoJSON();
@@ -2224,11 +2270,15 @@ function displaySegment(trace,id,elevation) {
 
     pog1.segment = polyline;
     pog2.segment = polyline;
-    pogGroup.addLayer(pog1);
-    pogGroup.addLayer(pog2);
+    if(!pogLoaded(pog1)) {
+        pogGroup.addLayer(pog1);
+        pog1.addTo(map);
+    }
+    if(!segmentLoaded(pog2)) {
+        pogGroup.addLayer(pog2);
+        pog2.addTo(map);
+    }
 
-    pog1.addTo(map);
-    pog2.addTo(map);
 
     polyline.markers = [];
     polyline.pogs = [pog1,pog2];
@@ -2350,10 +2400,12 @@ function loadSegments() {
             jQuery.each(json.searchResults, function (k, v) {
                 displaySegment(v.trace, v.id, v.elevation);
             });
-            drawnItems.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-
+            if(isCreateRoute)
+            {
+                drawnItems.eachLayer(function (layer) {
+                    map.removeLayer(layer);
+                });
+            }
             //$.notify("Segment mis à jour", "success");
         }
     ).fail(function () {
@@ -2520,6 +2572,22 @@ function segmentLoaded(poly)
         if(layer.id === poly.id)
         {
             res = true;
+            if(!isCreateRoute)
+            {
+                layer.addTo(map);
+            }
+        }
+    });
+    return res;
+}
+
+function pogLoaded(pog)
+{
+    var res = false;
+    pogGroup.eachLayer(function (layer) {
+        if(latlngEquality(pog._latlng,layer._latlng))
+        {
+            res = true;
         }
     });
     return res;
@@ -2527,6 +2595,9 @@ function segmentLoaded(poly)
 
 function beginRoute()
 {
+    drawnItems.eachLayer(function (layer) {
+        map.removeLayer(layer);
+    });
     pogGroup.eachLayer(function (layer) {
         layer.on("click",function (e){
             var pog = e.target;
@@ -2556,7 +2627,6 @@ function beginRoute()
                 }
 
             });
-            //bestChoices(layer.segment);
             jQuery.each(potentialPoly,function(index,value){
                 value.on("click",function (e){
                     buildRoute(e);
@@ -2569,7 +2639,10 @@ function beginRoute()
 function autoRoute()
 {
     computePogs = [];
-    autoButton.removeFrom(map);
+    //autoButton.removeFrom(map);
+    drawnItems.eachLayer(function (layer){
+        map.removeLayer(layer);
+    });
     pogGroup.eachLayer(function (layer) {
         layer.on("click",function (e){
             computePogs.push(e.target);
@@ -2582,17 +2655,12 @@ function autoRoute()
                 pogGroup.eachLayer(function (layer){
                     layer.off("click");
                 });
+                autoButton._activateStateNamed("auto-route");
                 computeRoute(computePogs);
             }
         })
-    });
 
-    autoCancelButton = L.easyButton('fa-times',
-        function (){
-            cancelAutoRoute();
-        },
-        "Annuler auto calcul d'un itinéraire"
-    );
+    });
 }
 
 function cancelAutoRoute()
@@ -2602,8 +2670,9 @@ function cancelAutoRoute()
         layer.off("click");
     });
 
-    autoCancelButton.removeFrom(map);
-    autoButton.addTo(map);
+    drawnItems.eachLayer(function (layer){
+        layer.addTo(map);
+    });
 }
 
 function computeRoute(pogs)
@@ -2620,7 +2689,17 @@ function computeRoute(pogs)
     var latlngs = [];
     while(end === null)
     {
+        console.log("boucle");
+
+        var limit = 0;
         jQuery.each(currentPogs,function(key,value){
+            if(limit === 1000)
+            {
+                console.log("limit");
+                return false;
+            }
+            limit++;
+            console.log(currentPogs);
             var continu = true;
             var skip = false;
             //On cherche tous les pogs enfants du pog courant
@@ -2651,6 +2730,7 @@ function computeRoute(pogs)
             });
             //On ajoute les nodes des enfants
             jQuery.each(possiblePogs,function(k,v){
+                console.log("boucle");
                 var newNode = tree.parse({pog : v});
                 currentNode.addChild(newNode);
                 if(v._leaflet_id === finalPog._leaflet_id)//Si on arrive au point final
@@ -2666,7 +2746,7 @@ function computeRoute(pogs)
         {
             end = 0;
         }
-        currentPogs = possiblePogs;
+        currentPogs = possiblePogs.slice();
         possiblePogs = [];
     }
     var endNode = root.all(function (node) {
@@ -2677,6 +2757,7 @@ function computeRoute(pogs)
     });
     if(endNode.length > 0)
     {
+        console.log("test");
         var path = endNode[0].getPath();
         var polys = [];
         for(var i = 1; i < path.length; i++)
@@ -3081,3 +3162,16 @@ function saveMultiplePolyServer(tab)
     });
 
 }
+
+function pogAlreadyComputed(pogArray,pog)
+{
+    var res = false;
+    jQuery.each(pogArray,function(k,v){
+        if(latlngEquality(v._latlng,pog._latlng))
+        {
+            res = true;
+            return false;
+        }
+    });
+    return res;
+};

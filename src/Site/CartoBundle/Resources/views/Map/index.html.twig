@@ -20,7 +20,8 @@
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
      <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-     <script src="http://cliffcloud.github.io/Leaflet.EasyButton/easy-button.js"></script>
+     <link rel="stylesheet" href="https://cdn.rawgit.com/CliffCloud/Leaflet.EasyButton/v1-dev/src/easy-button.css" />
+     <script src="https://cdn.rawgit.com/CliffCloud/Leaflet.EasyButton/v1-dev/src/easy-button.js"></script>
     <script type="text/javascript" src="https://rawgithub.com/mpetazzoni/leaflet-gpx/master/gpx.js"></script>
     <script src="http://open.mapquestapi.com/sdk/js/v7.2.s/mqa.toolkit.js?key=Fmjtd%7Cluu821u12h%2C72%3Do5-94bauw"></script>
     <script src="http://open.mapquestapi.com/sdk/leaflet/v1.s/mq-map.js?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf"></script>
@@ -158,7 +159,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close closeiti" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title">Sauvegarde de l'itinéraire</h4>
           </div>
           <div class="modal-body">
@@ -200,7 +201,7 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+            <button type="button" class="btn btn-default closeiti" data-dismiss="modal">Fermer</button>
             <button type="button" class="btn btn-primary" id="saveiti">Sauvegarder</button>
           </div>
         </div><!-- /.modal-content -->
@@ -237,7 +238,7 @@
       </div><!-- /.modal-dialog -->
 </div>
               
-{% javascripts '@SiteCartoBundle/Resources/js/map/*' '@SiteCartoBundle/Resources/js/itineraire/itineraire.js' %}
+{% javascripts '@SiteCartoBundle/Resources/js/map/*' '@SiteCartoBundle/Resources/js/itineraire/itineraire.js' '@SiteCartoBundle/Resources/js/*' %}
         <script type="text/javascript" src="{{ asset_url }}"></script>
 {% endjavascripts %}
 

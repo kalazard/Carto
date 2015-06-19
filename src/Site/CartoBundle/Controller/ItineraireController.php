@@ -460,6 +460,14 @@ class ItineraireController extends Controller {
         return new Response($content);
     }
 
+    /**
+     * Fonction de récupération des informations de formulaire pour les itinéraires
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return Response
+     *
+     */
     public function getFormDataAction(Request $request) {
         //si c'est un appel AJAX
         if ($request->isXMLHttpRequest()) {
@@ -511,6 +519,16 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
+    /**
+     * Fonction de mise à jour d'un itinéraire
+     *
+     * Cette méthode est appelée en ajax
+     *
+     *
+     * @return Response
+     *
+     *
+     */
     public function updateItiAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             $params = array();
@@ -552,7 +570,13 @@ class ItineraireController extends Controller {
         return new Response('This is not ajax!', 400);
     }
 
-    //fonction de recherche des itinéraires 
+    /**
+     * Fonction de recherche d'un itinéraire
+     *
+     *
+     *
+     * @return View
+     */
     public function searchAction(Request $request) {
         $clientSOAP = new \SoapClient(null, array(
             'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
@@ -635,6 +659,14 @@ class ItineraireController extends Controller {
         return new Response($content);
     }
 
+    /**
+     * Fonction de récupération d'un itinéraire par l'id
+     *
+     *
+     *
+     * @return Response
+     *
+     */
     public function getByIdAction($id) {
         //Appel du service de recherche
         $user = $this->getUser();
@@ -685,6 +717,16 @@ class ItineraireController extends Controller {
         return new Response($content);
     }
 
+    /**
+     * Fonction de suppression d'un itinéraire
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants :
+     *
+     *
+     * @return Response
+     *
+     *
+     */
     public function deleteAction(Request $request) {
         if ($request->isXMLHttpRequest()) {
             //Appel du service de sauvegarde
