@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,autoCancelButton,pogGroup,computePogs;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,autoCancelButton,pogGroup,computePogs,pogBar,routeBar;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -626,8 +626,12 @@ function goToPosition(position) {
 								points_tab_index["poly_courante"] = {};
 							}
 						
-							points_tab_index[key_poly][key] = key;
-							points_tab_index["poly_courante"][compteur_glob] = latlng;
+							//on ajoute le point si il n'est pas un POG
+							if(key != 0 && key != full_poly_tab._layers[key_poly]._latlngs.length-1)
+							{
+								points_tab_index[key_poly][key] = key;
+								points_tab_index["poly_courante"][compteur_glob] = latlng;
+							}
 							
 							compteur_glob++;
 						}						
@@ -1371,7 +1375,51 @@ L.Polyline.addInitHook(function () {
             }
         ]
     }).addTo(map);
+	routeDeleteButton = L.easyButton({
+        states:[
+            {
+                stateName: 'delete-route',
+                icon: 'fa-eraser',
+                onClick: function(control){
+                    deleteLastSegment();
+                },
+                title : "Retirer le dernier segment de l'itinéraire"
+            }
+        ]
+    }).disable();
 
+    routeCancelButton = L.easyButton({
+        states:[
+            {
+                stateName: 'cancel-route',
+                icon: 'fa-undo',
+                onClick: function(control){
+                    jQuery.each(polyArray,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    jQuery.each(potentialPoly,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    routeBar._buttons[0]._activateStateNamed("create-route");
+                    routeBar._buttons[1].disable();
+                    routeBar._buttons[2].disable();
+                    polyArray = [];
+                    potentialPoly = [];
+                    isCreateRoute = false;
+                    drawnItems.eachLayer(function (layer){
+                        layer.addTo(map);
+                    })
+                },
+                title : "Annuler le tracé d'un itinéraire"
+            }
+        ]
+    }).disable();
+
+    routeBar = L.easyBar([ routeButton, routeDeleteButton,routeCancelButton ]);
+    routeBar.addTo(map);
+	/*
 	POGButton = L.easyButton(
         {
             states : [{
@@ -1384,6 +1432,7 @@ L.Polyline.addInitHook(function () {
 
         ]}
     );
+	*/ 
 	 
 	Segsuppr = L.easyButton(
         {
@@ -1398,7 +1447,7 @@ L.Polyline.addInitHook(function () {
             ]}
      );
 
-    var pogBar = L.easyBar([ POGButton, Segsuppr ]);
+    var pogBar = L.easyBar([ Segsuppr ]);
     pogBar.addTo(map);
 
     L.control.scale().addTo(map);
@@ -2421,14 +2470,16 @@ function buildRoute(e)
 
      if(oldSize === 0)
      {
-         routeDeleteButton = L.easyButton('fa-eraser',
+         /*routeDeleteButton = L.easyButton('fa-eraser',
              function (){
                  deleteLastSegment();
              },
              "Retirer le dernier segment de l'itinéraire"
-         );
+         );*/
      }
 
+	 routeBar._buttons[1].enable();
+	 
      var URL = elevationURL + '&latLngCollection=';
      for (var i = 0; i <selectedPoly._latlngs.length; i++) {
          var lat = selectedPoly._latlngs[i].lat;
@@ -2493,9 +2544,9 @@ function deleteLastSegment()
         bestChoices(polyArray[polyArray.length - 1]);
         if(polyArray.length === 0)
         {
-            routeDeleteButton.removeFrom(map);
+            /*routeDeleteButton.removeFrom(map);
             routeSaveButton.removeFrom(map);
-            routeButton.addTo(map);
+            routeButton.addTo(map);*/
             pogGroup.eachLayer(function (layer){
                 layer.off("click");
                 map.removeLayer(layer);
@@ -2817,6 +2868,10 @@ function addPOGEvent()
     }
 }
 
+
+/* fonction qui sert à rien */
+
+
 //fonction d'ajout d'un POG sur une polyline, sépare une polyline en deux parties.
 function addPOG(e)
 {	
@@ -2904,7 +2959,6 @@ function addPOG(e)
 	
 	//ensuite on set les latlngs de l'ancienne dans une nouvelle polyline
 	
-	
 	//il faut set le POG au tout debut du tableau !!!!!!!!!!!!!
 	polyline = L.polyline(points2, {color: 'blue'});	
 	//ajout dans le drawnItems.
@@ -2913,7 +2967,7 @@ function addPOG(e)
 	polyline.addTo(map);
 
 	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2, newPOG);
+	//saveDeleteSegFromTR(e.target.id, points, points2, newPOG);
 	
 }
 
@@ -2990,19 +3044,12 @@ function supprSegment(e)
 	var points;
 	var points2;
 	
-	//on crrer le nouveau POG a la position de la souris
-	//var newPOG = L.latLng(e.latlng.lat, e.latlng.lng);
-	
 	//on récupère les points correspondant
 	points = e.target._latlngs.slice(0,pos_detect+1);
-	points2 = e.target._latlngs.slice(pos_detect+2,e.target._latlngs.length);
-
+	points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
 
 	//on set les points dans la première polyline
 	e.target._latlngs = points;
-	
-	//on set le pog	(POG de liaison donc on reprend le même)
-	//e.target.addLatLng(newPOG);
 	
 	//on redessine la polyline	
 	e.target.redraw();
@@ -3015,9 +3062,8 @@ function supprSegment(e)
 	//ajout a la map
 	polyline.addTo(map);
 
-
-	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2);
+	//et on envoit en base pour le save
+	//saveDeleteSegFromTR(e.target.id, points, points2);
 	
 }
 
@@ -3031,7 +3077,8 @@ function SegmentSlice(poly_key, tab_pos)
 	//séparation du tableau en plusieurs sous sections
 	
 	$.each(tab_pos, function(key, val) {	
-		if(val != 0 || val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+		//si le point n'est pas un POG
+		if(val != 0 && val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
 		{
 			slice_result[val] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,val+1);
 			slice_count = val;
@@ -3042,16 +3089,20 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	slice_result[slice_count+drawnItems._layers[poly_key]._latlngs.length] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,drawnItems._layers[poly_key]._latlngs.length);
 	
-	//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
-	
-	//--> le .remove enleve les poly du groupe mais pas de la map. a voir
-	
-	//drawnItems._layers[poly_key].remove();
+	//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result	
+	map.removeLayer(drawnItems._layers[poly_key]);
 	
 	//suppression de la polyline en bdd :
-	var tid = {};
-	tid[poly_key] = poly_key;
-	DeleteTrons(tid);
+	
+	//on récupère l'id de la polyline donnée avec key_poly
+	if(full_poly_tab._layers[poly_key].id !== undefined)
+	{
+		var poly_id = full_poly_tab._layers[poly_key].id;
+	
+		var tid = {};
+		tid[poly_id] = poly_id;
+		DeleteTrons(tid);
+	}
 	
 	//création des nouvelles polylines
 	
@@ -3158,11 +3209,17 @@ function saveMultiplePolyServer(tab)
 			//success
 			
 			//penser à set l'id de la poly
+            drawnItems.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            loadSegments();
         }
     });
 
 }
-
 function pogAlreadyComputed(pogArray,pog)
 {
     var res = false;
