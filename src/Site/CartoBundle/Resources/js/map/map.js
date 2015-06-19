@@ -625,9 +625,12 @@ function goToPosition(position) {
 								points_tab_index[key_poly] = {};
 								points_tab_index["poly_courante"] = {};
 							}
-						
-							points_tab_index[key_poly][key] = key;
-							points_tab_index["poly_courante"][compteur_glob] = latlng;
+							
+							if(key != 0 && key != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+							{
+								points_tab_index[key_poly][key] = key;
+								points_tab_index["poly_courante"][compteur_glob] = latlng;
+							}
 							
 							compteur_glob++;
 						}						
@@ -1417,7 +1420,7 @@ L.Polyline.addInitHook(function () {
 
     routeBar = L.easyBar([ routeButton, routeDeleteButton,routeCancelButton ]);
     routeBar.addTo(map);
-
+/*
 	POGButton = L.easyButton(
         {
             states : [{
@@ -1430,7 +1433,7 @@ L.Polyline.addInitHook(function () {
 
         ]}
     );
-	 
+*/	 
 	Segsuppr = L.easyButton(
         {
             states : [{
@@ -1444,7 +1447,7 @@ L.Polyline.addInitHook(function () {
             ]}
      );
 
-    pogBar = L.easyBar([ POGButton, Segsuppr ]);
+    pogBar = L.easyBar([ Segsuppr ]);
     pogBar.addTo(map);
 
     L.control.scale().addTo(map);
@@ -1532,6 +1535,7 @@ L.Polyline.addInitHook(function () {
 
     map.on('draw:segmentstop', function (e) {
         map.off("click");
+        isCreateSegment = false;
 		console.log("save");
     });
 
@@ -1565,6 +1569,10 @@ L.Polyline.addInitHook(function () {
 		
 		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
 		updateMultipleSegment(liste_points_final);
+    });
+
+    map.on("draw:editstop", function(e){
+        isEditSegment = false;
     });
 	map.on('draw:deleted', function (e) {
 		var tronId = {};
@@ -1647,22 +1655,19 @@ L.Polyline.addInitHook(function () {
 
     map.on('dragend', function () {
         if (map.getZoom() == formerZoom ) {
-            /*markerGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            drawnItems.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });*/
-            if(!isCreateRoute)
+            if(!isCreateRoute && !isCreateSegment && !isEditSegment)
             {
                 drawnItems.eachLayer(function (layer) {
                     map.removeLayer(layer);
                 });
+
+                pogGroup.eachLayer(function (layer) {
+                    map.removeLayer(layer);
+                 });
+                loadSegments();
             }
-            pogGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            loadSegments();
+
+
         }
     });
     $("#map").css("cursor", "move");
@@ -2237,6 +2242,8 @@ function displayTrace(trace, elevation) {
         }
     });
     map.on("draw:editstop", function () {
+
+
         for (var i = 0; i < polyline.markers.length; i++) {
             polyline.markers[i].addTo(map);
         }
@@ -3044,15 +3051,11 @@ function supprSegment(e)
 	
 	//on récupère les points correspondant
 	points = e.target._latlngs.slice(0,pos_detect+1);
-	points2 = e.target._latlngs.slice(pos_detect+2,e.target._latlngs.length);
+	points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
 
 
 	//on set les points dans la première polyline
 	e.target._latlngs = points;
-	
-	//on set le pog	(POG de liaison donc on reprend le même)
-	//e.target.addLatLng(newPOG);
-	
 	//on redessine la polyline	
 	e.target.redraw();
 	
@@ -3066,7 +3069,7 @@ function supprSegment(e)
 
 
 	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2);
+	//saveDeleteSegFromTR(e.target.id, points, points2);
 	
 }
 
@@ -3080,7 +3083,7 @@ function SegmentSlice(poly_key, tab_pos)
 	//séparation du tableau en plusieurs sous sections
 	
 	$.each(tab_pos, function(key, val) {	
-		if(val != 0 || val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+		if(val != 0 && val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
 		{
 			slice_result[val] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,val+1);
 			slice_count = val;
@@ -3093,14 +3096,18 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
 	
-	//--> le .remove enleve les poly du groupe mais pas de la map. a voir
+	map.removeLayer(drawnItems._layers[poly_key]);
 	
 	//drawnItems._layers[poly_key].remove();
 	
-	//suppression de la polyline en bdd :
-	var tid = {};
-	tid[poly_key] = poly_key;
-	DeleteTrons(tid);
+	if(full_poly_tab._layers[poly_key].id !== undefined)
+	{
+		var poly_id = full_poly_tab._layers[poly_key].id;
+ 	
+		var tid = {};
+		tid[poly_id] = poly_id;
+		DeleteTrons(tid);
+	}
 	
 	//création des nouvelles polylines
 	
