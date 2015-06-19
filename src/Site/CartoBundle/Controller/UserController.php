@@ -446,6 +446,80 @@ class UserController extends Controller {
             throw new NotFoundHttpException('Impossible de trouver la page demandée');
         }
     }
+    
+    public function resetPasswordAction()
+    {
+       $request = $this->getRequest();
+        //On regarde qu'il s'agit bien d'une requête ajax
+        if ($request->isXmlHttpRequest()) {
+            try {
+                    $manager = $this->getDoctrine()->getManager();
+                    //On récupère le nouveau mot de passe
+                    $newpassword = md5(uniqid('', true));
+                    //On récupère l'email de l'utilisateur qui veut reste son mot de passe
+                    $email = $request->request->get('email', '');
+                    //On récupère son id
+                    //findOneBy(array('alias' => "le-trail"))
+                    if ($email == "") {
+                        $return = array('success' => false, 'serverError' => false, 'message' => "Veuillez remplir le formulaire");
+                        $response = new Response(json_encode($return));
+                        $response->headers->set('Content-Type', 'application/json');
+                        return $response;
+                    }
+                    $user = $manager->getRepository("SiteCartoBundle:Utilisateur")->findOneBy(array('email' => $email));
+                    if ($user == null) {
+                        $return = array('success' => false, 'serverError' => false, 'message' => "Aucun compte enregistré pour cette adresse mail");
+                        $response = new Response(json_encode($return));
+                        $response->headers->set('Content-Type', 'application/json');
+                        return $response;
+                    }
+                    $id = $user->getId();
+                    
+
+                    
+
+                    $clientSOAP = new SoapClient(null, array(
+                        'uri' => $this->container->getParameter("auth_server_host"),
+                        'location' => $this->container->getParameter("auth_server_host"),
+                        'trace' => 1,
+                        'exceptions' => 1
+                    ));
+
+                    //On appel la méthode du webservice qui permet de modifier l'état de l'utilisateur
+                    $response = $clientSOAP->__call('changePassword', array('id' => CustomCrypto::encrypt($id), 'newpassword' => CustomCrypto::encrypt($newpassword), 'server' => CustomCrypto::encrypt($_SERVER['SERVER_ADDR'])));
+                    //L'utilisateur n'existe pas dans la base de données du serveur d'authentification
+
+                    if ($response['error'] == true) {
+                        $return = array('success' => false, 'serverError' => false, 'message' => $response['message']);
+                        $response = new Response(json_encode($return));
+                        $response->headers->set('Content-Type', 'application/json');
+                        return $response;
+                    }
+
+                    $message = \Swift_Message::newInstance()
+                        ->setSubject('Nouveau mot de passe')
+                        ->setFrom('noreply.trail@gmail.com')
+                        ->setTo($email)
+                        ->setBody("Vos identifiants pour vous connecter : \n login = " . $user->getEmail() . "\n mot de passe = " . $newpassword);
+                $this->get('mailer')->send($message);
+
+                    $return = array('success' => true, 'serverError' => false);
+                    $response = new Response(json_encode($return));
+                    $response->headers->set('Content-Type', 'application/json');
+                    return $response;
+                
+            } catch (Exception $e) {
+                //Il y a une erreur côté serveur
+                $return = array('success' => false, 'serverError' => true, 'message' => $e->getMessage());
+                $response = new Response(json_encode($return));
+                $response->headers->set('Content-Type', 'application/json');
+                return $response;
+            }
+        } else {
+            //La requête n'es pas une requête ajax, on envoie une erreur
+            throw new NotFoundHttpException('Impossible de trouver la page demandée');
+        }
+    }
 
     //Récupération d'un utilisateur dans la base de données
     public function getUserAction() {
