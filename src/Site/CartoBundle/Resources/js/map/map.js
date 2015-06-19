@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,autoCancelButton,pogGroup,computePogs;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,routeCancelButton,autoButton,autoCancelButton,pogGroup,computePogs,pogBar,routeBar;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -1357,6 +1357,7 @@ L.Polyline.addInitHook(function () {
                 onClick: function(control){
                     control.state('save-route');
                     createRoute();
+                    routeBar._buttons[2].enable();
                 },
                 title : "Tracer un itinéraire"
             },
@@ -1370,7 +1371,52 @@ L.Polyline.addInitHook(function () {
                 title : "Sauvegarder un itinéraire"
             }
         ]
-    }).addTo(map);
+    });
+
+    routeDeleteButton = L.easyButton({
+        states:[
+            {
+                stateName: 'delete-route',
+                icon: 'fa-eraser',
+                onClick: function(control){
+                    deleteLastSegment();
+                },
+                title : "Retirer le dernier segment de l'itinéraire"
+            }
+        ]
+    }).disable();
+
+    routeCancelButton = L.easyButton({
+        states:[
+            {
+                stateName: 'cancel-route',
+                icon: 'fa-undo',
+                onClick: function(control){
+                    jQuery.each(polyArray,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    jQuery.each(potentialPoly,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    routeBar._buttons[0]._activateStateNamed("create-route");
+                    routeBar._buttons[1].disable();
+                    routeBar._buttons[2].disable();
+                    polyArray = [];
+                    potentialPoly = [];
+                    isCreateRoute = false;
+                    drawnItems.eachLayer(function (layer){
+                        layer.addTo(map);
+                    })
+                },
+                title : "Annuler le tracé d'un itinéraire"
+            }
+        ]
+    }).disable();
+
+    routeBar = L.easyBar([ routeButton, routeDeleteButton,routeCancelButton ]);
+    routeBar.addTo(map);
 
 	POGButton = L.easyButton(
         {
@@ -1398,7 +1444,7 @@ L.Polyline.addInitHook(function () {
             ]}
      );
 
-    var pogBar = L.easyBar([ POGButton, Segsuppr ]);
+    pogBar = L.easyBar([ POGButton, Segsuppr ]);
     pogBar.addTo(map);
 
     L.control.scale().addTo(map);
@@ -2256,14 +2302,14 @@ function displaySegment(trace,id,elevation) {
 
     var pog1 = new L.Marker([latlngArr[0].lat, latlngArr[0].lng], {
         icon: new L.DivIcon({
-            iconSize: new L.Point(8, 8),
+            iconSize: new L.Point(10, 10),
             className: 'leaflet-div-icon leaflet-editing-icon'
         })
     });
 
     var pog2 = new L.Marker([latlngArr[latlngArr.length - 1].lat, latlngArr[latlngArr.length - 1].lng], {
         icon: new L.DivIcon({
-            iconSize: new L.Point(8, 8),
+            iconSize: new L.Point(10, 10),
             className: 'leaflet-div-icon leaflet-editing-icon'
         })
     });
@@ -2421,12 +2467,14 @@ function buildRoute(e)
 
      if(oldSize === 0)
      {
-         routeDeleteButton = L.easyButton('fa-eraser',
+         /*routeDeleteButton = L.easyButton('fa-eraser',
              function (){
                  deleteLastSegment();
              },
              "Retirer le dernier segment de l'itinéraire"
-         );
+         );*/
+
+         routeBar._buttons[1].enable();
      }
 
      var URL = elevationURL + '&latLngCollection=';
@@ -2493,9 +2541,10 @@ function deleteLastSegment()
         bestChoices(polyArray[polyArray.length - 1]);
         if(polyArray.length === 0)
         {
-            routeDeleteButton.removeFrom(map);
+            /*routeDeleteButton.removeFrom(map);
             routeSaveButton.removeFrom(map);
-            routeButton.addTo(map);
+            routeButton.addTo(map);*/
+            routeBar._buttons[1].disable();
             pogGroup.eachLayer(function (layer){
                 layer.off("click");
                 map.removeLayer(layer);
@@ -3158,6 +3207,13 @@ function saveMultiplePolyServer(tab)
 			//success
 			
 			//penser à set l'id de la poly
+            drawnItems.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            loadSegments();
         }
     });
 
