@@ -1,0 +1,9 @@
+{% extends "SiteCartoBundle:Map:indexFrame.html.twig" %}
+
+{% block body %}
+<script>
+	{% if jsonObject is not empty %}
+			init(loadMap,[{{jsonObject|raw}}]);
+	{% endif %}
+</script>
+{% endblock %}

@@ -4,6 +4,9 @@ site_carto_homepage:
 site_carto_mapPage:
     path:     /carte
     defaults: { _controller: SiteCartoBundle:Map:index }
+site_carto_mapPageFrame:
+    path:     /carteFrame
+    defaults: { _controller: SiteCartoBundle:Map:indexFrame }
 site_carto_itineraire:
     path:     /itineraire
     defaults: { _controller: SiteCartoBundle:Itineraire:index }
@@ -30,6 +33,11 @@ site_carto_saveItineraire:
 site_carto_loadItineraire:
     path:    /itineraire_load/{id}
     defaults: { _controller:SiteCartoBundle:Itineraire:load }
+    options:
+        expose: true
+site_carto_loadItineraireFrame:
+    path:    /itineraire_loadFrame/{id}
+    defaults: { _controller:SiteCartoBundle:Itineraire:loadFrame }
     options:
         expose: true
 site_carto_getPoi:

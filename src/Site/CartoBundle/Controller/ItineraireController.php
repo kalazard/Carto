@@ -261,6 +261,22 @@ class ItineraireController extends Controller {
         return new Response($content);
     }
 
+        /**
+     * Fonction de chargement d'un itinéraire
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return View
+     *
+     *
+     */
+    public function loadFrameAction($id) {
+        $repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
+        $iti = $repository->find($id);
+        $content = $this->get("templating")->render("SiteCartoBundle:Map:loadFrame.html.twig", array("itineraire" => $iti, "jsonObject" => json_encode($iti)));
+        return new Response($content);
+    }
+
 
     public function rechercheAction(Request $request) {
         //soit on affiche la page en chargeant toutes les données, soit on charge les données selon les paramètres 
