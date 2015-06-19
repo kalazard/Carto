@@ -1881,7 +1881,7 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
 
 function savePoi()
 {
-    loadMap = getRoleMap();
+    roleMap = loadRoleMap();
     $.post(Routing.generate('site_carto_savePoi'),
     {
         lat: latPoi,
