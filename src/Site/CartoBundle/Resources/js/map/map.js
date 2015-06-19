@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,routeCancelButton,autoButton,autoCancelButton,pogGroup,computePogs,pogBar,routeBar;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,routeCancelButton,autoButton,autoCancelButton,pogGroup,computePogs,pogBar,routeBar, geocoder;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -220,7 +220,30 @@ function goToPosition(position) {
     formerZoom = zoom;
     map.setView([position.coords.latitude, position.coords.longitude], zoom);
 
-    L.Control.geocoder().addTo(map);
+    geocoder = L.Control.geocoder().addTo(map);
+    geocoder.markGeocode = function(result) {
+        this._map.fitBounds(result.bbox);
+
+        if (this._geocodeMarker) {
+            this._map.removeLayer(this._geocodeMarker);
+        }
+
+        this._geocodeMarker = new L.Marker(result.center)
+            .bindPopup(result.html || result.name)
+            .addTo(this._map)
+            .openPopup();
+
+        drawnItems.eachLayer(function (layer) {
+            map.removeLayer(layer);
+        });
+
+        pogGroup.eachLayer(function (layer) {
+            map.removeLayer(layer);
+        });
+
+        loadSegments();
+        return this;
+    };
 
     //Ajout du fond de carte Landscape obtenu sur Thunderforest
     L.tileLayer('http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png', {
