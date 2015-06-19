@@ -322,7 +322,7 @@ class UserController extends Controller {
         $request = $this->getRequest();
         //On regarde qu'il s'agit bien d'une requête ajax
         if ($request->isXmlHttpRequest()) {
-            try {
+           // try {
                 //On vérifie que l'utilisateur courant est bien administrateur ou membre
                 if ($this->get('security.context')->isGranted('ROLE_Administrateur')) {
                     //On récupère le manager de Doctrine
@@ -345,7 +345,7 @@ class UserController extends Controller {
                         //Si il y a une erreur
 
                         if ($response['error'] == true) {
-                            $return = array('success' => false, 'serverError' => false, 'message' => $response['message']);
+                            $return = array('success' => false, 'serverError' => true, 'message' => $response['message']);
                             $response = new Response(json_encode($return));
                             $response->headers->set('Content-Type', 'application/json');
                             return $response;
@@ -364,13 +364,13 @@ class UserController extends Controller {
                     $response->headers->set('Content-Type', 'application/json');
                     return $response;
                 }
-            } catch (Exception $e) {
+            /*} catch (Exception $e) {
                 //Il y a une erreur côté serveur
                 $return = array('success' => false, 'serverError' => true, 'message' => $e->getMessage());
                 $response = new Response(json_encode($return));
                 $response->headers->set('Content-Type', 'application/json');
                 return $response;
-            }
+            }*/
         } else {
             //La requête n'es pas une requête ajax, on envoie une erreur
             throw new NotFoundHttpException('Impossible de trouver la page demandée');
