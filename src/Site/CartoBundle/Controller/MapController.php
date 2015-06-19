@@ -32,6 +32,12 @@ class MapController extends Controller
         return new Response($content);
     }
 
+    public function indexFrameAction()
+    {       
+        $content = $this->get("templating")->render("SiteCartoBundle:Map:mapFrame.html.twig");        
+        return new Response($content);
+    }
+
     public function createRouteAction(Request $request)
     {
       if ($request->isXMLHttpRequest()) 

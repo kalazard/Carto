@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    {% stylesheets filter='cssrewrite' '@SiteCartoBundle/Resources/css/*' '@SiteCartoBundle/Resources/css/design/common.css' '@SiteCartoBundle/Resources/css/design/home.css' '@SiteCartoBundle/Resources/css/design/map.css' %}
+      <link rel="stylesheet" href="{{ asset_url }}" type="text/css" />
+    {% endstylesheets %}
+    <style type="text/css">
+        html, body 
+        {
+          height: 100%;
+          margin-top: 0px;
+        }
+    </style>   
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+     <script src="http://cliffcloud.github.io/Leaflet.EasyButton/easy-button.js"></script>
+    <script type="text/javascript" src="https://rawgithub.com/mpetazzoni/leaflet-gpx/master/gpx.js"></script>
+    <script src="http://open.mapquestapi.com/sdk/js/v7.2.s/mqa.toolkit.js?key=Fmjtd%7Cluu821u12h%2C72%3Do5-94bauw"></script>
+    <script src="http://open.mapquestapi.com/sdk/leaflet/v1.s/mq-map.js?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf"></script>
+    <script src="http://open.mapquestapi.com/sdk/leaflet/v1.s/mq-geocoding.js?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf"></script>
+    <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
+    <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+     <script src="http://jnuno.com/tree-model-js/vendor/jnuno/TreeModel.js"></script>
+
+
+    <script src="{{ asset('bundles/fosjsrouting/js/router.js') }}"></script>
+    <script src="{{ path('fos_js_routing_js', {"callback": "fos.Router.setData"}) }}"></script>
+    <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+    <title>{% block title %}Map{% endblock %}</title>
+    <meta charset="utf-8">
+</head>
+<body>
+  <style>
+      .container-map{
+          height: 100%;
+          width: 100%;
+      }
+      .map{
+          width:100%;
+          height:100%;
+      }
+      .controlText{
+          background-color: rgba(250,250,250,0.8);
+          border-radius: 4px;
+          font-size: 16px;
+      }
+  </style>
+
+  <div class=" container-map">
+      <div id="map" class="map context-menu-one box menu-1"></div>
+    </div>
+    <div class="modal fade" id="save">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Sauvegarde de l'itinéraire</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Nom :</label>
+                <input type="text" class="form-control" id="nom">
+              </div>
+              <div class="form-group">
+                <label for="message-text" class="control-label">Numéro :</label>
+                <input type="number" class="form-control" id="numero"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="message-text" class="control-label">Description :</label>
+                <textarea class="form-control" id="description"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Difficulté:</label>
+                <select id="difficulte"></select>
+              </div>
+              <div class="form-group">
+                <label for="message-text" class="control-label">Status :</label>
+                <select id="status"></select>
+              </div>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Type de chemin :</label>
+                <select id="typechemin"></select>
+              </div>
+              <div class="form-group">
+                <label for="message-text" class="control-label">Visibilité :</label>
+                <select id="public">
+                  <option value="0">Privé</option>
+                  <option value="1">Publique</option>
+                </select>
+              </div>
+              {% if app.user %}
+              <input type="hidden" class="form-control" id="auteur" value={{app.user.id}}>
+              {% endif %}
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+            <button type="button" class="btn btn-primary" id="saveiti">Sauvegarder</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+      <div class="modal fade" id="addpoi">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Sauvegarde du POI</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Type de lieu :</label>
+                <select id="typelieu"></select>
+              </div>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Titre :</label>
+                <input type="text" class="form-control" id="titre">
+              </div>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Description :</label>
+                <input type="text" class="form-control" id="descriptionPoi">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+            <button type="button" class="btn btn-primary" id="savepoi">Sauvegarder</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+</div>
+              
+{% javascripts '@SiteCartoBundle/Resources/js/map/*' '@SiteCartoBundle/Resources/js/itineraire/itineraire.js' %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+{% endjavascripts %}
+
+{% block body %}
+{% endblock %}
+</body>
+
+</html>
