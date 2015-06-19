@@ -242,7 +242,7 @@ class TypelieuController extends Controller
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1;
 
-      if (!isset($_POST["label"]) )
+      if (!isset($_POST["label"]) || $_POST["label"] == '')
       {
         $upload=0;
         $return_message .= " Veuillez définir un nom à votre type de lieu, svp. ";
@@ -430,7 +430,7 @@ class TypelieuController extends Controller
       //$target_dir ="C:/wamp/www/Images/";
       $upload = 1; 
 
-      if (!isset($_POST["label"]) )
+      if (!isset($_POST["label"]) || $_POST["label"] == '')
       {
         $upload=0;
         $return_message .= " Veuillez définir un nom à votre type de lieu, svp. ";

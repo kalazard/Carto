@@ -1,6 +1,6 @@
 var map, GPX, routeCreateControl, routeSaveControl, pointArray, latlngArray, polyline, tracepolyline, elevationScript, elevationChartScript,
     denivelep, denivelen, drawnItems, drawControl, currentLayer, el, mapgeojson, editDrawControl, segmentID, fetchingElevation, traceData, formerZoom, markerGroup, polyArray,
-    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,autoButton,autoCancelButton,pogGroup,computePogs;
+    radiusGroup, potentialPoly, routeButton, routeSaveButton,routeDeleteButton,routeCancelButton,autoButton,autoCancelButton,pogGroup,computePogs,pogBar,routeBar, geocoder;
 var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
@@ -220,7 +220,30 @@ function goToPosition(position) {
     formerZoom = zoom;
     map.setView([position.coords.latitude, position.coords.longitude], zoom);
 
-    L.Control.geocoder().addTo(map);
+    geocoder = L.Control.geocoder().addTo(map);
+    geocoder.markGeocode = function(result) {
+        this._map.fitBounds(result.bbox);
+
+        if (this._geocodeMarker) {
+            this._map.removeLayer(this._geocodeMarker);
+        }
+
+        this._geocodeMarker = new L.Marker(result.center)
+            .bindPopup(result.html || result.name)
+            .addTo(this._map)
+            .openPopup();
+
+        drawnItems.eachLayer(function (layer) {
+            map.removeLayer(layer);
+        });
+
+        pogGroup.eachLayer(function (layer) {
+            map.removeLayer(layer);
+        });
+
+        loadSegments();
+        return this;
+    };
 
     //Ajout du fond de carte Landscape obtenu sur Thunderforest
     L.tileLayer('http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png', {
@@ -625,9 +648,12 @@ function goToPosition(position) {
 								points_tab_index[key_poly] = {};
 								points_tab_index["poly_courante"] = {};
 							}
-						
-							points_tab_index[key_poly][key] = key;
-							points_tab_index["poly_courante"][compteur_glob] = latlng;
+							
+							if(key != 0 && key != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+							{
+								points_tab_index[key_poly][key] = key;
+								points_tab_index["poly_courante"][compteur_glob] = latlng;
+							}
 							
 							compteur_glob++;
 						}						
@@ -1357,6 +1383,7 @@ L.Polyline.addInitHook(function () {
                 onClick: function(control){
                     control.state('save-route');
                     createRoute();
+                    routeBar._buttons[2].enable();
                 },
                 title : "Tracer un itinéraire"
             },
@@ -1370,8 +1397,53 @@ L.Polyline.addInitHook(function () {
                 title : "Sauvegarder un itinéraire"
             }
         ]
-    }).addTo(map);
+    });
 
+    routeDeleteButton = L.easyButton({
+        states:[
+            {
+                stateName: 'delete-route',
+                icon: 'fa-eraser',
+                onClick: function(control){
+                    deleteLastSegment();
+                },
+                title : "Retirer le dernier segment de l'itinéraire"
+            }
+        ]
+    }).disable();
+
+    routeCancelButton = L.easyButton({
+        states:[
+            {
+                stateName: 'cancel-route',
+                icon: 'fa-undo',
+                onClick: function(control){
+                    jQuery.each(polyArray,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    jQuery.each(potentialPoly,function(k,v){
+                        unglow(v);
+                        map.removeLayer(v);
+                    });
+                    routeBar._buttons[0]._activateStateNamed("create-route");
+                    routeBar._buttons[1].disable();
+                    routeBar._buttons[2].disable();
+                    polyArray = [];
+                    potentialPoly = [];
+                    isCreateRoute = false;
+                    drawnItems.eachLayer(function (layer){
+                        layer.addTo(map);
+                    })
+                },
+                title : "Annuler le tracé d'un itinéraire"
+            }
+        ]
+    }).disable();
+
+    routeBar = L.easyBar([ routeButton, routeDeleteButton,routeCancelButton ]);
+    routeBar.addTo(map);
+/*
 	POGButton = L.easyButton(
         {
             states : [{
@@ -1384,7 +1456,7 @@ L.Polyline.addInitHook(function () {
 
         ]}
     );
-	 
+*/	 
 	Segsuppr = L.easyButton(
         {
             states : [{
@@ -1398,7 +1470,7 @@ L.Polyline.addInitHook(function () {
             ]}
      );
 
-    var pogBar = L.easyBar([ POGButton, Segsuppr ]);
+    pogBar = L.easyBar([ Segsuppr ]);
     pogBar.addTo(map);
 
     L.control.scale().addTo(map);
@@ -1486,6 +1558,7 @@ L.Polyline.addInitHook(function () {
 
     map.on('draw:segmentstop', function (e) {
         map.off("click");
+        isCreateSegment = false;
 		console.log("save");
     });
 
@@ -1519,6 +1592,10 @@ L.Polyline.addInitHook(function () {
 		
 		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
 		updateMultipleSegment(liste_points_final);
+    });
+
+    map.on("draw:editstop", function(e){
+        isEditSegment = false;
     });
 	map.on('draw:deleted', function (e) {
 		var tronId = {};
@@ -1601,22 +1678,19 @@ L.Polyline.addInitHook(function () {
 
     map.on('dragend', function () {
         if (map.getZoom() == formerZoom ) {
-            /*markerGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            drawnItems.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });*/
-            if(!isCreateRoute)
+            if(!isCreateRoute && !isCreateSegment && !isEditSegment)
             {
                 drawnItems.eachLayer(function (layer) {
                     map.removeLayer(layer);
                 });
+
+                pogGroup.eachLayer(function (layer) {
+                    map.removeLayer(layer);
+                 });
+                loadSegments();
             }
-            pogGroup.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
-            loadSegments();
+
+
         }
     });
     $("#map").css("cursor", "move");
@@ -1835,7 +1909,7 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
 
 function savePoi()
 {
-    loadMap = getRoleMap();
+    roleMap = loadRoleMap();
     $.post(Routing.generate('site_carto_savePoi'),
     {
         lat: latPoi,
@@ -2191,6 +2265,8 @@ function displayTrace(trace, elevation) {
         }
     });
     map.on("draw:editstop", function () {
+
+
         for (var i = 0; i < polyline.markers.length; i++) {
             polyline.markers[i].addTo(map);
         }
@@ -2256,14 +2332,14 @@ function displaySegment(trace,id,elevation) {
 
     var pog1 = new L.Marker([latlngArr[0].lat, latlngArr[0].lng], {
         icon: new L.DivIcon({
-            iconSize: new L.Point(8, 8),
+            iconSize: new L.Point(10, 10),
             className: 'leaflet-div-icon leaflet-editing-icon'
         })
     });
 
     var pog2 = new L.Marker([latlngArr[latlngArr.length - 1].lat, latlngArr[latlngArr.length - 1].lng], {
         icon: new L.DivIcon({
-            iconSize: new L.Point(8, 8),
+            iconSize: new L.Point(10, 10),
             className: 'leaflet-div-icon leaflet-editing-icon'
         })
     });
@@ -2421,12 +2497,14 @@ function buildRoute(e)
 
      if(oldSize === 0)
      {
-         routeDeleteButton = L.easyButton('fa-eraser',
+         /*routeDeleteButton = L.easyButton('fa-eraser',
              function (){
                  deleteLastSegment();
              },
              "Retirer le dernier segment de l'itinéraire"
-         );
+         );*/
+
+         routeBar._buttons[1].enable();
      }
 
      var URL = elevationURL + '&latLngCollection=';
@@ -2493,9 +2571,10 @@ function deleteLastSegment()
         bestChoices(polyArray[polyArray.length - 1]);
         if(polyArray.length === 0)
         {
-            routeDeleteButton.removeFrom(map);
+            /*routeDeleteButton.removeFrom(map);
             routeSaveButton.removeFrom(map);
-            routeButton.addTo(map);
+            routeButton.addTo(map);*/
+            routeBar._buttons[1].disable();
             pogGroup.eachLayer(function (layer){
                 layer.off("click");
                 map.removeLayer(layer);
@@ -2995,15 +3074,11 @@ function supprSegment(e)
 	
 	//on récupère les points correspondant
 	points = e.target._latlngs.slice(0,pos_detect+1);
-	points2 = e.target._latlngs.slice(pos_detect+2,e.target._latlngs.length);
+	points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
 
 
 	//on set les points dans la première polyline
 	e.target._latlngs = points;
-	
-	//on set le pog	(POG de liaison donc on reprend le même)
-	//e.target.addLatLng(newPOG);
-	
 	//on redessine la polyline	
 	e.target.redraw();
 	
@@ -3017,7 +3092,7 @@ function supprSegment(e)
 
 
 	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2);
+	//saveDeleteSegFromTR(e.target.id, points, points2);
 	
 }
 
@@ -3031,7 +3106,7 @@ function SegmentSlice(poly_key, tab_pos)
 	//séparation du tableau en plusieurs sous sections
 	
 	$.each(tab_pos, function(key, val) {	
-		if(val != 0 || val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
+		if(val != 0 && val != slice_count,drawnItems._layers[poly_key]._latlngs.length-1)
 		{
 			slice_result[val] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,val+1);
 			slice_count = val;
@@ -3044,14 +3119,18 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
 	
-	//--> le .remove enleve les poly du groupe mais pas de la map. a voir
+	map.removeLayer(drawnItems._layers[poly_key]);
 	
 	//drawnItems._layers[poly_key].remove();
 	
-	//suppression de la polyline en bdd :
-	var tid = {};
-	tid[poly_key] = poly_key;
-	DeleteTrons(tid);
+	if(full_poly_tab._layers[poly_key].id !== undefined)
+	{
+		var poly_id = full_poly_tab._layers[poly_key].id;
+ 	
+		var tid = {};
+		tid[poly_id] = poly_id;
+		DeleteTrons(tid);
+	}
 	
 	//création des nouvelles polylines
 	
@@ -3158,6 +3237,13 @@ function saveMultiplePolyServer(tab)
 			//success
 			
 			//penser à set l'id de la poly
+            drawnItems.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            pogGroup.eachLayer(function (layer){
+                map.removeLayer(layer);
+            });
+            loadSegments();
         }
     });
 
