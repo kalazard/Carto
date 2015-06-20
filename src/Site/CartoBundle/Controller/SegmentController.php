@@ -120,7 +120,7 @@ class SegmentController extends Controller
 					//$elevationString = $elevationString . $point["elevation"];
 					
 					$elevationString = $elevationString . "1";
-					if(++$i != count($pointsArray))
+					if(++$i != count($poly["points"]))
 					{
 						$elevationString = $elevationString . ";";
 					}
@@ -154,6 +154,9 @@ class SegmentController extends Controller
 				$manager->persist($segment);
 				$manager->flush();
 			}
+			
+			$lsArray = [];
+			$elevationString = "";
 				
             $response = new Response(json_encode(array("result" => "success","code" => 200,)));
             $response->headers->set('Content-Type', 'application/json');

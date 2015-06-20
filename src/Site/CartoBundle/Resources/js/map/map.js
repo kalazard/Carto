@@ -5,7 +5,6 @@ var isCreateRoute = false;
 var isCreateSegment = false;
 var isEditSegment = false;
 var isLoadingMap = false;
-var isAddPOG = false;
 var supprSeg = false;
 var is_reloading = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
@@ -31,22 +30,26 @@ var points_current_get_elevation;
 var point_other_poly;
 var save_points_elevation;
 
+//constructeur objet point 
 var Point = function (lat, lng) {
     this.lat = lat;
     this.lng = lng;
 };
 
+//constructeur objet TypeLieu
 var TypeLieu = function (id, label, icone) {
     this.id = id;
     this.label = label;
     this.icone = icone;
 };
 
+//constructeur objet icone
 var Icone = function (id, path) {
     this.id = id;
     this.path = path;
 };
 
+// ???
 var editDraw = L.Control.extend({
     options: {
         position: 'topright'
@@ -64,7 +67,10 @@ var editDraw = L.Control.extend({
     }
 });
 
+//fonction d'initialisation de la map 
 function init(callback, params) {
+	//déclaration de l'objet carte
+	//intègre la modal montrant l'ajout des POIs
     map = new L.map('map', {
         contextmenu: true,
         contextmenuWidth: 140,
@@ -78,23 +84,30 @@ function init(callback, params) {
             }
         }]
     });
+	//chargments de tout les POIs existants dans la base de données
     loadLieux();
+	//si le navigateur est autorisé à indiquer la géolocalisation du client
     if (navigator.geolocation) {
+		//récupération de la position de l'utilisateur et appel de la fnction goToPosition
         navigator.geolocation.getCurrentPosition(goToPosition, showError);
     }
     else {
+		//???
         goToPosition({"coords": {"latitude": 0, "longitude": 0}}, callback, params);
     }
+	//ajout de l'overley qui affiche l'élévation d'un itinéraire
     addOverlay();
+	//
     $('#savepoi').click(savePoi);
     if (typeof callback !== "undefined" && typeof params !== "undefined") {
         callback.apply(null, params);
     }
 }
 
+//fonction de chargement du rôle de l'utilisateur.
 function loadRoleMap() {
     var role;
-
+	//appel ajax vers l'adresse générée par symfony (se trouve dans le fichier routing.yml)
     $.ajax({
         url: Routing.generate('site_carto_getRoleMap'),
         type: 'POST',
@@ -110,14 +123,16 @@ function loadRoleMap() {
     return role;
 }
 
+//fonction de chargement des lieux
 function loadLieux() {
     var res = [];
-
     $.ajax({
         url: Routing.generate('site_carto_getAllLieux'),
         type: 'GET',
         dataType: 'json',
         success: function (json, statut) {
+		
+			//rajoute les lieux trouvés à la suite de l'élément HTML possédant l'id typelieu
             for (var i = 0; i < json.length; i++) {
                 var opt = $("<option>").attr("value", json[i].id).text(json[i].label);
                 opt.appendTo("#typelieu");
@@ -130,6 +145,7 @@ function loadLieux() {
     return res;
 }
 
+//fonction de chargement des POIs
 function loadPois()
 {
     $.ajax({
@@ -137,17 +153,23 @@ function loadPois()
         type : 'GET',
         dataType : 'json',
         success : function(json, statut){
+		
+			//on charge le role de l'utilisateur
             roleMap = loadRoleMap();
-
+			//initialisation
             var icone;
             var marker;
+			//pour chaque résultats du tableau json, on génère un POI
             for(var i = 0; i < json.length; i++)
             {
+				//attribution des valeurs à l'icone 
                 icone = L.icon({
                     iconUrl : json[i].typelieu.icone.path,
                     iconSize : [30, 30]
                 });
 
+				//si l'utilisateur est un admin ou un cartographe, on lui donne le droit de modifier et de supprimer les POIs
+				//génération des modals pour chaque POIs
                 if(roleMap == 1 || roleMap == 3)
                 {
                     if(json[i].image != null)
@@ -204,20 +226,22 @@ function loadPois()
     });
 }
 
-//Coordonnées à partir du navigateur
+//Obtenir les coordonnées à partir du navigateur
 function getLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(goToPosition, showError);
     } else {
-        //$("#map").html("Votre navigateur ne supporte pas la géolocalisation");
         goToPosition({"coords": {"latitude": 0, "longitude": 0}});
     }
 }
+
+//???
 function showError(error) {
     goToPosition({"coords": {"latitude": 0, "longitude": 0}});
 }
 
-//Place la map à la position récupérée dans getLocation
+//Place la map à la position récupérée dans getLocation.
+//cette fonction contient également la rédéfinition des classes draw et edit de la librairie leafletDraw
 function goToPosition(position) {
     //Définition des attributs de la carte et positionnement
     $("#map").css("height", "100%").css("width", "100%").css("margin", "auto");
@@ -227,7 +251,7 @@ function goToPosition(position) {
     }
     formerZoom = zoom;
     map.setView([position.coords.latitude, position.coords.longitude], zoom);
-
+	
     geocoder = L.Control.geocoder().addTo(map);
     geocoder.markGeocode = function(result) {
         this._map.fitBounds(result.bbox);
@@ -240,16 +264,19 @@ function goToPosition(position) {
             .bindPopup(result.html || result.name)
             .addTo(this._map)
             .openPopup();
+			
+		if(!is_reloading)
+		{
+			drawnItems.eachLayer(function (layer) {
+				map.removeLayer(layer);
+			});
 
-        drawnItems.eachLayer(function (layer) {
-            map.removeLayer(layer);
-        });
-
-        pogGroup.eachLayer(function (layer) {
-            map.removeLayer(layer);
-        });
-
-        loadSegments();
+			pogGroup.eachLayer(function (layer) {
+				map.removeLayer(layer);
+			});
+			loadSegments();
+			is_reloading = true;
+		}
         return this;
     };
 
@@ -258,10 +285,16 @@ function goToPosition(position) {
         attribution: 'Landscape'
     }).addTo(map);
 
+	//déclaration 
+	//contient les marqueurs de toutes les polylines
     markerGroup = new L.LayerGroup();
+	//contient tout les POGs des polylines
     pogGroup = new L.LayerGroup();
+	//contient toutes les polylines 
     drawnItems = new L.FeatureGroup();
+	//contient
 	radiusGroup = new L.FeatureGroup();
+	//le groupe drawnItems est ajouté à la map (c'est un layerGroup)
     map.addLayer(drawnItems);
     map.eachLayer(function (layer) {
         if ((layer instanceof L.Polyline) && !(layer instanceof L.Polygon)) {
@@ -269,7 +302,8 @@ function goToPosition(position) {
         }
     });
 
-
+	//redéfinition de l'une des classes de la librairie leafletDraw
+	//rien n'a été modifié dans cette classe
     L.Draw.SegmentFeature = L.Draw.Feature.extend({
         includes: L.Mixin.Events,
 
@@ -350,6 +384,8 @@ function goToPosition(position) {
     });
 
     //Création d'une polyline custom pour les segments
+	//cette classe a été redéfinies pour implémenter des fonctionnalités lors du traçage d'un tronçon
+	//(ici, un segment est un tronçon)
     L.Draw.SegmentPolyline = L.Draw.SegmentFeature.extend({
         statics: {
             TYPE: 'segmentpolyline'
@@ -384,15 +420,12 @@ function goToPosition(position) {
         },
 
         initialize: function (map, options) {
-            // Need to set this here to ensure the correct message is used.
+		
             this.options.drawError.message = L.drawLocal.draw.handlers.polyline.error;
 
-            // Merge default drawError options with custom options
             if (options && options.drawError) {
                 options.drawError = L.Util.extend({}, this.options.drawError, options.drawError);
             }
-
-            // Save the type so super can fire, need to do this as cannot do this.TYPE :(
             this.type = L.Draw.Polyline.TYPE;
 
             L.Draw.SegmentFeature.prototype.initialize.call(this, map, options);
@@ -410,11 +443,6 @@ function goToPosition(position) {
 
                 this._tooltip.updateContent(this._getTooltipText());
 
-                // Make a transparent marker that will used to catch click events. These click
-                // events will create the vertices. We need to do this so we can ensure that
-                // we can create vertices over other map layers (markers, vector layers). We
-                // also do not want to trigger any click handlers of objects we are clicking on
-                // while drawing.
                 if (!this._mouseMarker) {
                     this._mouseMarker = L.marker(this._map.getCenter(), {
                         icon: L.divIcon({
@@ -520,24 +548,6 @@ function goToPosition(position) {
             if (this.options.repeatMode) {
                 this.enable();
             }
-			
-			/*
-			$.each(drawnItems._layers, function(key, val) {
-				
-				$.each(val._latlngs, function(key, points) 
-				{									
-					//test de concordances entre les points 
-					if(points.lat == base_lat && points.lng == base_lng)
-					{				
-						//on set le point correspondant 
-						points.lat = base_lat;
-						points.lng = base_lng;
-						
-						console.log("ça marche bitch");
-					}
-				});
-			});	
-			*/
         },
 
         //Called to verify the shape is valid when the user tries to finish it
@@ -609,16 +619,21 @@ function goToPosition(position) {
                 this._markers[markerCount - 2].off('click', this._finishShape, this);
             }
         },
-
+		
+		//fonction qui a été modifiée 
         _createMarker: function (latlng) {
 		
 			var number_point = Object.keys(this._markerGroup._layers);
 
 			//calcul de la zone de détection en fonction du radius
 			
+			//en plus de l'ajout de point, la fonction est chargée de détecté les "colisions" entre d'autre point.
+			
+			//si deux points possèdent les même coordonées, on superpose les deux points (leurs coordonnées sont identiques)
 			var number_temp = 0;
             var radius = 10;
 			
+			//calcul pour attribuer un rayon de detection autour du point ou l'on clique
 			number_temp = 0.0001*((radius/10)*(18-map.getZoom()+1));
 			
 			number_temp = number_temp + (0.0001*((radius/10) * (18-map.getZoom())));
@@ -628,29 +643,29 @@ function goToPosition(position) {
 			var base_lng = latlng.lng;
 
 			var index_save = "";
-			
+			//ensuite on parcourt tout les points enregistrés dans la variables drawnItems
 			$.each(full_poly_tab._layers, function(key_poly, val) {					
 
 				$.each(val._latlngs, function(key, points) 
 				{
-						//si il y a une concordance (on arrondis pour éliminer les imperfections), 
-						//on sauvegarde toute la polyline dans le tableau temp_redraw
-						
+						//si il y a une concordance (on arrondis pour éliminer les imperfections), 						
 						//il peut y avoir plusieurs polyline dans l'intersection
-						
 						//structure du tableau : tab[id_poly][pos] 
+						
+						//on calcule la différence entre le point ou l'on a cliqué, et le point courant de la variable DrawItems
 						
 						dif_lat = base_lat - points.lat;
 						dif_lng = base_lng - points.lng;
 						
-						//récupération du zoom 
-						
+						//si le point courant se trouve dans le rayon calculé
 						if((dif_lat < number_temp && dif_lat > -1*number_temp ) && (dif_lng < number_temp*2 && dif_lng > -1*number_temp*2))
 						{
+							//on set la longitude et la latitude du point ou l'on a cliqué sur le point détecté 
 							latlng.lat = points.lat;
 							latlng.lng = points.lng;
 							
-							//on initialise le tableau points_tab_index
+							//le tableau points_tab_index sert à stocker les points qui sont des POPS et qui sont des intersection entre un ou plusieurs tronçons.
+							//si c'est le cas, 
 							if(points_tab_index[key_poly] === undefined)
 							{				
 								points_tab_index[key_poly] = {};
@@ -664,18 +679,19 @@ function goToPosition(position) {
 								points_tab_index["poly_courante"][compteur_glob] = latlng;
 							}							
 							
-							//on garde l'intersection de la polyline qu'on est en train de tracer
-							
-							//on sauvegarde le compteur dans le tableau machin : create_poly_segmentation_count
+							//on sauvegarde le compteur dans le tableau : create_poly_segmentation_count
+							//ce tableau est utilisé pour stocker les intersections de la polyline qu'on est en train de tracer.
 							if(create_poly_segmentation_count != 0)
 							{
 								table_pos_poly_courante[create_poly_segmentation_count] = create_poly_segmentation_count;
 							}
-							
+							//on incémente le compteur qui permet de défnir la position d'un point dans la polyline
 							compteur_glob++;
 						}						
 					});
 			});	
+			
+			//fin de l'ajout custom
 		
             var marker = new L.Marker(latlng, {
                 icon: this.options.icon,
@@ -878,7 +894,7 @@ function goToPosition(position) {
         }
     });
 	
-	///////////////////////////// class edit poly
+//redefinition de la classe edit.
 
 /*
  * L.Edit.Poly is an editing handler for polylines and polygons.
@@ -1003,56 +1019,20 @@ L.Edit.Poly = L.Handler.extend({
 		this._poly.fire('edit');
 	},
 	
-	//rajout de l'evenement onMarkerStart
+	//rajout de l'evenement onMarkerStart. Cette fonction est utilisée pour déplacer plusieurs points de plusieurs polyline (Layers) en même temps.
 	_onMarkerDragStart: function (e) {
 	
 		var base_lat_first = e.target._latlng.lat;
 		var base_lng_first = e.target._latlng.lng;
 		
-		//structure : tab[id][0] = id;
-		//			  tab[id]["POINTS"]
-		
-		//update_list_segment = 
-		
-		//on stocke la et les poly a chaque dragstart
-		
 		
 		//on crée un objet qui va contenir tout les marqueurs et tout les points qui sont à modifier
 		liste_poly_detect = {};
 		liste_poly_detect_point = {};
-		/*
-		liste_poly_detect[0] = e.target._latlng.lat;
-		liste_poly_detect[1] = e.target._latlng.lng;
-		*/
 		
-		//console.log(liste_poly_detect);
-		
-		//on rajoute la detection des points dans cette fonction, puis on stocke les points dans une liste 
-		/*
-		var markerGroup2 = $.extend(true, {}, markerGroup);
-		
-		$.each(markerGroup2._layers, function(key, val) { 
-			if(val._latlng.lat == base_lat_first && val._latlng.lng == base_lng_first)
-			{
-				//on stocke les points trouvés dans l'objet liste_poly_detect
-				//id du marqeur -> lat et lng
-				if (!liste_poly_detect.key) {
-
-					liste_poly_detect[key] = {};
-				
-					liste_poly_detect[key][0] = val._latlng.lat;
-					liste_poly_detect[key][1] = val._latlng.lng;
-				}
-			}
-		});
-		*/
-		
-		//on detecte tout les polylines concernée par le déplacement (par les points)
+		//on detecte tout les polylines concernée par le déplacement (par les points que l'on a trouvé dans le createMarker de la classe segment)
 		
 		var full_poly_tab = $.extend(true, {}, drawnItems);
-		
-		//liste_poly_detect[cle]['cle'] = cle;
-		//liste_poly_detect[cle]['pos'] = pos;
 		
 		//comparaison avec les points du tableau full_poly_tab
 		
@@ -1074,9 +1054,9 @@ L.Edit.Poly = L.Handler.extend({
 		});
 		
 		//on doit rechercher les points qui ont une collisions avec le point en paramètre (e)
-		
+		//meme chose avec les 
+		/*
 		liste_marqueur_detect = {};
-		
 		
 		var markerGroup2 = $.extend(true, {}, markerGroup);
 		
@@ -1091,53 +1071,16 @@ L.Edit.Poly = L.Handler.extend({
 					liste_marqueur_detect[key][1] = val._latlng.lng;
 				}
 			}
-		});
+		});*/
 	},
 
+	//fonction de déplacement d'un marqueur 
 	_onMarkerDrag: function (e) {
 		var marker = e.target;
 		
 		//on récupère les coordonnées du point que l'on a sélectionné
 		var base_lat_maj = e.target._latlng.lat;
 		var base_lng_maj = e.target._latlng.lng;
-	
-		//var base_lat_first = liste_poly_detect[0];
-		//var base_lng_first = liste_poly_detect[1];
-		
-		//y a un problème avec le drawnItems
-		//le tableau est modifié pendant que la boucle foreach est effectué, donc il faut partir sur une copie du tableau 
-		
-		//pour corriger le problème il faudrait cloner la variable drawnItems sans référence.
-		/*
-		var full_poly_tab = $.extend(true, {}, drawnItems);
-		
-		//comparaison avec les points du tableau full_poly_tab
-		
-		$.each(full_poly_tab._layers, function(key, val) {
-			
-			$.each(val._latlngs, function(pos, points) 
-			{									
-				//test de concordances entre les points 
-				if(points.lat == base_lat_first && points.lng == base_lng_first)
-				{				
-					//on set le point correspondant 
-					points.lat = base_lat_maj;
-					points.lng = base_lng_maj;
-					
-					//la variable key c'est l'id du layer 
-					//la variable pos c'est la position du point dans le layer.
-					//drawnItems._layers[key]._latlngs[pos].lat
-					
-					drawnItems._layers[key]._latlngs[pos].lat = base_lat_maj;
-					drawnItems._layers[key]._latlngs[pos].lng = base_lng_maj;
-					
-					//création de la 
-					
-					drawnItems._layers[key].redraw();
-				}
-			});
-		});	*/
-
 		
 		//mis à jour des points contenus dans l'object liste_poly_detect
 		var point_temp;
@@ -1163,35 +1106,31 @@ L.Edit.Poly = L.Handler.extend({
 		var latlngs_modif;
 		var poly_id = this._poly._leaflet_id;
 		
-		//liste_poly_detect[cle] = {}
-		//liste_poly_detect[cle]['cle'] = cle;
-		//liste_poly_detect[cle]['pos'] = pos;
-		
 		$.each(liste_poly_detect, function(key, val) { 			
+			
 			//on récupère la polyline
 			//si la polyline n'est pas la polyline courante 
-			
 			if(val != poly_id)
 			{
 				//on récupère les latlngs de la poyline
-				latlngs_modif = $.extend(true, {}, drawnItems._layers[val['key']]._latlngs);
-				//parcourir les 
-				
-				//on les parcourts ensuite
+				latlngs_modif = $.extend(true, {}, drawnItems._layers[val['key']]._latlngs);				
+				//ensuite pour chaque points
 				$.each(latlngs_modif, function(pos, val) { 
-				
-					//on set les valeurs du points que l'on déplace a partir de la liste liste_poly_detect_point
+					//si le point se toruve dans le tableau liste_poly_detect généré dans l'ajout d'un point
 					if(pos == liste_poly_detect[key]['pos'])
 					{
+						//on set les valeurs du points que l'on déplace a partir de la liste liste_poly_detect_point
 						val.lat = base_lat_maj;
 						val.lng = base_lng_maj;
 					}
 				});
-				
+				//on redessine la polyline courante
 				drawnItems._layers[val['key']].redraw();
 			}
 			
 		});
+		
+		//fin de la modification
 		
 		L.extend(marker._origLatLng, marker._latlng);
 		if (marker._middleLeft) {
@@ -1354,6 +1293,9 @@ L.Polyline.addInitHook(function () {
 	});
 });
 
+//fin de la classe edit
+
+	//inclusion de la barre des actions
     L.DrawToolbar.include({
         getModeHandlers: function (map) {
             return [
@@ -1371,7 +1313,7 @@ L.Polyline.addInitHook(function () {
             ];
         }
     });
-
+	//ajout du bouton " Tracer un parcours "
     drawControl = new L.Control.Draw({
         draw: {
             polyline: {
@@ -1391,7 +1333,8 @@ L.Polyline.addInitHook(function () {
     });
     L.drawLocal.draw.toolbar.buttons.polyline = 'Tracer un parcours';
     map.addControl(drawControl);
-
+	
+	//ajout des boutons pour tracer un itinéraire
     routeButton = L.easyButton({
         states:[
             {
@@ -1460,20 +1403,7 @@ L.Polyline.addInitHook(function () {
 
     routeBar = L.easyBar([ routeButton, routeDeleteButton,routeCancelButton ]);
     routeBar.addTo(map);
-/*
-	POGButton = L.easyButton(
-        {
-            states : [{
-                icon : 'fa-plus',
-                onClick : function (){
-                    addPOGEvent();
-                },
-                title : "Ajouter un POG"
-            }
-
-        ]}
-    );
-*/	 
+	//ajout du bouton de suppression d'un segment d'un tronçon
 	Segsuppr = L.easyButton({
             states : [
 			{
@@ -1498,12 +1428,13 @@ L.Polyline.addInitHook(function () {
             ]}
      );
 
-
+	//ajout dans la barre et dans la map
     pogBar = L.easyBar([ Segsuppr ]);
     pogBar.addTo(map);
 
     L.control.scale().addTo(map);
-
+	
+	//création d'un itinéraire
     map.on('draw:created', function (e) {
         var type = e.layerType,
             layer = e.layer;
@@ -1515,6 +1446,7 @@ L.Polyline.addInitHook(function () {
             pointArray[i] = new Point(polyline._latlngs[i].lat, polyline._latlngs[i].lng);
         }
         //console.log("pointArray length : " +  pointArray.length);
+		//récupération de l'élévation 
         var URL = elevationURL + '&latLngCollection=';
         for (var i = 0; i < pointArray.length; i++) {
             var lat = pointArray[i].lat;
@@ -1534,15 +1466,17 @@ L.Polyline.addInitHook(function () {
         $("#denivn").text("");
     });
 
+	//evenement de création d'un segment
     map.on('draw:segmentcreated', function (e) {
 		//lors de l'ajout d'une polyline, on la sépare en plusieurs morceau.
-		console.log(points_tab_index);
 		//boucle pour parcourir toutes les polylines détectées.
 		$.each(points_tab_index, function(key, val) { 
 			if(key != "poly_courante")
 			{
+				//si l'objet n'est pas vide
 				if(count_object_property(val) != 0)
 				{
+					//fonction qui sert à séparé les tronçons en plusieurs sous tronçons. S'occupe également de l'envois en BDD
 					SegmentSlice(key, val);
 				}
 			}
@@ -1552,11 +1486,11 @@ L.Polyline.addInitHook(function () {
         drawnItems.addLayer(layer);
         polyline = layer;
         map.off("click");
-        //console.log("poly coords : " + polyline._latlngs.length);
+        //on génére les points de la polyline
         for (var i = 0; i < polyline._latlngs.length; i++) {
             pointArray[i] = new Point(polyline._latlngs[i].lat, polyline._latlngs[i].lng);
         }
-        //console.log("pointArray length : " +  pointArray.length);
+        //récupération de l'élévation
         var URL = elevationSegmentURL + '&latLngCollection=';
         for (var i = 0; i < pointArray.length; i++) {
             var lat = pointArray[i].lat;
@@ -1578,8 +1512,6 @@ L.Polyline.addInitHook(function () {
 		//autoriser le passage seulement si les points ne sont pas des POGS (le zéro n'est pas ajouté dans le tableau, mais le dernier point oui)
 		if(count_object_property(table_pos_poly_courante) != 0)
 		{
-			if(count_object_property(e.layer._latlngs) != create_poly_segmentation_count)
-			{
 				//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
 				
 				//on récupère une polyline et on la découpe en fonction du tab_pos donné en paramètre.
@@ -1588,7 +1520,7 @@ L.Polyline.addInitHook(function () {
 				
 				//séparation du tableau en plusieurs sous sections
 				$.each(table_pos_poly_courante, function(key, val) {				
-					if(val != 0 && val != pointArray.length-1)
+					if(val != 0 && val != pointArray.length)
 					{
 						slice_result[val] = pointArray.slice(slice_count,val+1);
 						slice_count = val;
@@ -1597,10 +1529,11 @@ L.Polyline.addInitHook(function () {
 				
 				slice_result[slice_count+pointArray.length] = pointArray.slice(slice_count,pointArray.length);
 				
-				//pas de suppresion en bdd puisque le segment n'existe pas encore.		
+				//pas de suppresion en BDD puisque le segment n'existe pas encore.		
 				
 				//création des nouvelles polylines
 				//slice_result contient le nuage de points, on le set dans les polylines
+				
 				$.each(slice_result, function(key, val) 
 				{
 					polyline = L.polyline(val, {color: 'blue'});	
@@ -1616,10 +1549,10 @@ L.Polyline.addInitHook(function () {
 				//remise à zéro du tableau et du compteur
 				table_pos_poly_courante = {};
 				create_poly_segmentation_count = 0;
-			}
 		}
 		else
 		{
+			//si il n'y a pas de coupure, on sauvegarde simplement la polyline
 			 setTimeout(saveSegment, 5000);
 		}
 		
@@ -1639,20 +1572,21 @@ L.Polyline.addInitHook(function () {
     map.on('draw:segmentstart', function (e) {
         drawSegment(e);
     });
-
+	
     map.on('draw:segmentstop', function (e) {
         map.off("click");
         isCreateSegment = false;
     });
-
+	
     map.on('draw:editstart', function (e) {
         isEditSegment = true;
     });
 	
+	//fonction qui permet de sauvegarder en base de données les modifications apportées à plusieurs polylines
 	map.on('draw:edited', function (e) {
         isEditSegment = false;
-		//dans cette fonction prévoir une requete pour envoyer tout les segments qui ont été édités
 		
+		//le tableau liste_points_final contient toutes les polylines qui vont être modifiées en BDD
 		var liste_points_final = {};
 		
 		//on lit les polylines du tableau liste_points_final
@@ -1671,8 +1605,6 @@ L.Polyline.addInitHook(function () {
 			});	
 		});			
 		
-		//récupérer les popylines selon leurs ids, et générer le tableau des points associés.
-		
 		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
 		updateMultipleSegment(liste_points_final);
     });
@@ -1680,6 +1612,8 @@ L.Polyline.addInitHook(function () {
     map.on("draw:editstop", function(e){
         isEditSegment = false;
     });
+	
+	//evenement de sauvegarde pour la suppression d'une ou de plusieurs polylines
 	map.on('draw:deleted', function (e) {
 		var tronId = {};
 		//pour récupérer l'id du layer : e.layers._layers
@@ -1689,11 +1623,10 @@ L.Polyline.addInitHook(function () {
 		
 		//suppression en base
 		DeleteTrons(tronId);
-		
-		//suppression du DrawnItems
-		
-		//remove les marqueurs
     });
+	
+	//fonction qui gère le zoom.
+	//contient la mise à jour du radius de détection des points.
     map.on("zoomend", function (e) {
         if (map.getZoom() < 10 && formerZoom >= 10) {
             markerGroup.eachLayer(function (layer) {
@@ -1711,16 +1644,9 @@ L.Polyline.addInitHook(function () {
             drawnItems.eachLayer(function (layer) {
                 layer.addTo(map);
             });
-            //loadSegments();
         }		
         formerZoom = map.getZoom();
 		
-		// création des cercles 	
-	//suppression de tout les marqueurs précédent.
-	
-	/*$.each(radiusGroup._layers, function(key, radius) {
-		radius.removeLayer();
-	});*/
 	radiusGroup.eachLayer(function (layer){
 		map.removeLayer(layer);
 	});
@@ -1739,38 +1665,26 @@ L.Polyline.addInitHook(function () {
 	{
 		radius = radius - 20;
 	}	
-	  
-	$.each(full_poly_tab._layers, function(key, val) {
-		$.each(val._latlngs, function(key, points) 
-		{
-		//	if()
-		//	{
-				//console.log(radius);
-				
-				//commentaire temporaire !!!!
-				/*
-				var circle = new L.circle([points.lat, points.lng], radius).addTo(map);
-				//ajout du cercle à un layer groupe
-				radiusGroup.addLayer(circle);
-				*/
-		//	}
-		});
-	});			
-	  ///////////FIN DU CALCUL
+	
+	///////////FIN DU CALCUL
     })
 
     map.on('dragend', function () {
         if (map.getZoom() == formerZoom ) {
             if(!isCreateRoute && !isCreateSegment && !isEditSegment)
             {
-                drawnItems.eachLayer(function (layer) {
-                    map.removeLayer(layer);
-                });
+					drawnItems.eachLayer(function (layer) {
+						map.removeLayer(layer);
+					});
 
-                pogGroup.eachLayer(function (layer) {
-                    map.removeLayer(layer);
-                 });
-                loadSegments();
+					pogGroup.eachLayer(function (layer) {
+						map.removeLayer(layer);
+					 });
+				if(!is_reloading)
+				{	 
+					loadSegments();
+					is_reloading = true;
+				}
             }
 
 
@@ -1778,7 +1692,11 @@ L.Polyline.addInitHook(function () {
     });
     $("#map").css("cursor", "move");
     loadPois();
-    loadSegments();
+	if(!is_reloading)
+	{
+		loadSegments();
+		is_reloading = true;
+	}
     if (isLoadingMap) {
         segmentID = traceData.segment.id;
         displayTrace(traceData.segment, traceData.elevation);
@@ -1846,7 +1764,7 @@ function displayCoords(event) {
     $("#lng").val(event.latlng.lng);
 }
 
-
+//???
 function parseGPX(path) {
     GPX = new L.GPX(path, {
         async: true,
@@ -1860,11 +1778,13 @@ function parseGPX(path) {
         }).addTo(map);
 }
 
+//fonction utilitaire de geocoding
 function geocode() {
     var geo = MQ.geocode({map: map})
         .search($("#ville").val());
 }
 
+//fonction d'initilisation pour créer un itinéraire (appellée de la barre des boutons)
 function createRoute() {
     if (!isCreateRoute) {
         isCreateRoute = true;
@@ -1877,6 +1797,7 @@ function createRoute() {
     }
 }
 
+
 function drawRoute(event) {
     if (!isCreateRoute) {
         isCreateRoute = true;
@@ -1888,6 +1809,7 @@ function drawRoute(event) {
     }
 }
 
+//sauvegarder l'itinéraire que l'on vient de tracer (après appuis sur le bouton sauvegarder)
 function saveRoute() {
     loadDifficultes();
     loadStatus();
@@ -1962,6 +1884,7 @@ function saveRoute() {
 
 }
 
+//fonction de traçage d'un segment (attribution d'un écouteur pour la variable map)
 function drawSegment(event) {
     if (!isCreateSegment) {
         isCreateSegment = true;
@@ -1973,7 +1896,8 @@ function drawSegment(event) {
     }
 }
 
-function saveSegment() {  //console.log(JSON.stringify(pointArray));	
+//sauvegarde du segment tracé
+function saveSegment() {  
     $.post(Routing.generate('site_carto_saveSegment'),
         {
             points: JSON.stringify(pointArray)
@@ -1990,6 +1914,7 @@ function saveSegment() {  //console.log(JSON.stringify(pointArray));
 
 }
 
+//fonction de sauvegarde d'un POI
 function savePoi()
 {
     roleMap = loadRoleMap();
@@ -2001,13 +1926,9 @@ function savePoi()
         idLieu : $("#typelieu option:selected").val(),
         titre : $("#titre").val(),
         description : $("#descriptionPoi").val()
-        //labellieu : labelLieu,
-        //idicone : idIcone,
-        //pathicone : pathIcone
-        //existLieu : new TypeLieu(idLieu, labelLieu, new Icone(idIcone, pathIcone))
     },
     function(data, status){
-        //console.log(data);
+	
         var iconePoi = L.icon({iconUrl : data.path,iconSize : [30, 30]});
 
         if(roleMap == 1 || roleMap == 3)
@@ -2025,7 +1946,7 @@ function savePoi()
     $("#addpoi").modal('hide');
 }
 
-
+//fonction de modification d'un POI
 function modifPoi()
 {
     var dataPoi = $('#formModifPoi').serialize();
@@ -2106,15 +2027,13 @@ function suppressionPoi(idPoi)
     });
 }
 
+//fonction de récupération de l'élévation de l'itinéraire que l'on trace
 function getElevation(response)
 {
     blockItineraireSave();
     denivelen = 0;
     denivelep = 0;
-    //console.log("Taille de pointArray : " + pointArray.length);
-    //console.log(response);
     var poly = [];
-    //var latlngs = polyArray[polyArray.length - 1]._latlngs;
     for(var i = 0; i < polyArray[polyArray.length - 1]._latlngs.length; i++)
     {
         polyArray[polyArray.length - 1]._latlngs[i].elevation = response.elevationProfile[i].height;
@@ -2152,19 +2071,14 @@ function getElevation(response)
 
     }
     blockItineraireSave();
-    /* map.on("click",function (ev){
-     addPointOnMap(ev);
-     });*/
-
 }
 
+//fonction de récupération de l'élévation du segment que l'on trace
 function getElevationSegment(response)
 {
     blockItineraireSave();
     denivelen = 0;
     denivelep = 0;
-    //console.log("Taille de pointArray : " + pointArray.length);
-    //console.log(response);
     for(var i = 0; i < pointArray.length; i++)
     {
         pointArray[i].elevation = response.elevationProfile[i].height;
@@ -2202,6 +2116,7 @@ function getElevationSegment(response)
     });
 }
 
+//fonction de chargement des difficultées (utilisé dans la modal de sauvegarde d'un itinéraire)
 function loadDifficultes() {
     $.ajax({
         url: Routing.generate('site_carto_getDifficulteParcours'),
@@ -2225,6 +2140,7 @@ function loadDifficultes() {
     });
 }
 
+//fonction de chargement des status (utilisé dans la modal de sauvegarde d'un itinéraire)
 function loadStatus() {
     $.ajax({
         url: Routing.generate('site_carto_getStatus'),
@@ -2248,6 +2164,8 @@ function loadStatus() {
     });
 }
 
+
+//fonction de chargement des types de chemins (utilisé dans la modal de sauvegarde d'un itinéraire)
 function loadTypechemin() {
     $.ajax({
         url: Routing.generate('site_carto_getTypechemin'),
@@ -2271,6 +2189,7 @@ function loadTypechemin() {
     });
 }
 
+//fonction de conversion d'un tableau JSON en fichier CSV
 function csvJSON(csv) {
 
     var lines = csv.split("\n");
@@ -2297,6 +2216,7 @@ function csvJSON(csv) {
     return result;
 }
 
+//fonction d'affichage des traces CSV
 function displayTrace(trace, elevation) {
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
@@ -2392,6 +2312,7 @@ function displayTrace(trace, elevation) {
     map.fitBounds(polyline.getBounds());//On centre la map sur la polyline
 }
 
+//fonction d'affichage d'un segment à partir d'une trace CSV
 function displaySegment(trace,id,elevation) {
     //On convertit les coordonnées JSON en LatLng utilisables pour la polyline
     var LSCoords = trace.split(",");
@@ -2462,11 +2383,13 @@ function displaySegment(trace,id,elevation) {
     }
 }
 
+//fonction utilitaire pour attribuer un JSON dans une variable gloable
 function loadMap(json) {
     isLoadingMap = true;
     traceData = json;
 }
 
+//fonction qui sert à gérer la surbrillance d'un objet.
 function surbrillance(object) {
     object.on("mouseover", function () {
         object.setStyle({color: 'yellow'});
@@ -2478,6 +2401,7 @@ function surbrillance(object) {
     });
 }
 
+//fonction pour mettre à jour un segment
 function updateSegment(points) {
     $.post(Routing.generate('site_carto_segment_update'),
         {
@@ -2494,6 +2418,7 @@ function updateSegment(points) {
     isEditSegment = false;
 }
 
+//fonction pour mettre à jour plusieurs segments
 function updateMultipleSegment(points) {
 	var points_string = JSON.stringify(points);
 	console.log(points_string);
@@ -2510,6 +2435,7 @@ function updateMultipleSegment(points) {
         });
 }
 
+//fonction pour faire apparaitre la modal de sauvegarde d'un itinéraire
 function blockItineraireSave() {
     if (!$("#saveiti").prop("disabled")) {
         $("#saveiti").prop("disabled", true).change();
@@ -2519,12 +2445,13 @@ function blockItineraireSave() {
     }
 }
 
+//fonction d'ajout d'un point sur la map
 function addPointOnMap(ev) {
-
+	//création du point
     pointArray.push(new Point(ev.latlng.lat, ev.latlng.lng));
-    //console.log("Nouveau point ajouté, nouvelle taille : " + pointArray.length);
     latlngArray.push(ev.latlng);
     if (pointArray.length > 1) {
+		//récupération de l'élévation
         polyline = L.polyline(latlngArray);
         var URL = elevationSegmentURL + '&latLngCollection=';
         for (var i = 0; i < latlngArray.length; i++) {
@@ -2544,6 +2471,7 @@ function addPointOnMap(ev) {
     }
 }
 
+//fonction de chargement des segments
 function loadSegments() {
     var bounds = map.getBounds();
     $.post(Routing.generate('site_carto_loadSegment'),
@@ -2564,7 +2492,7 @@ function loadSegments() {
                     map.removeLayer(layer);
                 });
             }
-			
+			//on reset la variable pour de nouveau autoriser les appels ajax
 			is_reloading = false;
             //$.notify("Segment mis à jour", "success");
         }
@@ -2573,6 +2501,7 @@ function loadSegments() {
         });
 }
 
+//fonction de construction de l'itinéraire qu'on est en train de tracer.
 function buildRoute(e)
  {
      var oldSize = polyArray.length;
@@ -2581,16 +2510,11 @@ function buildRoute(e)
 
      if(oldSize === 0)
      {
-         /*routeDeleteButton = L.easyButton('fa-eraser',
-             function (){
-                 deleteLastSegment();
-             },
-             "Retirer le dernier segment de l'itinéraire"
-         );*/
 
          routeBar._buttons[1].enable();
      }
 
+	 //récupération de l'élévation
      var URL = elevationURL + '&latLngCollection=';
      for (var i = 0; i <selectedPoly._latlngs.length; i++) {
          var lat = selectedPoly._latlngs[i].lat;
@@ -2723,11 +2647,13 @@ function bestChoices(selectedPoly)
 
 }
 
+//teste l'égalité entre deux points (lat et lng)
 function latlngEquality(latlngA, latlngB)
 {
     return latlngA.lat === latlngB.lat && latlngA.lng === latlngB.lng;
 }
 
+//ajout des layers à la map après le chargement
 function segmentLoaded(poly)
 {
     var res = false;
@@ -2756,6 +2682,7 @@ function pogLoaded(pog)
     return res;
 }
 
+//début du traçage de la route
 function beginRoute()
 {
     drawnItems.eachLayer(function (layer) {
@@ -2764,7 +2691,6 @@ function beginRoute()
     pogGroup.eachLayer(function (layer) {
         layer.on("click",function (e){
             var pog = e.target;
-            console.log(e.target);
             pogGroup.eachLayer(function (layer){
                 layer.off("click");
                 map.removeLayer(layer);
@@ -2799,6 +2725,7 @@ function beginRoute()
     });
 }
 
+//fonction qui trouve une route avec deux POGs donnés
 function autoRoute()
 {
     computePogs = [];
@@ -2826,6 +2753,7 @@ function autoRoute()
     });
 }
 
+//annulation 
 function cancelAutoRoute()
 {
     computePogs = [];
@@ -2838,6 +2766,7 @@ function cancelAutoRoute()
     });
 }
 
+//fonction de calcul de la detection automatique d'une route
 function computeRoute(pogs)
 {
     var finalPog = pogs[1];//Point d'arrivée
@@ -2891,7 +2820,6 @@ function computeRoute(pogs)
             });
             //On ajoute les nodes des enfants
             jQuery.each(possiblePogs,function(k,v){
-                console.log("boucle");
                 var newNode = tree.parse({pog : v});
                 currentNode.addChild(newNode);
                 if(v._leaflet_id === finalPog._leaflet_id)//Si on arrive au point final
@@ -2951,6 +2879,8 @@ function computeRoute(pogs)
         $.notify("Aucun chemin trouvé","warning");
     }
 }
+
+//trouver un POG par son id
 function findPogById(id)
 {
     var res = "";
@@ -2964,117 +2894,7 @@ function findPogById(id)
     return res;
 }
 
-/* sépare  */
-function addPOGEvent()
-{
-	 if (!isAddPOG) {
-        isAddPOG = true;
-        pointArray = [];
-        latlngArray = [];
-        polyline.on("click",function (e){
-            addPOG(e);
-        })
-
-    }
-	else
-	{
-		isAddPOG = false;
-		polyline.off("click",function (e){
-           addPOG(e);
-        })
-	}
-}
-
-//fonction d'ajout d'un POG sur une polyline, sépare une polyline en deux parties.
-function addPOG(e)
-{	
-	var points_click = e.latlng;
-	
-	console.log("test");
-	
-	//on récupère les coordonnées du point passé en paramètre
-	
-	//calcul pour savoir si un point se trouve dans la ligne tracée entre les deux autres points 
-	
-	var compteur = 0
-	var pt1;
-	var pt2;
-	var d1;
-	var d2;
-	var di;
-	var add;
-	var pos_detect;
-	
-	$.each(e.target._latlngs, function(pos_point, val) 
-	{		
-		//on récupère le point courant et le point suivant 
-		pt1 = e.target._latlngs[compteur];
-		
-		if(compteur != (e.target._latlngs.length-1)) 
-		{
-			pt2 = e.target._latlngs[compteur+1];
-			
-			//calcul pour trouver a quel segment de polyline le point appartient. (fait avec les distances)
-			
-			d1 = pt1.distanceTo(points_click);
-			d2 = pt2.distanceTo(points_click);
-			di = pt1.distanceTo(pt2);
-			
-			d1 = Number((d1).toFixed(0));
-			d2 = Number((d2).toFixed(0));
-			di = Number((di).toFixed(0));
-			
-			add = d1+d2;
-			add = di - add;
-			
-			if(add >= -2 && add <= 2)
-			{				
-				pos_detect = compteur;
-			}
-		}
-		
-	compteur++;
-	});
-	
-	//une fois qu'on a trouvé le point, on récupère les x premiers points de la polyline qu'on stocke dans une variable
-	var points;
-	var points2;
-	
-	//on crée le nouveau POG a la position de la souris
-	var newPOG = L.latLng(e.latlng.lat, e.latlng.lng);
-	
-	//on récupère les points correspondant
-	points = e.target._latlngs.slice(0,pos_detect+1);
-	points2 = e.target._latlngs.slice(pos_detect+2,e.target._latlngs.length);
-	
-	//on ajoute deux nouveau points au debut et à la fin des polylines (ajout du POG)
-
-	//on set les points dans la première polyline
-	e.target._latlngs = points;
-	
-	//on set le pog	(POG de liaison donc on reprend le même)
-	e.target.addLatLng(newPOG);
-	
-	//on redessine la polyline	
-	e.target.redraw();
-	
-	//ensuite on set les latlngs de l'ancienne dans une nouvelle polyline
-	
-	
-	//il faut set le POG au tout debut du tableau !!!!!!!!!!!!!
-	polyline = L.polyline(points2, {color: 'blue'});	
-	//ajout dans le drawnItems.
-	drawnItems.addLayer(polyline);
-	//ajout a la map
-	polyline.addTo(map);
-
-	//et on envoit en base
-	//saveDeleteSegFromTR(e.target.id, points, points2);
-	
-}
-
-
-/* fonction de tansition */
+// fonction de tansition 
 function supprSegment_call()
 {	
 	if (!supprSeg) {
@@ -3089,10 +2909,11 @@ function supprSegment_call()
     }
 	else
 	{
+		//desactivation du on click lorsqu'on appui sur le bouton
 		supprSeg = false;
 		drawnItems.eachLayer(function (layer){
             layer.off("click",function (e){
-			//supprSegment(e);
+			
 			});
         });
 	}
@@ -3100,19 +2921,16 @@ function supprSegment_call()
 
 
 
-/* fonction de suppréssion d'un segment d'un tronçon */
+// fonction de suppréssion d'un segment d'un tronçon 
 function supprSegment(e)
 {	
 	var points_click = e.latlng;
 	
-	//si la polyline où l'on clique possède 4 points où plus.
+	//si la polyline où l'on clique possède 4 points ou plus.
 	if(count_object_property(e.target._latlngs) > 3)
-	{
-		
+	{	
 		//on récupère les coordonnées du point passé en paramètre
-		
 		//calcul pour savoir si un point se trouve dans la ligne tracée entre les deux autres points 
-		
 		var compteur = 0
 		var pt1;
 		var pt2;
@@ -3148,7 +2966,7 @@ function supprSegment(e)
 				
 				if(add >= -2 && add <= 2)
 				{			
-					//segment a supprimer
+					//segment a supprimer (identification par sa position)
 					pos_detect = compteur;
 				}
 			}
@@ -3176,14 +2994,9 @@ function supprSegment(e)
 		drawnItems.addLayer(polyline);
 		//ajout a la map
 		polyline.addTo(map);
-
-		//il manque le save en bdd. utilisation de la méthode save multiple poly ?
 		
 		//sauvegarde des tronçons dans la base de données.
 		
-		//pour sauvegarder les polylines, il faut avoir ce type de structure de tableau : tab[0][objet point]
-		
-		//réorganisation des points en vue de la sauvegarde :
 		var array_save = [];
 		
 		array_save.push(points);
@@ -3198,7 +3011,7 @@ function supprSegment(e)
 	
 }
 
-/* fonction de séparation d'une polyline */
+// fonction de séparation d'une polyline 
 function SegmentSlice(poly_key, tab_pos)
 {	
 	//on récupère une polyline et on la découpe en fonction du tab_pos donné en paramètre.
@@ -3221,12 +3034,9 @@ function SegmentSlice(poly_key, tab_pos)
 	//on ajoute au tableau slice_result la dernière partie des points manquant
 	
 	slice_result[slice_count+drawnItems._layers[poly_key]._latlngs.length] = drawnItems._layers[poly_key]._latlngs.slice(slice_count,drawnItems._layers[poly_key]._latlngs.length);
-	
 	//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
 	
 	map.removeLayer(drawnItems._layers[poly_key]);
-	
-	//points_current_get_elevation
 	
 	var get_elevation_array = [];
 	var count = 0;
@@ -3269,8 +3079,8 @@ function SegmentSlice(poly_key, tab_pos)
 		//pb avec les élévations des points
 		//console.log(save_points_elevation);
 	});
-	//on recherche les elevations des points
 	
+	//on supprime la polyline dans la base de données si elle existe
 	if(drawnItems._layers[poly_key].id !== undefined)
 	{
 		var poly_id = drawnItems._layers[poly_key].id;
@@ -3300,7 +3110,7 @@ function SegmentSlice(poly_key, tab_pos)
 	
 }
 
-/* suppression d'un tronçon */
+// suppression d'un tronçon 
 function DeleteTrons(Tronids)
 {
 	$.ajax({
@@ -3309,21 +3119,26 @@ function DeleteTrons(Tronids)
         data: {"idTron" : Tronids},
         cache: false,
         success: function(){
-			//rechargement de la map
-			drawnItems.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            pogGroup.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            loadSegments();
+
+		//rechargement de la map
+		drawnItems.eachLayer(function (layer){
+			map.removeLayer(layer);
+		});
+		pogGroup.eachLayer(function (layer){
+			map.removeLayer(layer);
+		});
+			if(!is_reloading)
+			{	
+				loadSegments();
+				is_reloading = true;
+			}
         }		
     });
 }
 
-/* suppression d'un segment d'un tronçon */
+// suppression d'un segment d'un tronçon
 
-/* en paramètre, l'id du premier segment, la liste des points du premier, la liste des points du deuxième */
+// en paramètre, l'id du premier segment, la liste des points du premier, la liste des points du deuxième 
 
 function saveDeleteSegFromTR(Tid, pts1, pts2)
 {
@@ -3334,43 +3149,13 @@ function saveDeleteSegFromTR(Tid, pts1, pts2)
         url: Routing.generate('site_carto_delete_seg_from_tron'),
         data: {"tid" : Tid, 'pts1' : pts1, "pts2" : pts2},
         cache: false,
-        success: function(){
-			//success
-			//pas besoin de rafraichissement, comme tout est fait sur le js, mais par contre, pas de renvoi d'id possible.
-			/*drawnItems.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            pogGroup.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            loadSegments();*/
-			
+        success: function(){			
 			$.notify("Segment supprimé", "success");
         }
     });
 }
 
-/* insertion d'un POG dans une polyline */
-
-/* en paramètre, l'id du premier segment, la liste des points du premier, la liste des points du deuxième */
-
-//ne sert à rien 
-function saveaddPOG(Tid, pts1, pts2, POG)
-{
-	$.ajax({
-        type: "POST",
-        url: Routing.generate('site_carto_add_pog_tron'),
-        data: {"tid" : Tid, 'pts1' : pts1, "pts2" : pts2, "pog" : POG},
-        cache: false,
-        success: function(){
-			//success
-			
-			//penser à set l'id de la poly
-        }
-    });
-}
-
-/* save une liste de polyline */
+// save une liste de polyline 
 
 function saveMultiplePolyServer(tab)
 {
@@ -3381,27 +3166,26 @@ function saveMultiplePolyServer(tab)
         data: {"tab" : tab},
         cache: false,
         success: function(data){
-			//success
-			
-			console.log(is_reloading);
+			drawnItems.eachLayer(function (layer){
+				map.removeLayer(layer);
+			});
+			pogGroup.eachLayer(function (layer){
+				map.removeLayer(layer);
+			});
 			if(!is_reloading)
 			{
-				is_reloading = true;
-				drawnItems.eachLayer(function (layer){
-					map.removeLayer(layer);
-				});
-				pogGroup.eachLayer(function (layer){
-					map.removeLayer(layer);
-				});
+				//blocage pour ne pas recharger la map plusieurs fois !
 				loadSegments();
-				
-				$.notify("Segments sauvegardé", "success");
+				is_reloading = true;
 			}
+		$.notify("Segments sauvegardé", "success");
+		
         }
     });
 
 }
 
+//???
 function pogAlreadyComputed(pogArray,pog)
 {
     var res = false;
@@ -3415,6 +3199,7 @@ function pogAlreadyComputed(pogArray,pog)
     return res;
 };
 
+//fonction utilitaire pour compter le nombre de propriétés d'un objet
 function count_object_property(val)
 {
 	var count = 0;
@@ -3427,9 +3212,10 @@ function count_object_property(val)
 	return count;
 }
 
+//récupérer l'élévation d'une polyline
 function get_elevation_polys(polys_point)
 {
-	var URL = elevationMultipleSegmentURL + '&latLngCollection=';
+	/*var URL = elevationMultipleSegmentURL + '&latLngCollection=';
 	var result = {};
 
 	for (var i = 0; i < polys_point.length; i++) 
@@ -3446,11 +3232,13 @@ function get_elevation_polys(polys_point)
 	elevationScript = document.createElement('script');
 	elevationScript.type = 'text/javascript';
 	elevationScript.src = URL;
-	$("body").append(elevationScript);
+	$("body").append(elevationScript);*/
 }
 
+//récupérer l'élévation de plusieurs segments
 function getElevationMultipleSegment(response)
 {
+/*
     blockItineraireSave();
     denivelen = 0;
     denivelep = 0;
@@ -3469,31 +3257,7 @@ function getElevationMultipleSegment(response)
     $("#denivp").text("Dénivelé positif : " + denivelep + "m");
     $("#denivn").text("Dénivelé négatif : " + denivelen + "m");
 	
-	/*
-    var geojson = polyline.toGeoJSON();
-    for(var i = 0; i < geojson.geometry.coordinates.length; i++)
-    {
-        geojson.geometry.coordinates[i].push(points_current_get_elevation[i].elevation);
-    }
-    if(mapgeojson !== undefined)
-    {
-        map.removeLayer(mapgeojson);
-    }
-    el.clear();
-    mapgeojson = L.geoJson(geojson,{
-        onEachFeature: el.addData.bind(el) //working on a better solution
-    });
-    if(isEditSegment)
-    {
-        updateSegment(JSON.stringify(points_current_get_elevation));
-
-    }
-    blockItineraireSave();
-    map.on("click",function (ev){
-        addPointOnMap(ev);
-    });
-	*/
-	
 	//clone de l'objet pour pouvoir le reutiliser par la suite.	
 	save_points_elevation = $.extend(true, {}, points_current_get_elevation);
+	*/
 }
