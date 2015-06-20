@@ -7,6 +7,7 @@ var isEditSegment = false;
 var isLoadingMap = false;
 var isAddPOG = false;
 var supprSeg = false;
+var is_reloading = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
 var elevationMultipleSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationMultipleSegment&shapeFormat=raw&unit=m";
@@ -656,18 +657,20 @@ function goToPosition(position) {
 								points_tab_index["poly_courante"] = {};
 							}
 							
-							//on sauvegarde le tableau 
+							//on sauvegarde la position du point dans le tableau si ce n'est pas un POG.
 							if(key != 0 && key != drawnItems._layers[key_poly]._latlngs.length-1)
-							{
+							{							
 								points_tab_index[key_poly][key] = key;
 								points_tab_index["poly_courante"][compteur_glob] = latlng;
-							}
+							}							
 							
 							//on garde l'intersection de la polyline qu'on est en train de tracer
 							
 							//on sauvegarde le compteur dans le tableau machin : create_poly_segmentation_count
-							
-							table_pos_poly_courante[create_poly_segmentation_count] = create_poly_segmentation_count;
+							if(create_poly_segmentation_count != 0)
+							{
+								table_pos_poly_courante[create_poly_segmentation_count] = create_poly_segmentation_count;
+							}
 							
 							compteur_glob++;
 						}						
@@ -1479,7 +1482,6 @@ L.Polyline.addInitHook(function () {
                 onClick : function (control){
 				control.state('editor_mode');
                     supprSegment_call();
-					supprSeg = true;
                 },
                 title : "Supprimer un segment d'un tronçon"
             },
@@ -1488,7 +1490,8 @@ L.Polyline.addInitHook(function () {
                 icon: 'fa fa-check',
                 onClick: function(control){
                     control.state('del_seg');
-					supprSeg = false;
+					
+					supprSegment_call();
                 },
                 title : "Revenir à l'édition"
             }
@@ -1533,12 +1536,15 @@ L.Polyline.addInitHook(function () {
 
     map.on('draw:segmentcreated', function (e) {
 		//lors de l'ajout d'une polyline, on la sépare en plusieurs morceau.
-		
+		console.log(points_tab_index);
 		//boucle pour parcourir toutes les polylines détectées.
 		$.each(points_tab_index, function(key, val) { 
 			if(key != "poly_courante")
 			{
-				SegmentSlice(key, val);
+				if(count_object_property(val) != 0)
+				{
+					SegmentSlice(key, val);
+				}
 			}
 		});
         var type = e.layerType,
@@ -1568,49 +1574,49 @@ L.Polyline.addInitHook(function () {
 		
 		//séparation des segments lors de la sauvegarde
 		
-		//si la  variable globale compteur est initialisée, on n'appelle pas la fonction saveSegment, mais la fonction multiple save segment	
+		//si la  variable globale compteur est initialisée, on n'appelle pas la fonction saveSegment, mais la fonction multiple save segment
+		//autoriser le passage seulement si les points ne sont pas des POGS (le zéro n'est pas ajouté dans le tableau, mais le dernier point oui)
 		if(count_object_property(table_pos_poly_courante) != 0)
 		{
-			//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
-			
-			//on récupère une polyline et on la découpe en fonction du tab_pos donné en paramètre.
-			var slice_result = {};
-			var slice_count = 0; 
-			
-			//séparation du tableau en plusieurs sous sections
-			$.each(table_pos_poly_courante, function(key, val) {				
-				if(val != 0 && val != pointArray.length-1)
-				{
-					slice_result[val] = pointArray.slice(slice_count,val+1);
-					slice_count = val;
-				}
-			});
-			
-			slice_result[slice_count+pointArray.length] = pointArray.slice(slice_count,pointArray.length);
-			
-			//on supprime l'ancienne polyline et on recrée les autres avec le tableau slice_result
-			//chais pas comment on delete :3
-			//map.removeLayer(drawnItems._layers[poly_key]);
-			
-			//pas de suppresion en bdd puisque le segment n'existe pas encore.		
-			
-			//création des nouvelles polylines
-			//slice_result contient le nuage de points, on le set dans les polylines
-			$.each(slice_result, function(key, val) 
+			if(count_object_property(e.layer._latlngs) != create_poly_segmentation_count)
 			{
-				polyline = L.polyline(val, {color: 'blue'});	
-				//ajout dans le drawnItems.
-				drawnItems.addLayer(polyline);
-				//ajout a la map
-				polyline.addTo(map);		
-			}); 
-			
-			//on envois les modifications en base de données : 
-			saveMultiplePolyServer(slice_result);
-			
-			//remise à zéro du tableau et du compteur
-			table_pos_poly_courante = {};
-			create_poly_segmentation_count = 0;
+				//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
+				
+				//on récupère une polyline et on la découpe en fonction du tab_pos donné en paramètre.
+				var slice_result = {};
+				var slice_count = 0; 
+				
+				//séparation du tableau en plusieurs sous sections
+				$.each(table_pos_poly_courante, function(key, val) {				
+					if(val != 0 && val != pointArray.length-1)
+					{
+						slice_result[val] = pointArray.slice(slice_count,val+1);
+						slice_count = val;
+					}
+				});
+				
+				slice_result[slice_count+pointArray.length] = pointArray.slice(slice_count,pointArray.length);
+				
+				//pas de suppresion en bdd puisque le segment n'existe pas encore.		
+				
+				//création des nouvelles polylines
+				//slice_result contient le nuage de points, on le set dans les polylines
+				$.each(slice_result, function(key, val) 
+				{
+					polyline = L.polyline(val, {color: 'blue'});	
+					//ajout dans le drawnItems.
+					drawnItems.addLayer(polyline);
+					//ajout a la map
+					polyline.addTo(map);		
+				}); 
+				
+				//on envois les modifications en base de données : 
+				saveMultiplePolyServer(slice_result);
+				
+				//remise à zéro du tableau et du compteur
+				table_pos_poly_courante = {};
+				create_poly_segmentation_count = 0;
+			}
 		}
 		else
 		{
@@ -2558,6 +2564,8 @@ function loadSegments() {
                     map.removeLayer(layer);
                 });
             }
+			
+			is_reloading = false;
             //$.notify("Segment mis à jour", "success");
         }
     ).fail(function () {
@@ -3061,7 +3069,7 @@ function addPOG(e)
 	polyline.addTo(map);
 
 	//et on envoit en base
-	saveDeleteSegFromTR(e.target.id, points, points2);
+	//saveDeleteSegFromTR(e.target.id, points, points2);
 	
 }
 
@@ -3070,12 +3078,24 @@ function addPOG(e)
 function supprSegment_call()
 {	
 	if (!supprSeg) {
+		supprSeg = true;
         pointArray = [];
-        latlngArray = [];
-        polyline.on("click",function (e){
-            supprSegment(e);
-        })
+        latlngArray = [];		
+		drawnItems.eachLayer(function (layer){
+            layer.on("click",function (e){
+			supprSegment(e);
+			});
+        });
     }
+	else
+	{
+		supprSeg = false;
+		drawnItems.eachLayer(function (layer){
+            layer.off("click",function (e){
+			//supprSegment(e);
+			});
+        });
+	}
 }
 
 
@@ -3085,78 +3105,96 @@ function supprSegment(e)
 {	
 	var points_click = e.latlng;
 	
-	//on récupère les coordonnées du point passé en paramètre
-	
-	//calcul pour savoir si un point se trouve dans la ligne tracée entre les deux autres points 
-	
-	var compteur = 0
-	var pt1;
-	var pt2;
-	var d1;
-	var d2;
-	var di;
-	var add;
-	var pos_detect;
-	
-	$.each(e.target._latlngs, function(pos_point, val) 
-	{		
-		//on récupère le point courant et le point suivant 
-		pt1 = e.target._latlngs[compteur];
+	//si la polyline où l'on clique possède 4 points où plus.
+	if(count_object_property(e.target._latlngs) > 3)
+	{
 		
-		if(compteur != (e.target._latlngs.length-1)) 
-		{
-			pt2 = e.target._latlngs[compteur+1];
+		//on récupère les coordonnées du point passé en paramètre
+		
+		//calcul pour savoir si un point se trouve dans la ligne tracée entre les deux autres points 
+		
+		var compteur = 0
+		var pt1;
+		var pt2;
+		var d1;
+		var d2;
+		var di;
+		var add;
+		var pos_detect;
+		
+		$.each(e.target._latlngs, function(pos_point, val) 
+		{		
+			//on récupère le point courant et le point suivant 
+			pt1 = e.target._latlngs[compteur];
 			
-			//calcul pour trouver a quel segment de polyline le point appartient.
-			
-			d1 = pt1.distanceTo(points_click);
-			d2 = pt2.distanceTo(points_click);
-			di = pt1.distanceTo(pt2);
-			
-			d1 = Number((d1).toFixed(0));
-			d2 = Number((d2).toFixed(0));
-			di = Number((di).toFixed(0));
-			
-			add = d1+d2;
-			add = di - add;
-			
-			//console.log("point : " + compteur + "  (d1+d2)-di " + add);
-			
-			if(add >= -2 && add <= 2)
-			{			
-				//segment a supprimer
-				pos_detect = compteur;
+			if(compteur != (e.target._latlngs.length-1)) 
+			{
+				pt2 = e.target._latlngs[compteur+1];
+				
+				//calcul pour trouver a quel segment de polyline le point appartient.
+				
+				d1 = pt1.distanceTo(points_click);
+				d2 = pt2.distanceTo(points_click);
+				di = pt1.distanceTo(pt2);
+				
+				d1 = Number((d1).toFixed(0));
+				d2 = Number((d2).toFixed(0));
+				di = Number((di).toFixed(0));
+				
+				add = d1+d2;
+				add = di - add;
+				
+				//console.log("point : " + compteur + "  (d1+d2)-di " + add);
+				
+				if(add >= -2 && add <= 2)
+				{			
+					//segment a supprimer
+					pos_detect = compteur;
+				}
 			}
-		}
+			
+		compteur++;
+		});
 		
-	compteur++;
-	});
-	
-	//une fois qu'on a trouvé le point, on récupère les x premiers points de la polyline qu'on stocke dans une variable
-	var points;
-	var points2;
-	
-	//on récupère les points correspondant
-	points = e.target._latlngs.slice(0,pos_detect+1);
-	points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
+		//une fois qu'on a trouvé le point, on récupère les x premiers points de la polyline qu'on stocke dans une variable
+		var points;
+		var points2;
+		
+		//on récupère les points correspondant
+		points = e.target._latlngs.slice(0,pos_detect+1);
+		points2 = e.target._latlngs.slice(pos_detect+1,e.target._latlngs.length);
 
+		//on set les points dans la première polyline
+		e.target._latlngs = points;
+		//on redessine la polyline	
+		e.target.redraw();
+		
+		//ensuite on set les latlngs de l'ancienne dans une nouvelle polyline
+		
+		polyline = L.polyline(points2, {color: 'blue'});	
+		//ajout dans le drawnItems.
+		drawnItems.addLayer(polyline);
+		//ajout a la map
+		polyline.addTo(map);
 
-	//on set les points dans la première polyline
-	e.target._latlngs = points;
-	//on redessine la polyline	
-	e.target.redraw();
-	
-	//ensuite on set les latlngs de l'ancienne dans une nouvelle polyline
-	
-	polyline = L.polyline(points2, {color: 'blue'});	
-	//ajout dans le drawnItems.
-	drawnItems.addLayer(polyline);
-	//ajout a la map
-	polyline.addTo(map);
-
-
-	//et on envoit en base
-	//saveDeleteSegFromTR(e.target.id, points, points2);
+		//il manque le save en bdd. utilisation de la méthode save multiple poly ?
+		
+		//sauvegarde des tronçons dans la base de données.
+		
+		//pour sauvegarder les polylines, il faut avoir ce type de structure de tableau : tab[0][objet point]
+		
+		//réorganisation des points en vue de la sauvegarde :
+		var array_save = [];
+		
+		array_save.push(points);
+		array_save.push(points2);
+		
+		saveMultiplePolyServer(array_save);
+	}
+	else
+	{
+		$.notify("Ce tronçon ne contient pas assez de segments. (3 minimum)", "error");
+	}
 	
 }
 
@@ -3228,10 +3266,10 @@ function SegmentSlice(poly_key, tab_pos)
 		
 		//save_points_elevation
 		
-		console.log(save_points_elevation);
+		//pb avec les élévations des points
+		//console.log(save_points_elevation);
 	});
 	//on recherche les elevations des points
-	
 	
 	if(drawnItems._layers[poly_key].id !== undefined)
 	{
@@ -3344,15 +3382,21 @@ function saveMultiplePolyServer(tab)
         cache: false,
         success: function(data){
 			//success
-            drawnItems.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            pogGroup.eachLayer(function (layer){
-                map.removeLayer(layer);
-            });
-            loadSegments();
 			
-			$.notify("Segments sauvegardé", "success");
+			console.log(is_reloading);
+			if(!is_reloading)
+			{
+				is_reloading = true;
+				drawnItems.eachLayer(function (layer){
+					map.removeLayer(layer);
+				});
+				pogGroup.eachLayer(function (layer){
+					map.removeLayer(layer);
+				});
+				loadSegments();
+				
+				$.notify("Segments sauvegardé", "success");
+			}
         }
     });
 
