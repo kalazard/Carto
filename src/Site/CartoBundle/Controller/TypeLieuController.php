@@ -32,7 +32,7 @@ class TypelieuController extends Controller
      *
      * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
      *
-     * @return string 
+     * @return Response 
      *
      * JSON contenant la liste des types de lieu
      *
@@ -87,7 +87,7 @@ class TypelieuController extends Controller
      * id_user : id du type de lieu
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON contenant les informations du type de lieu
      *
@@ -198,7 +198,7 @@ class TypelieuController extends Controller
      * $_FILES['icone'] : L'image à upload 
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le type de lieu a été créé ou non
      *
@@ -324,7 +324,7 @@ class TypelieuController extends Controller
      * idTypelieu : Id du type de lieu à modifier
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le type de lieu a été créé ou non
      *
@@ -386,7 +386,7 @@ class TypelieuController extends Controller
      * $_FILES['icone'] : L'image à upload 
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le type de lieu a été modifié ou non
      *
@@ -538,7 +538,7 @@ class TypelieuController extends Controller
      * idTypelieu : Id du type de lieu à supprimer
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le type de lieu a été supprimé ou non
      *

@@ -19,7 +19,7 @@ class IconeController extends Controller
      *
      * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
      *
-     * @return string 
+     * @return Response 
      *
      * JSON contenant la liste des icones
      *
