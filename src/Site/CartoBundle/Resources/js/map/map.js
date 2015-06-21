@@ -1535,7 +1535,7 @@ L.Polyline.addInitHook(function () {
 				//slice_result contient le nuage de points, on le set dans les polylines
 				
 				//on ne le rédessine pas puisque la BDD recharge la page.
-				/*
+				
 				$.each(slice_result, function(key, val) 
 				{
 					polyline = L.polyline(val, {color: 'blue'});	
@@ -1543,14 +1543,7 @@ L.Polyline.addInitHook(function () {
 					drawnItems.addLayer(polyline);
 					//ajout a la map
 					polyline.addTo(map);		
-				}); */
-				
-				 markerGroup.eachLayer(function (layer) {
-					map.removeLayer(layer);
-				});
-				drawnItems.eachLayer(function (layer) {
-					map.removeLayer(layer);
-				});
+				}); 
 				
 				//on envois les modifications en base de données : 
 				saveMultiplePolyServer(slice_result);
