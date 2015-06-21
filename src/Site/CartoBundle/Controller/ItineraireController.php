@@ -321,7 +321,7 @@ class ItineraireController extends Controller {
     public function loadAction($id) {
         $repository = $this->getDoctrine()->getManager()->getRepository('SiteCartoBundle:Itineraire');
         $iti = $repository->find($id);
-        $content = $this->get("templating")->render("SiteCartoBundle:Map:load.html.twig", array("itineraire" => $iti, "jsonObject" => json_encode($iti)));
+        $content = $this->get("templating")->render("SiteCartoBundle:Map:loadFrame.html.twig", array("itineraire" => $iti, "jsonObject" => json_encode($iti)));
         return new Response($content);
     }
 

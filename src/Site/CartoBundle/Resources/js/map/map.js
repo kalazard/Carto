@@ -7,6 +7,7 @@ var isEditSegment = false;
 var isLoadingMap = false;
 var supprSeg = false;
 var is_reloading = false;
+var map_load = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
 var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
 var elevationMultipleSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationMultipleSegment&shapeFormat=raw&unit=m";
@@ -29,6 +30,7 @@ var multiple_point_object_elevation = {};
 var points_current_get_elevation;
 var point_other_poly;
 var save_points_elevation;
+
 
 //constructeur objet point 
 var Point = function (lat, lng) {
@@ -92,7 +94,6 @@ function init(callback, params) {
         navigator.geolocation.getCurrentPosition(goToPosition, showError);
     }
     else {
-		//???
         goToPosition({"coords": {"latitude": 0, "longitude": 0}}, callback, params);
     }
 	//ajout de l'overley qui affiche l'élévation d'un itinéraire
@@ -100,6 +101,7 @@ function init(callback, params) {
 	//
     $('#savepoi').click(savePoi);
     if (typeof callback !== "undefined" && typeof params !== "undefined") {
+		map_load = true;
         callback.apply(null, params);
     }
 }
@@ -1587,28 +1589,30 @@ L.Polyline.addInitHook(function () {
 	//fonction qui permet de sauvegarder en base de données les modifications apportées à plusieurs polylines
 	map.on('draw:edited', function (e) {
         isEditSegment = false;
+		if(!map_load)
+		{
+			//le tableau liste_points_final contient toutes les polylines qui vont être modifiées en BDD
+			var liste_points_final = {};
 		
-		//le tableau liste_points_final contient toutes les polylines qui vont être modifiées en BDD
-		var liste_points_final = {};
-		
-		//on lit les polylines du tableau liste_points_final
-		$.each(update_list_segment, function(key, val) {
-			var current_layer_update = drawnItems.getLayer(val);
-			liste_points_final[key] = {};
-			liste_points_final[key]['id'] = current_layer_update.id;
-			
-			liste_points_final[key]['points'] = {};
-			
-			//on lit ensuite tout les points et on les stocke dans un tableau.
-			$.each(current_layer_update._latlngs, function(pos, point) {
-				var point_current_update = new Point(point.lat,point.lng);
+			//on lit les polylines du tableau liste_points_final
+			$.each(update_list_segment, function(key, val) {
+				var current_layer_update = drawnItems.getLayer(val);
+				liste_points_final[key] = {};
+				liste_points_final[key]['id'] = current_layer_update.id;
 				
-				liste_points_final[key]['points'][pos] = point_current_update;
-			});	
-		});			
-		
-		//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
-		updateMultipleSegment(liste_points_final);
+				liste_points_final[key]['points'] = {};
+				
+				//on lit ensuite tout les points et on les stocke dans un tableau.
+				$.each(current_layer_update._latlngs, function(pos, point) {
+					var point_current_update = new Point(point.lat,point.lng);
+					
+					liste_points_final[key]['points'][pos] = point_current_update;
+				});	
+			});			
+			
+			//Puis on le passe en paramètre et on le save grâce à une boucle foreach.
+			updateMultipleSegment(liste_points_final);
+		}
     });
 
     map.on("draw:editstop", function(e){
@@ -2276,31 +2280,43 @@ function displayTrace(trace, elevation) {
         }
     })
     map.on('draw:edited', function (e) {
-        polyline.markers = [];
-        pointArray = [];
-        var latlngs = polyline.getLatLngs();
-        var URL = elevationUpdateURL + '&latLngCollection=';
-        for (var i = 0; i < latlngs.length; i++) {
-            var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
-                icon: new L.DivIcon({
-                    iconSize: new L.Point(8, 8),
-                    className: 'leaflet-div-icon leaflet-editing-icon'
-                })
-            });
-            marker.addTo(map);
-            polyline.markers.push(marker);
-            markerGroup.addLayer(marker);
-            pointArray.push(new Point(latlngs[i].lat, latlngs[i].lng));
-            URL += latlngs[i].lat + "," + latlngs[i].lng;
-            if (i !== latlngs.length - 1) {
-                URL += ",";
-            }
-        }
-        URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        elevationScript = document.createElement('script');
-        elevationScript.type = 'text/javascript';
-        elevationScript.src = URL;
-        $("body").append(elevationScript);
+	
+		if(map_load)
+		{
+			console.log(traceData);
+			console.log(e);
+		
+			polyline.markers = [];
+			pointArray = [];
+			var latlngs = polyline.getLatLngs();
+			
+			console.log(polyline);
+			
+			var URL = elevationUpdateURL + '&latLngCollection=';
+			for (var i = 0; i < latlngs.length; i++) {
+				var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
+					icon: new L.DivIcon({
+						iconSize: new L.Point(8, 8),
+						className: 'leaflet-div-icon leaflet-editing-icon'
+					})
+				});
+				marker.addTo(map);
+				polyline.markers.push(marker);
+				markerGroup.addLayer(marker);
+				pointArray.push(new Point(latlngs[i].lat, latlngs[i].lng));
+				URL += latlngs[i].lat + "," + latlngs[i].lng;
+				if (i !== latlngs.length - 1) {
+					URL += ",";
+				}
+			}
+			URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			elevationScript = document.createElement('script');
+			elevationScript.type = 'text/javascript';
+			elevationScript.src = URL;
+			$("body").append(elevationScript);
+			
+			//puis on sauvegarde la modification de l'itinéraire
+		}
 
     });
     map.on('draw:deletestart', function (e) {
@@ -2422,19 +2438,27 @@ function updateSegment(points) {
 
 //fonction pour mettre à jour plusieurs segments
 function updateMultipleSegment(points) {
-	var points_string = JSON.stringify(points);
-	console.log(points_string);
-    $.post(Routing.generate('site_carto_segment_multiple_update'),
-        {
-            points: points_string
-        },
-        function (data, status) {
-			console.log(data);
-            $.notify("Segments mis à jour", "success");
-        }
-    ).fail(function () {
-            $.notify("Erreur lors de la mise à jour", "error");
-        });
+	//si l'on charge une page d'un itinéraire, on appelle une autre fonction 
+	if(!map_load)
+	{
+		var points_string = JSON.stringify(points);
+		console.log(points_string);
+		$.post(Routing.generate('site_carto_segment_multiple_update'),
+			{
+				points: points_string
+			},
+			function (data, status) {
+				console.log(data);
+				$.notify("Segments mis à jour", "success");
+			}
+		).fail(function () {
+				$.notify("Erreur lors de la mise à jour", "error");
+			});
+	}
+	else
+	{
+		console.log(points);
+	}	
 }
 
 //fonction pour faire apparaitre la modal de sauvegarde d'un itinéraire
@@ -3243,4 +3267,10 @@ function getElevationMultipleSegment(response)
 	//clone de l'objet pour pouvoir le reutiliser par la suite.	
 	save_points_elevation = $.extend(true, {}, points_current_get_elevation);
 	*/
+}
+
+//fonction pour enregistrer la modification d'un itinéraire en base de donnée
+function updateiti()
+{
+
 }
