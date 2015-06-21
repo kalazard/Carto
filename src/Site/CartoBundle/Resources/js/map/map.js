@@ -1101,10 +1101,6 @@ L.Edit.Poly = L.Handler.extend({
 				point_temp.lng = liste_poly_detect[key][1];		
 		});
 		*/
-		/*
-		console.log(drawnItems);
-		console.log(this._poly);
-		*/
 		var latlngs_modif;
 		var poly_id = this._poly._leaflet_id;
 		
@@ -1542,7 +1538,7 @@ L.Polyline.addInitHook(function () {
 				{
 					polyline = L.polyline(val, {color: 'blue'});	
 					//ajout dans le drawnItems.
-					drawnItems.addLayer(polyline);
+					//drawnItems.addLayer(polyline);
 					//ajout a la map
 					polyline.addTo(map);		
 				}); 
@@ -2518,6 +2514,7 @@ function loadSegments() {
                     map.removeLayer(layer);
                 });
             }
+			
 			//on reset la variable pour de nouveau autoriser les appels ajax
 			is_reloading = false;
             //$.notify("Segment mis à jour", "success");
@@ -3032,7 +3029,10 @@ function supprSegment(e)
 	}
 	else
 	{
-		$.notify("Ce tronçon ne contient pas assez de segments. (3 minimum)", "error");
+		if(supprSeg)
+		{
+			$.notify("Ce tronçon ne contient pas assez de segments. (3 minimum)", "error");
+		}
 	}
 	
 }
@@ -3118,16 +3118,19 @@ function SegmentSlice(poly_key, tab_pos)
 	
 	//création des nouvelles polylines
 	
+	//plus besoin de redessiner les polylines, comme le contenu est rechargé depuis la fonction loadSegment
+	/*
 	//slice_result contient le nuage de points, on le set dans les polylines
 	$.each(slice_result, function(key, val) 
 	{
 		polyline = L.polyline(val, {color: 'blue'});	
 		//ajout dans le drawnItems.
-		drawnItems.addLayer(polyline);
+		//drawnItems.addLayer(polyline);
 		//ajout a la map
 		polyline.addTo(map);		
-	}); 
-	
+	}); */
+	//on retire le layer du groupe
+	drawnItems.removeLayer(drawnItems._layers[poly_key]);
 	//on envois les modifications en base de données : 
 	saveMultiplePolyServer(slice_result);
 	
