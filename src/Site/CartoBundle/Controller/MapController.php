@@ -38,6 +38,57 @@ class MapController extends Controller
         return new Response($content);
     }
 
+    /**
+     * Fonction de création d'un itinéraire
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * date : date du jour 
+     * longueur : La longueur de l'itinéraire 
+     * elevation : L'élévation de l'itinéraire
+     * nom : Le nom de l'itinéraire
+     * numero : Le numéro de l'itinéraire
+     * typechemin : Le type de chemn de l'itinéraire
+     * commentaire : Un commentaire sur l'itinéraire
+     * </code>
+     * 
+     * @return Response 
+     *
+     * JSON permettant de définir si l'itinéraire a été créé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     *
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function createRouteAction(Request $request)
     {
       if ($request->isXMLHttpRequest()) 
@@ -215,7 +266,14 @@ class MapController extends Controller
 		return $response;
 	}
 	
-		//fonction de chargement des tronçons dans une zone précise
+	/**
+     * Fonction de chargement des tronçons dans une zone précise
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     * 
+     * @return Response 
+     *
+     */
 	public function loadSegmentAction(Request $request)
 	{
 		if ($request->isXMLHttpRequest()) 

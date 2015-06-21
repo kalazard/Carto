@@ -23,7 +23,55 @@ use DateTime;
 
 class MemberController extends Controller {
 
-	//Affichage de la fiche membre
+    /**
+     * Fonction de renvoyant les informations du profil d'un membre
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le mot de passe a été changé
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "id": id du membre,
+     *     "prenom": prenom du membre,
+     *     "nom": nom du membre,
+     *     "email": email du membre,
+     *     "tel": telephone du membre,
+     *     "date": date de naissance du membre,
+     *     "itiMoyenne": note Moyenne des itinéraires créés par le membre,
+     *     "itineraires": itineraires créés par le membre,
+     *     "favoris": itinéraires favoris du membre
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
 	public function profilAction()
 	{
 		$result = array();
@@ -162,6 +210,14 @@ class MemberController extends Controller {
 		}
 	}
 	
+	/**
+     * Fonction éditant les informations personnelles du profil d'un membre
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
+     * 
+     * @return Response
+     * 
+     */
 	public function profilSubmitAction(Request $request)
 	{
 		//on récupère les infos et on les stocke

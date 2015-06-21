@@ -20,6 +20,47 @@ class DifficulteParcoursController extends Controller
         return new Response('Nothing to see :D', 400);
     }
 
+    /**
+     * Fonction de récupération de toutes les difficultés de la base de données
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucuns paramètres : 
+     * 
+     * @return string 
+     *
+     * JSON contenant une liste de tous les difficultés
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "diffs": Liste d'objet difficultés,
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getDifficultesAction(Request $request)
     {
       if ($request->isXMLHttpRequest()) 

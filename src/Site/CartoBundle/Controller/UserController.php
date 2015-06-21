@@ -42,7 +42,56 @@ class UserController extends Controller {
         return new Response(json_encode(array("role" => $role, "code" => 200)));
     }
 
-    //Création d'un utilisateur
+        /**
+     * Fonction de création d'un utilisateur
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * email : Email de l'utilisateur à créer 
+     * nom : Nom de l'utilisateur à créer 
+     * prenom : Prénom de l'utilisateur à créer 
+     * datenaissance : Date de naissance de l'utilisateur à créer 
+     * telephone : Téléphone de l'utilisateur à créer 
+     * licence : Url du site de la licence de l'utilisateur à créer
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si l'utilisateur a été créé ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function createAction() {
         //On récupère la requete courrante
         $request = $this->getRequest();
@@ -225,7 +274,47 @@ class UserController extends Controller {
         }
     }
 
-    //Permttra de charger la liste des rôles disponibles
+    /**
+     * Fonction de chargement des roles
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucuns paramètres 
+     * 
+     * @return string 
+     *
+     * JSON contenant la liste des roles de la base de données
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "roles": role
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function loadRolesAction() {
         //On récupère la requête courrante
         $request = $this->getRequest();
@@ -264,6 +353,51 @@ class UserController extends Controller {
         }
     }
 
+         /**
+     * Fonction de récupération de l'état de l'utilisateur (activé / désactivé)
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * id_user : id de l'utilisateur
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON contenant l'état d'activation de l'utilisateur
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "actif": int
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getUserActivationAction() {
         //Permet de récupérer dans le webservice si l'utilisateur passé en paramètre existe ou non
         $request = $this->getRequest();
@@ -315,7 +449,49 @@ class UserController extends Controller {
         }
     }
 
-    //Récupération de la liste des utilisateurs
+        /**
+     * Fonction de récupération de tous les utilisateurs de la base de données
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucuns paramètres : 
+     * 
+     * @return string 
+     *
+     * JSON contenant une liste de tous les utilisateurs
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "users": Liste d'objet utilisateurs,
+     *     "visibilite": récupère le rôle de l'utilisateur connecté pour savoir si il est admin ou non
+     *     "actifs": Tableau qui pour chaque utilisateur renvoyé contiendra son état d'activation
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getAllUsersAction() {
 
         //On récupère la requête courrante
@@ -377,6 +553,52 @@ class UserController extends Controller {
         }
     }
 
+    /**
+     * Fonction d'activation ou de désactivation de l'utilisateur
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * id_user : id de l'utilisateur
+     * activation: int en fonction de l'état que l'on veut donner à l'utilisateur
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON contenant le succès de l'opération
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function deleteAction() {
         //Seul l'administrateur peut supprimer un utilisateur
         $request = $this->getRequest();
@@ -447,6 +669,48 @@ class UserController extends Controller {
         }
     }
     
+        /**
+     * Fonction de réinitialisation du mot de passe de l'utilisateur
+     *
+     * Cette méthode est appelée en ajax et ne requiert aucuns paramètres.
+     * Un email avec un nouveau mot de passe est envoyé à l'adresse mail de l'utilisateur.
+     * 
+     * @return string 
+     *
+     * JSON contenant un message.
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function resetPasswordAction()
     {
        $request = $this->getRequest();
@@ -521,7 +785,52 @@ class UserController extends Controller {
         }
     }
 
-    //Récupération d'un utilisateur dans la base de données
+        /**
+     * Fonction de récupération des informations d'un utilisateur dans la base de données
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * id_user : id de l'utilisateur
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON contenant les informations de l'utilisateur
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "user": Objet membre sérailisé
+     *     "role": Objet role de l'utilisateur sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function getUserAction() {
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {
@@ -569,7 +878,58 @@ class UserController extends Controller {
         }
     }
 
-    //Mise à jour d'un utilisateur dans la base de données
+    
+    /**
+     * Fonction de mise à jour d'un utilisateur
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * id_user : id de l'utilisateur à modifier
+     * emailUpdate : Email de l'utilisateur à modifier 
+     * nomUpdate : Nom de l'utilisateur à modifier 
+     * prenomUpdate : Prénom de l'utilisateur à modifier 
+     * datenaissanceUpdate : Date de naissance de l'utilisateur à modifier 
+     * telephoneUpdate : Téléphone de l'utilisateur à modifier 
+     * licenceUpdate : Url du site de la licence de l'utilisateur à modifier
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si l'utilisateur a été modifié ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function updateUserAction() {
         $request = $this->getRequest();  //On récupère la requete courrante
         if ($request->isXmlHttpRequest()) {    //On regarde qu'il s'agit bien d'une requête AJAX
@@ -753,7 +1113,53 @@ class UserController extends Controller {
         }
     }
 
-    //Permettra de connecter un utilisateur
+        /**
+     * Fonction de connexion de l'utilisateur
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * _csrf_token : token csrf généré
+     * _email : email de l'utilisateur à connecter
+     * _password : mot de passe de l'utilisateur à connecter
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si l'utilisateur est connecté ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function logInAction() {
         $request = $this->getRequest();
         //On regarde qu'il s'agit bien d'une requête ajax
@@ -826,6 +1232,16 @@ class UserController extends Controller {
         }
     }
 
+    /**
+     * Fonction de déconnexion de l'utilisateur
+     *
+     * Cette méthode est appelée en GET et ne requiert aucuns paramètres : 
+     * 
+     * @return View 
+     *
+     * Redirige sur la page d'acceuil 
+     * 
+     */
     public function logOutAction() {
         $this->get('security.token_storage')->setToken(null);
         $this->get('request')->getSession()->invalidate();
@@ -835,7 +1251,54 @@ class UserController extends Controller {
         return $response;
     }
 
-    //Permet de changer le mot de passe d'un utilisateur
+        /**
+     * Fonction de changement du mot de passe de l'utilisateur
+     *
+     * Cette méthode est appelée en ajax et requiert les paramètres suivants : 
+     * 
+     * <code>
+     * oldpassword : ancien mot de passe de l'utilisateur
+     * newpassword : le nouveau mot de passe
+     * </code>
+     *
+     * On vérifie que l'ancien mot de passe est juste, ensuite on change le mot de passe.
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le mot de passe a été changé
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur dans la création :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": false,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function changePasswordAction() {
         $request = $this->getRequest();
         //On regarde qu'il s'agit bien d'une requête ajax
@@ -914,8 +1377,17 @@ class UserController extends Controller {
         }
     }
 
-    //Affichage du formulaire d'ajout d'un utilisateur
-    //Affichage de la liste des membres
+    /**
+     * Fonction permettant d'afficher l'annuaire
+     *
+     * Cette méthode est appelée en GET et ne requiert aucuns paramètres.
+     * 
+     * @return View 
+     *
+     * Redirige sur la page de l'annuaire
+     * 
+     * 
+     */
     public function annuaireAction() {
 
         $content = $this->get("templating")->render("SiteCartoBundle:User:annuaire.html.twig");

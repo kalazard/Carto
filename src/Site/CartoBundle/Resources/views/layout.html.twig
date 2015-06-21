@@ -54,6 +54,9 @@
 							<li>
                                    <a href="{{path('site_carto_searchitineraire')}}">Itinéraires</a>
                             </li> 
+                            <li>
+                                <a href="{{path('site_carto_upload')}}">Uploader un GPX</a>
+                            </li>
                             {%if is_granted('ROLE_Administrateur')%}
                             <li>
                                 <a href="{{path('site_carto_annuaire')}}">Gérer les utilisateurs</a>

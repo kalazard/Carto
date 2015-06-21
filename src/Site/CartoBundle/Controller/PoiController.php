@@ -53,7 +53,7 @@ class PoiController extends Controller
      *
      * Cette méthode est appelée en ajax et ne requiert aucun paramètre : 
      *
-     * @return string 
+     * @return Response 
      *
      * JSON contenant la liste des pois
      *
@@ -116,7 +116,7 @@ class PoiController extends Controller
      * description : Description du poi
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le poi a été créé ou non
      *
@@ -193,7 +193,7 @@ class PoiController extends Controller
      * idPoi : Id du poi à supprimer
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le poi a été supprimé ou non
      *
@@ -293,7 +293,7 @@ class PoiController extends Controller
      * idPoi : Id du poi à modifier
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le poi a été modifier ou non
      *
@@ -356,7 +356,7 @@ class PoiController extends Controller
      * idPoi : Id du poi à modifier
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le poi a été modifié ou non
      *
@@ -438,7 +438,7 @@ class PoiController extends Controller
 	 * 
      * </code>
      * 
-     * @return string 
+     * @return Response 
      *
      * JSON permettant de définir si le poi a été modifié ou non
      *
