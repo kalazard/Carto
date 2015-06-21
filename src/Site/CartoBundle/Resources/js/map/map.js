@@ -3029,7 +3029,10 @@ function supprSegment(e)
 	}
 	else
 	{
-		$.notify("Ce tronçon ne contient pas assez de segments. (3 minimum)", "error");
+		if(supprSeg)
+		{
+			$.notify("Ce tronçon ne contient pas assez de segments. (3 minimum)", "error");
+		}
 	}
 	
 }
