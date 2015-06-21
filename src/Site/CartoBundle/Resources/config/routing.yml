@@ -256,16 +256,6 @@ site_carto_delete_tron:
     path:     /delete_tron
     defaults: { _controller: SiteCartoBundle:Segment:DeleteTronc }
     options:
-        expose: true
-site_carto_delete_seg_from_tron:
-    path:     /segment_delete_tron
-    defaults: { _controller: SiteCartoBundle:Segment:DeleteSegFromTronc }
-    options:
-        expose: true	
-site_carto_add_pog_tron:
-    path:     /tron_add_pog
-    defaults: { _controller: SiteCartoBundle:Segment:AddPOGTron }
-    options:
         expose: true	
 site_carto_save_multiple_segment:
     path:     /save_multiple_segment

@@ -183,6 +183,38 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
+	
+	 /**
+     * Fonction du téléchargement du fichier GPX correposndant à l'itinéraire affiché.
+     *
+     * Cette méthode est appelée depuis la vue fiche_itinéraire
+     *
+     * @return string 
+     *
+     * Nom du fichier sauvegardé
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "filename": nom du fichier GPX
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
 
     public function downloadGPXAction($id) {
 
@@ -198,6 +230,38 @@ class ItineraireController extends Controller {
 
         return $response;
     }
+	
+	/**
+     * Fonction de sauvegarde d'un fichier GPX 
+     *
+     * Cette méthode est appelée depuis la méthode downloadGPXAction
+     *
+     * @return string 
+     *
+     * Url du GPX voulu
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "filename": nom du fichier GPX
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
 
     public function saveGpx($id_itineraire, $filename) {
         $manager = $this->getDoctrine()->getManager();
@@ -261,7 +325,7 @@ class ItineraireController extends Controller {
         return new Response($content);
     }
 
-        /**
+     /**
      * Fonction de chargement d'un itinéraire
      *
      * Cette méthode est appelée en ajax
@@ -276,7 +340,6 @@ class ItineraireController extends Controller {
         $content = $this->get("templating")->render("SiteCartoBundle:Map:loadFrame.html.twig", array("itineraire" => $iti, "jsonObject" => json_encode($iti)));
         return new Response($content);
     }
-
 
     public function rechercheAction(Request $request) {
         //soit on affiche la page en chargeant toutes les données, soit on charge les données selon les paramètres 

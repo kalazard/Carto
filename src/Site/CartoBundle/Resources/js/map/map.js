@@ -3138,25 +3138,6 @@ function DeleteTrons(Tronids)
     });
 }
 
-// suppression d'un segment d'un tronçon
-
-// en paramètre, l'id du premier segment, la liste des points du premier, la liste des points du deuxième 
-
-function saveDeleteSegFromTR(Tid, pts1, pts2)
-{
-	pts1 = JSON.stringify(pts1);
-	pts2 = JSON.stringify(pts2);
-	$.ajax({
-        type: "POST",
-        url: Routing.generate('site_carto_delete_seg_from_tron'),
-        data: {"tid" : Tid, 'pts1' : pts1, "pts2" : pts2},
-        cache: false,
-        success: function(){			
-			$.notify("Segment supprimé", "success");
-        }
-    });
-}
-
 // save une liste de polyline 
 
 function saveMultiplePolyServer(tab)

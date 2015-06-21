@@ -425,6 +425,45 @@ class PoiController extends Controller
         return $response;
     }
 
+	/**
+     * Fonction de sauvegarde d'un POI avec une image 
+     * 
+     * <code>
+     * $_FILES : Image uploadée par le client
+	 * lng : longitude
+	 * lat : latitude 
+	 * alt : altitude
+	 * titre : titre du POI
+	 * description : descirption du POI
+	 * 
+     * </code>
+     * 
+     * @return string 
+     *
+     * JSON permettant de définir si le poi a été modifié ou non
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+     *     "poi": Le poi à éditer sérialisé
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": "Message"
+     * }
+     * </code>
+     * 
+     * 
+     */
     public function savePoiWithPictureAction(Request $request){
         //Récupération de la photo
         //Sauvegarde du fichier   
@@ -505,6 +544,39 @@ class PoiController extends Controller
         }
     }
 	
+	/**
+     * Fonction de tests des droits utilisateur.
+     * 
+	 * Il faut être connecté.
+	 *
+     * <code>
+	 *  pas de paramètre
+     * </code>
+     * 
+     * @return None
+     *
+     * Example en cas de succès :
+     * 
+     * <code>
+     * {
+     *     "success": true,
+     *     "serverError": false,
+		   "page Access": true
+     * }
+     * </code>
+     * 
+     * Example en cas d'erreur du serveur :
+     * 
+     * <code>
+     * {
+     *     "success": false,
+     *     "serverError": true,
+     *     "message": createNotFoundException
+     * }
+     * </code>
+     * 
+     * 
+     */
 	public function testDeDroits($permission)
 	{
 		$manager = $this->getDoctrine()->getManager();
