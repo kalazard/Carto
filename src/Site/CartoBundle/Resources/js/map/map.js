@@ -1476,7 +1476,7 @@ L.Polyline.addInitHook(function () {
 				if(count_object_property(val) != 0)
 				{
 					//fonction qui sert à séparé les tronçons en plusieurs sous tronçons. S'occupe également de l'envois en BDD
-					SegmentSlice(key, val);
+					//SegmentSlice(key, val);
 				}
 			}
 		});
@@ -1509,7 +1509,7 @@ L.Polyline.addInitHook(function () {
 		
 		//si la  variable globale compteur est initialisée, on n'appelle pas la fonction saveSegment, mais la fonction multiple save segment
 		//autoriser le passage seulement si les points ne sont pas des POGS (le zéro n'est pas ajouté dans le tableau, mais le dernier point oui)
-		if(count_object_property(table_pos_poly_courante) != 0)
+		/*if(count_object_property(table_pos_poly_courante) != 0)
 		{
 				//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
 				
@@ -1555,8 +1555,8 @@ L.Polyline.addInitHook(function () {
 		{
 			//si il n'y a pas de coupure, on sauvegarde simplement la polyline
 			 setTimeout(saveSegment, 5000);
-		}
-		
+		}*/
+        setTimeout(saveSegment, 5000);
         $("#denivp").text("");
         $("#denivn").text("");
 		create_poly_segmentation_count = 0;
@@ -1708,7 +1708,6 @@ L.Polyline.addInitHook(function () {
         $("#long").text("Longueur : " + traceData.longueur + "km");
         $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
         isLoadingMap = false;
-        is_reloading = false;
     }
 
 }
@@ -2386,7 +2385,7 @@ function displaySegment(trace,id,elevation) {
             })
         });
 
-        marker.overlaped = [];
+        /*marker.overlaped = [];
         markerGroup.eachLayer(function(layer){
             if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
             {
@@ -2398,7 +2397,7 @@ function displaySegment(trace,id,elevation) {
                 layer.overlaped.push(marker);
             }
         });
-        markerGroup.addLayer(marker);
+        markerGroup.addLayer(marker);*/
 
         polyline.markers.push(marker);
     }
