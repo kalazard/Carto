@@ -2390,6 +2390,10 @@ function displaySegment(trace,id,elevation) {
             if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
             {
                 marker.overlaped.push(layer);
+                if(layer.overlaped === undefined)
+                {
+                    layer.overlaped = [];
+                }
                 layer.overlaped.push(marker);
             }
         });
