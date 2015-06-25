@@ -634,7 +634,7 @@ function goToPosition(position) {
 			
 			//si deux points possèdent les même coordonées, on superpose les deux points (leurs coordonnées sont identiques)
 			var number_temp = 0;
-            var radius = 10;
+            var radius = 5;
 			
 			//calcul pour attribuer un rayon de detection autour du point ou l'on clique
 			number_temp = 0.0001*((radius/10)*(18-map.getZoom()+1));
