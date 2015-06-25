@@ -161,7 +161,7 @@
     </div>
     <iframe class="map-iframe" 
             frameborder="0" 
-            src="http://localhost/Carto/web/app_dev.php/itineraire_load/{{resultats.searchResults.id}}" 
+            src="{{ app.request.getSchemeAndHttpHost() }}/Carto/web/app_dev.php/itineraire_load/{{resultats.searchResults.id}}"
             id="mapframe"></iframe>
     
     {% javascripts '@SiteCartoBundle/Resources/js/itineraire/*' %}
