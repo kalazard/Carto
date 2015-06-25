@@ -9,6 +9,7 @@ var supprSeg = false;
 var is_reloading = false;
 var map_load = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
+var elevationURLAJAX = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&shapeFormat=raw&unit=m";
 var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
 var elevationMultipleSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationMultipleSegment&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
@@ -2288,7 +2289,7 @@ function displayTrace(trace, elevation) {
 			
 			console.log(polyline);
 			
-			var URL = elevationUpdateURL + '&latLngCollection=';
+			/*var URL = elevationUpdateURL + '&latLngCollection=';
 			for (var i = 0; i < latlngs.length; i++) {
 				var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
 					icon: new L.DivIcon({
@@ -2309,9 +2310,10 @@ function displayTrace(trace, elevation) {
 			elevationScript = document.createElement('script');
 			elevationScript.type = 'text/javascript';
 			elevationScript.src = URL;
-			$("body").append(elevationScript);
+			$("body").append(elevationScript);*/
 			
 			//puis on sauvegarde la modification de l'itinéraire
+            updateiti(e.target);
 		}
 
     });
@@ -3273,7 +3275,64 @@ function getElevationMultipleSegment(response)
 }
 
 //fonction pour enregistrer la modification d'un itinéraire en base de donnée
-function updateiti()
+function updateiti(poly)
 {
+    var id = poly.id;
+    var URL = elevationURLAJAX + '&latLngCollection=';
+    var points = [];
+    var denivelepUpdate = 0;
+    var denivelenUpdate = 0;
+    poly.markers = [];
+    for (var i = 0; i < poly._latlngs.length; i++) {
+        var marker = new L.Marker([poly._latlngs[i].lat, poly._latlngs[i].lng], {
+            icon: new L.DivIcon({
+                iconSize: new L.Point(12, 12),
+                className: 'leaflet-div-icon leaflet-editing-icon'
+            })
+        });
+        poly.markers.push(marker);
+        markerGroup.addLayer(marker);
+        points.push(new Point(poly._latlngs[i].lat, poly._latlngs[i].lng));
+        URL += latlngs[i].lat + "," + latlngs[i].lng;
+        if (i !== poly._latlngs.length - 1) {
+            URL += ",";
+        }
+    }
+    URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    $.when(function()
+    {
+        $.get(URL,
+            function (data, status) {
+                for(var i = 0; i < data.elevationProfile.length; i++)
+                {
+                    points.elevation = data.elevationProfile[i].height;
+                    points.distance = data.elevationProfile[i].distance;
+                }
+                for(var i = 0; i < points.length - 1; i++)
+                {
+                    var diff = points[i].elevation - points[i + 1].elevation;
+                    diff < 0 ? denivelepUpdate += diff * -1 : denivelenUpdate += diff * -1;
+                }
+            }
+        );
+    }).then(function()
+    {
+        $.post(Routing.generate('site_carto_updateItineraireTrace'),
+            {
+                points: JSON.stringify(points),
+                longueur: points[points.length - 1].distance,
+                denivelep: denivelepUpdate,
+                denivelen: denivelenUpdate,
+                id : id
+            },
+            function (data, status) {
+
+                $.notify("Itinéraire mis à jour", "success");
+            }
+        ).fail(function () {
+                $.notify("Erreur lors de la mise à jour", "error");
+            });
+    });
+
 
 }

@@ -183,6 +183,53 @@ class ItineraireController extends Controller {
         }
         return new Response('This is not ajax!', 400);
     }
+
+    /**
+     * Fonction de mise à jours des tracés desitinéraires
+     *
+     * Cette méthode est appelée en ajax
+     *
+     * @return string
+     *
+     * JSON contenant l'itinéraire sauvegardé
+     *
+     */
+    public function updateItiTraceAction(Request $request) {
+        if ($request->isXMLHttpRequest()) {
+            $manager = $this->getDoctrine()->getManager();
+            $repository = $manager->getRepository("SiteCartoBundle:Itineraire");
+
+
+            $pointArray = json_decode($request->request->get("points", ""), true);
+            $lsArray = [];
+            $elevationString = "";
+            $i = 0;
+            foreach ($pointArray as $pt) {
+                $newPoint = new MySQLPoint(floatval($pt["lng"]), floatval($pt["lat"]));
+                array_push($lsArray, $newPoint);
+                $elevationString = $elevationString . $pt["elevation"];
+                if (++$i != count($pointArray)) {
+                    $elevationString = $elevationString . ";";
+                }
+            }
+            $ls = new LineString($lsArray);
+
+            $route = $repository->find($request->request->get("id", ""));
+            $route->setLongueur($request->request->get("longueur", ""));
+            $route->setDeniveleplus($request->request->get("denivelep", ""));
+            $route->setDenivelemoins($request->request->get("denivelen", ""));
+            $route->setSegment($ls);
+            $route->setElevation($elevationString);
+
+
+            $manager->persist($route);
+            $manager->flush();
+            $response = new Response(json_encode(array("result" => "success", "code" => 200, "jsonObject" => json_encode($route))));
+            $response->headers->set('Content-Type', 'application/json');
+            return $response;
+        }
+        return new Response('This is not ajax!', 400);
+    }
 	
 	 /**
      * Fonction du téléchargement du fichier GPX correposndant à l'itinéraire affiché.
