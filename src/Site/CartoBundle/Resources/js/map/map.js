@@ -1708,6 +1708,7 @@ L.Polyline.addInitHook(function () {
         $("#long").text("Longueur : " + traceData.longueur + "km");
         $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
         isLoadingMap = false;
+        is_reloading = false;
     }
 
 }
@@ -2406,6 +2407,7 @@ function displaySegment(trace,id,elevation) {
 //fonction utilitaire pour attribuer un JSON dans une variable gloable
 function loadMap(json) {
     isLoadingMap = true;
+    is_reloading = true;
     traceData = json;
 }
 
