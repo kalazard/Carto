@@ -186,7 +186,16 @@ class MemberController extends Controller {
                         }
                         
                         $itineraireService = $this->container->get('itineraire_service');
-                        $itiService = $itineraireService->getNotes($resItiFav, $id_courant);
+                        
+                        if(isset($resItiFav) && sizeof($resItiFav)>0)
+                        {
+                            $itiService = $itineraireService->getNotes($resItiFav, $id_courant);
+                        }
+                        else
+                        {
+                            $itiService = array("userNotes" => array(), "allNotes" => array());
+                        }
+                        
                         $notes = json_decode($itiService, true);
                         $result['un'] = $notes['userNotes'];
                         
