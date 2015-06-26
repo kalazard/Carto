@@ -1713,6 +1713,7 @@ L.Polyline.addInitHook(function () {
         $("#long").text("Longueur : " + traceData.longueur + "km");
         $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
         isLoadingMap = false;
+        map.dragging.disable();
     }
 
 }
@@ -1822,7 +1823,7 @@ function saveRoute() {
     loadDifficultes();
     loadStatus();
     loadTypechemin();
-    jQuery.each(polyArray,function(i,v){
+    /*jQuery.each(polyArray,function(i,v){
         jQuery.each(v._latlngs,function(index,value)
         {
             var point = new Point(value.lat,value.lng);
@@ -1830,7 +1831,28 @@ function saveRoute() {
             point.distance = value.distance;
             pointArray.push(point);
         });
-    });
+    });*/
+    for(var i = 0; i < polyArray.length; i++)
+    {
+        var latlngs = polyArray[i]._latlngs;
+        var latlngsplus = null;
+        if(i < polyArray.length - 1)
+        {
+            latlngsplus = polyArray[i + 1]._latlngs;
+        }
+        if(latlngsplus !== null && !latlngEquality(latlngs[latlngs.length - 1], latlngsplus[0]))
+        {
+            polyArray[i + 1]._latlngs = polyArray[i + 1]._latlngs.reverse();
+        }
+
+        for(var j = 0; j < latlngs.length; j++)
+        {
+            var point = new Point(latlngs[j].lat,latlngs[j].lng);
+            point.elevation = latlngs[j].elevation;
+            point.distance = latlngs[j].distance;
+            pointArray.push(point);
+        }
+    }
     if(potentialPoly !== undefined && potentialPoly.length > 0)
     {
         jQuery.each(potentialPoly,function(i,v){
@@ -1864,7 +1886,7 @@ function saveRoute() {
             });
         jQuery.each(polyArray,function(i,v){
             unglow(v);
-            map.removeLayer(v);
+            //map.removeLayer(v);
         });
         polyArray = [];
         $("#save").modal('hide');
@@ -2239,8 +2261,8 @@ function displayTrace(trace, elevation) {
 
     polyline = L.polyline(latlngArr, {color: 'blue'});
     drawnItems.addLayer(polyline);
-    console.log(drawnItems.getLayers());
-    surbrillance(polyline);
+    
+    //surbrillance(polyline);
     polyline.markers = [];
     for (var i = 0; i < latlngArr.length; i++) {
         var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
@@ -2266,6 +2288,7 @@ function displayTrace(trace, elevation) {
     });
 
     polyline.addTo(map);
+    console.log(polyline);
 
 
     //Events de la polyline, on retire les points selon les différents cas
