@@ -705,8 +705,8 @@ class ItineraireController extends Controller {
      */
     public function searchAction(Request $request) {
         $clientSOAP = new \SoapClient(null, array(
-            'uri' => "http://localhost/Carto/web/app_dev.php/itineraire",
-            'location' => "http://localhost/Carto/web/app_dev.php/itineraire",
+            'uri' => $this->container->getParameter("base_url")."/Carto/web/app_dev.php/itineraire",
+            'location' => $this->container->getParameter("base_url")."/Carto/web/app_dev.php/itineraire",
             'trace' => true,
             'exceptions' => true
         ));
