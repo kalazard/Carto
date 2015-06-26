@@ -269,4 +269,9 @@ site_carto_update_iti:
     path:     /delete_tron
     defaults: { _controller: SiteCartoBundle:Itineraire:updateIti }
     options:
-        expose: true	
+        expose: true
+site_carto_updateItineraireTrace:
+    path:     /updateItiTrace
+    defaults: { _controller: SiteCartoBundle:Itineraire:updateItiTrace }
+    options:
+        expose: true

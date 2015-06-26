@@ -9,6 +9,7 @@ var supprSeg = false;
 var is_reloading = false;
 var map_load = false;
 var elevationURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevation&shapeFormat=raw&unit=m";
+var elevationURLAJAX = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&shapeFormat=raw&unit=m";
 var elevationSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationSegment&shapeFormat=raw&unit=m";
 var elevationMultipleSegmentURL = "http://open.mapquestapi.com/elevation/v1/profile?key=Fmjtd%7Cluu8210720%2C7a%3Do5-94bahf&callback=getElevationMultipleSegment&shapeFormat=raw&unit=m";
 var graph = $("<img>").css("display", "none");
@@ -633,7 +634,7 @@ function goToPosition(position) {
 			
 			//si deux points possèdent les même coordonées, on superpose les deux points (leurs coordonnées sont identiques)
 			var number_temp = 0;
-            var radius = 10;
+            var radius = 5;
 			
 			//calcul pour attribuer un rayon de detection autour du point ou l'on clique
 			number_temp = 0.0001*((radius/10)*(18-map.getZoom()+1));
@@ -1475,7 +1476,7 @@ L.Polyline.addInitHook(function () {
 				if(count_object_property(val) != 0)
 				{
 					//fonction qui sert à séparé les tronçons en plusieurs sous tronçons. S'occupe également de l'envois en BDD
-					SegmentSlice(key, val);
+					//SegmentSlice(key, val);
 				}
 			}
 		});
@@ -1508,7 +1509,7 @@ L.Polyline.addInitHook(function () {
 		
 		//si la  variable globale compteur est initialisée, on n'appelle pas la fonction saveSegment, mais la fonction multiple save segment
 		//autoriser le passage seulement si les points ne sont pas des POGS (le zéro n'est pas ajouté dans le tableau, mais le dernier point oui)
-		if(count_object_property(table_pos_poly_courante) != 0)
+		/*if(count_object_property(table_pos_poly_courante) != 0)
 		{
 				//on appelle sépare les points en plusieurs tronçon et on les save. le tableau pointArray contient la polyline courante
 				
@@ -1554,8 +1555,8 @@ L.Polyline.addInitHook(function () {
 		{
 			//si il n'y a pas de coupure, on sauvegarde simplement la polyline
 			 setTimeout(saveSegment, 5000);
-		}
-		
+		}*/
+        setTimeout(saveSegment, 5000);
         $("#denivp").text("");
         $("#denivn").text("");
 		create_poly_segmentation_count = 0;
@@ -2288,7 +2289,7 @@ function displayTrace(trace, elevation) {
 			
 			console.log(polyline);
 			
-			var URL = elevationUpdateURL + '&latLngCollection=';
+			/*var URL = elevationUpdateURL + '&latLngCollection=';
 			for (var i = 0; i < latlngs.length; i++) {
 				var marker = new L.Marker([latlngArr[i].lat, latlngArr[i].lng], {
 					icon: new L.DivIcon({
@@ -2309,9 +2310,10 @@ function displayTrace(trace, elevation) {
 			elevationScript = document.createElement('script');
 			elevationScript.type = 'text/javascript';
 			elevationScript.src = URL;
-			$("body").append(elevationScript);
+			$("body").append(elevationScript);*/
 			
 			//puis on sauvegarde la modification de l'itinéraire
+            updateiti(e.target);
 		}
 
     });
@@ -2383,15 +2385,19 @@ function displaySegment(trace,id,elevation) {
             })
         });
 
-        marker.overlaped = [];
+        /*marker.overlaped = [];
         markerGroup.eachLayer(function(layer){
             if(latlngEquality(layer.getLatLng(),marker.getLatLng()))
             {
                 marker.overlaped.push(layer);
+                if(layer.overlaped === undefined)
+                {
+                    layer.overlaped = [];
+                }
                 layer.overlaped.push(marker);
             }
         });
-        markerGroup.addLayer(marker);
+        markerGroup.addLayer(marker);*/
 
         polyline.markers.push(marker);
     }
@@ -2400,6 +2406,7 @@ function displaySegment(trace,id,elevation) {
 //fonction utilitaire pour attribuer un JSON dans une variable gloable
 function loadMap(json) {
     isLoadingMap = true;
+    is_reloading = true;
     traceData = json;
 }
 
@@ -3273,7 +3280,64 @@ function getElevationMultipleSegment(response)
 }
 
 //fonction pour enregistrer la modification d'un itinéraire en base de donnée
-function updateiti()
+function updateiti(poly)
 {
+    var id = poly.id;
+    var URL = elevationURLAJAX + '&latLngCollection=';
+    var points = [];
+    var denivelepUpdate = 0;
+    var denivelenUpdate = 0;
+    poly.markers = [];
+    for (var i = 0; i < poly._latlngs.length; i++) {
+        var marker = new L.Marker([poly._latlngs[i].lat, poly._latlngs[i].lng], {
+            icon: new L.DivIcon({
+                iconSize: new L.Point(12, 12),
+                className: 'leaflet-div-icon leaflet-editing-icon'
+            })
+        });
+        poly.markers.push(marker);
+        markerGroup.addLayer(marker);
+        points.push(new Point(poly._latlngs[i].lat, poly._latlngs[i].lng));
+        URL += latlngs[i].lat + "," + latlngs[i].lng;
+        if (i !== poly._latlngs.length - 1) {
+            URL += ",";
+        }
+    }
+    URL.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    $.when(function()
+    {
+        $.get(URL,
+            function (data, status) {
+                for(var i = 0; i < data.elevationProfile.length; i++)
+                {
+                    points.elevation = data.elevationProfile[i].height;
+                    points.distance = data.elevationProfile[i].distance;
+                }
+                for(var i = 0; i < points.length - 1; i++)
+                {
+                    var diff = points[i].elevation - points[i + 1].elevation;
+                    diff < 0 ? denivelepUpdate += diff * -1 : denivelenUpdate += diff * -1;
+                }
+            }
+        );
+    }).then(function()
+    {
+        $.post(Routing.generate('site_carto_updateItineraireTrace'),
+            {
+                points: JSON.stringify(points),
+                longueur: points[points.length - 1].distance,
+                denivelep: denivelepUpdate,
+                denivelen: denivelenUpdate,
+                id : id
+            },
+            function (data, status) {
+
+                $.notify("Itinéraire mis à jour", "success");
+            }
+        ).fail(function () {
+                $.notify("Erreur lors de la mise à jour", "error");
+            });
+    });
+
 
 }
