@@ -98,6 +98,7 @@ class MemberController extends Controller {
 			//on recherche tout les utilisateurs 
 			$data = $manager->getRepository('SiteCartoBundle:Itineraire')->findBy(array('auteur'=>$id_courant));
                         $allItiNotes = array();                        
+                        $userNote = -1;
                         
                         foreach($data as $itiTmp)
                         {
