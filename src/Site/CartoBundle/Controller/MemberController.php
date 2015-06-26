@@ -193,7 +193,7 @@ class MemberController extends Controller {
                         }
                         else
                         {
-                            $itiService = array("userNotes" => array(), "allNotes" => array());
+                            $itiService = json_encode(array("userNotes" => array(), "allNotes" => array()));
                         }
                         
                         $notes = json_decode($itiService, true);
