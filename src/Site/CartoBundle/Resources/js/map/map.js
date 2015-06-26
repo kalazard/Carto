@@ -1393,7 +1393,12 @@ L.Polyline.addInitHook(function () {
                     isCreateRoute = false;
                     drawnItems.eachLayer(function (layer){
                         layer.addTo(map);
-                    })
+                    });
+                    pogGroup.eachLayer(function(layer){
+                        layer.off("click");
+                        map.removeLayer(layer);
+                        layer.addTo(map);
+                    });
                 },
                 title : "Annuler le tracé d'un itinéraire"
             }
