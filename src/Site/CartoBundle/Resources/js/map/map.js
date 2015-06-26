@@ -1706,6 +1706,8 @@ L.Polyline.addInitHook(function () {
 		is_reloading = true;
 	}
     if (isLoadingMap) {
+        setTimeout(function ()
+        {
         segmentID = traceData.segment.id;
         displayTrace(traceData.segment, traceData.elevation);
         $("#denivp").text("Dénivelé positif : " + traceData.deniveleplus + "m");
@@ -1714,6 +1716,8 @@ L.Polyline.addInitHook(function () {
         $("#diffiDisplay").text("Difficulté : " + traceData.difficulte.label);
         isLoadingMap = false;
         map.dragging.disable();
+        },5000);
+        
     }
 
 }
